@@ -1,0 +1,3 @@
+# This file keeps track of the schema provider to prevent accidental changes.
+# Read more: https://www.prisma.io/docs/guides/migrate/developing-with-prisma-migrate/understanding-the-prisma-migrate-development-workflow
+provider = "postgresql"
