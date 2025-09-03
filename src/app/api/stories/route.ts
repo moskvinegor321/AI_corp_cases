@@ -19,4 +19,16 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ items, counts: countsMap });
 }
 
+export async function DELETE(req: NextRequest) {
+  if (!process.env.ADMIN_TOKEN || req.headers.get('x-admin-token') !== process.env.ADMIN_TOKEN) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const { ids } = (await req.json().catch(() => ({ ids: [] }))) as { ids: string[] };
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return NextResponse.json({ error: 'No ids provided' }, { status: 400 });
+  }
+  const result = await prisma.story.deleteMany({ where: { id: { in: ids } } });
+  return NextResponse.json({ deletedCount: result.count });
+}
+
 

@@ -14,12 +14,15 @@ export type Story = {
   createdAt: string;
 };
 
-export function StoryCard({ story, onAction }: { story: Story; onAction: (id: string, a: 'publish' | 'reject' | 'triage') => void }) {
+export function StoryCard({ story, onAction, selected, onSelect }: { story: Story; onAction: (id: string, a: 'publish' | 'reject' | 'triage') => void; selected?: boolean; onSelect?: (id: string, v: boolean) => void }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="border rounded-md p-4 flex gap-4 items-start bg-card fade-in-up">
       <div className="flex-1">
         <div className="flex items-center gap-2">
+          {onSelect && (
+            <input type="checkbox" checked={!!selected} onChange={(e) => onSelect(story.id, e.target.checked)} />
+          )}
           <h3 className="font-semibold text-lg">{story.title}</h3>
           {story.company && <span className="text-xs border rounded px-2 py-0.5">{story.company}</span>}
           <span className={`ml-2 text-xs px-2 py-0.5 rounded border ${

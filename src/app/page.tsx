@@ -9,6 +9,7 @@ export default function Home() {
   const [items, setItems] = useState<Story[]>([]);
   const [loading, setLoading] = useState(false);
   const [adminToken, setAdminToken] = useState<string>("");
+  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
@@ -25,6 +26,7 @@ export default function Home() {
     const res = await fetch(`/api/stories${q}`);
     const data = await res.json();
     setItems((data.items || []) as Story[]);
+    setSelectedIds({});
   }, []);
 
   useEffect(() => {
@@ -54,6 +56,24 @@ export default function Home() {
     fetchStories(status);
   }, [status, fetchStories, adminToken]);
 
+  const onSelect = useCallback((id: string, v: boolean) => {
+    setSelectedIds((prev) => ({ ...prev, [id]: v }));
+  }, []);
+
+  const deleteSelected = useCallback(async () => {
+    const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+    const ids = Object.keys(selectedIds).filter((k) => selectedIds[k]);
+    if (ids.length === 0) return;
+    // optimistic
+    setItems((prev) => prev.filter((s) => !ids.includes(s.id)));
+    await fetch('/api/stories', {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json', 'x-admin-token': token || '' },
+      body: JSON.stringify({ ids }),
+    });
+    fetchStories(status);
+  }, [selectedIds, adminToken, status, fetchStories]);
+
   return (
     <div className="min-h-screen p-6 md:p-10">
       <div className="flex items-center justify-between">
@@ -71,6 +91,9 @@ export default function Home() {
             onChange={(e) => saveToken(e.target.value)}
             style={{ width: 180 }}
           />
+          <button className="px-3 py-2 rounded border" onClick={deleteSelected} disabled={Object.values(selectedIds).every((v) => !v)}>
+            Удалить выбранные
+          </button>
           <button className="px-4 py-2 rounded bg-primary text-primary-foreground" onClick={generate} disabled={loading}>
             {loading ? 'Генерация…' : 'Сгенерировать 5 новых историй'}
           </button>
@@ -78,7 +101,7 @@ export default function Home() {
       </div>
       <div className="mt-6 grid gap-4 grid-cols-1">
         {items.map((it) => (
-          <StoryCard key={it.id} story={it} onAction={onAction} />
+          <StoryCard key={it.id} story={it} onAction={onAction} selected={!!selectedIds[it.id]} onSelect={onSelect} />
         ))}
       </div>
     </div>
