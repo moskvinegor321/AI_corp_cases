@@ -36,7 +36,7 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
     } catch {}
   };
   return (
-    <div className="glass rounded-xl p-5 flex gap-4 items-start fade-in-up">
+    <div className="glass rounded-xl p-5 flex gap-4 items-start fade-in-up relative">
       <div className="flex-1">
         <div className="flex items-center gap-2">
           {onSelect && (
@@ -65,8 +65,8 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
           ))}
         </div>
       </div>
-      <div className="flex flex-col gap-2 w-56">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 w-64 absolute bottom-3 right-3 items-end">
+        <div className="flex items-center gap-2 justify-end w-full">
           <button className="flex-1 px-3 py-1 rounded btn-glass text-red-400" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
           <button className="flex-1 px-3 py-1 rounded btn-glass" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
           <button className="flex-1 px-3 py-1 rounded btn-glass text-green-400" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
