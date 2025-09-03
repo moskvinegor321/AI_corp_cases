@@ -13,6 +13,7 @@ export type Story = {
   confidence?: number | null;
   createdAt: string;
   publishedAt?: string | null;
+  sourcePublishedAt?: string | null;
 };
 
 export function StoryCard({ story, onAction, selected, onSelect }: { story: Story; onAction: (id: string, a: 'publish' | 'reject' | 'triage') => void; selected?: boolean; onSelect?: (id: string, v: boolean) => void }) {
@@ -71,6 +72,9 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
             {story.status === 'published' ? 'Опубликовано' : story.status === 'rejected' ? 'Отклонено' : 'Разобрать'}
           </span>
           <span className="px-2 py-0.5">Создано: {new Date(story.createdAt).toLocaleDateString()}</span>
+          {story.sourcePublishedAt && (
+            <span className="px-2 py-0.5">Источник: {new Date(story.sourcePublishedAt).toLocaleDateString()}</span>
+          )}
           {story.publishedAt && (
             <span className="px-2 py-0.5">Опубликовано (AION): {new Date(story.publishedAt).toLocaleDateString()}</span>
           )}

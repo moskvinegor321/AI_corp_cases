@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { toSlug } from '@/lib/slug';
 import { isDuplicate } from '@/lib/dedupe';
 import { generateStories } from '@/lib/llm/generateStories';
+import { extractPublishedAt } from '@/lib/search';
 
 export const runtime = 'nodejs';
 
@@ -64,6 +65,9 @@ export async function POST(req: NextRequest) {
     batchSlugs.add(slug);
     batchTitles.push(it.title);
 
+    // best-effort parse date from first source url or provider date if any
+    const firstSource = (it.sources || [])[0];
+    const sourceDate = extractPublishedAt(it.publishedAt as any) || extractPublishedAt(firstSource);
     const saved = await prisma.story.create({
       data: {
         title: it.title,
@@ -75,6 +79,7 @@ export async function POST(req: NextRequest) {
         noveltyNote: it.novelty_note || null,
         confidence: typeof it.confidence === 'number' ? it.confidence : null,
         origin: 'generated',
+        sourcePublishedAt: sourceDate ? sourceDate : null,
       },
     });
     created.push(saved);

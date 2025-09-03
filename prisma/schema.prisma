@@ -36,6 +36,7 @@ model Story {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   publishedAt   DateTime?
+  sourcePublishedAt DateTime?
 }
 
 model BanTitle {
