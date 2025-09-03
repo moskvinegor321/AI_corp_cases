@@ -34,3 +34,37 @@ body {
 .fade-in-up {
   animation: fadeInUp 220ms ease-out;
 }
+
+/* Subtle glass + gradient background */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(60rem 40rem at 10% -10%, rgba(99,102,241,0.22), transparent 50%),
+    radial-gradient(50rem 30rem at 90% -10%, rgba(236,72,153,0.18), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  pointer-events: none;
+  z-index: -2;
+}
+
+.glass {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.btn-glass {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: background 150ms ease, transform 120ms ease;
+}
+.btn-glass:hover { background: rgba(255,255,255,0.14); }
+.btn-glass:active { transform: translateY(1px) scale(0.99); }
+
+.chip {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+}

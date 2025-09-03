@@ -76,25 +76,25 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-6 md:p-10">
-      <div className="flex items-center justify-between">
+      <div className="glass rounded-2xl p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="text-2xl font-bold">AION</div>
+          <div className="text-2xl font-bold tracking-tight">AION</div>
           <HeaderStats />
         </div>
         <div className="flex items-center gap-3">
           <Filters value={status} onChange={setStatus} />
           <input
-            className="px-2 py-1 rounded border bg-background"
+            className="px-2 py-1 rounded btn-glass"
             type="password"
             placeholder="Admin token"
             value={adminToken}
             onChange={(e) => saveToken(e.target.value)}
             style={{ width: 180 }}
           />
-          <button className="px-3 py-2 rounded border" onClick={deleteSelected} disabled={Object.values(selectedIds).every((v) => !v)}>
+          <button className="px-3 py-2 rounded btn-glass" onClick={deleteSelected} disabled={Object.values(selectedIds).every((v) => !v)}>
             Удалить выбранные
           </button>
-          <button className="px-4 py-2 rounded bg-primary text-primary-foreground" onClick={generate} disabled={loading}>
+          <button className="px-4 py-2 rounded btn-glass" onClick={generate} disabled={loading}>
             {loading ? 'Генерация…' : 'Сгенерировать 5 новых историй'}
           </button>
         </div>

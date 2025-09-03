@@ -36,15 +36,15 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
     } catch {}
   };
   return (
-    <div className="border rounded-md p-4 flex gap-4 items-start bg-card fade-in-up">
+    <div className="glass rounded-xl p-5 flex gap-4 items-start fade-in-up">
       <div className="flex-1">
         <div className="flex items-center gap-2">
           {onSelect && (
             <input type="checkbox" checked={!!selected} onChange={(e) => onSelect(story.id, e.target.checked)} />
           )}
-          <h3 className="font-semibold text-lg">{story.title}</h3>
-          {story.company && <span className="text-xs border rounded px-2 py-0.5">{story.company}</span>}
-          <span className={`ml-2 text-xs px-2 py-0.5 rounded border ${
+          <h3 className="font-semibold text-lg tracking-tight">{story.title}</h3>
+          {story.company && <span className="text-xs chip rounded px-2 py-0.5">{story.company}</span>}
+          <span className={`ml-2 text-xs px-2 py-0.5 rounded chip ${
             story.status === 'published' ? 'border-green-600 text-green-500' : story.status === 'rejected' ? 'border-red-600 text-red-500' : 'border-yellow-600 text-yellow-500'
           }`}>
             {story.status === 'published' ? 'Опубликовано' : story.status === 'rejected' ? 'Отклонено' : 'Разобрать'}
@@ -66,10 +66,10 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <button className="px-3 py-1 rounded bg-green-600 text-white transition-transform active:scale-[0.98]" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
-        <button className="px-3 py-1 rounded bg-destructive text-destructive-foreground transition-transform active:scale-[0.98]" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
-        <button className="px-3 py-1 rounded border transition-transform active:scale-[0.98]" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
-        <button className="px-3 py-1 rounded border transition-colors hover:bg-accent" onClick={copyAll}>{copied ? 'Скопировано' : 'Копировать'}</button>
+        <button className="px-3 py-1 rounded btn-glass text-green-400" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
+        <button className="px-3 py-1 rounded btn-glass text-red-400" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
+        <button className="px-3 py-1 rounded btn-glass" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
+        <button className="px-3 py-1 rounded btn-glass" onClick={copyAll}>{copied ? 'Скопировано' : 'Копировать'}</button>
       </div>
     </div>
   );
