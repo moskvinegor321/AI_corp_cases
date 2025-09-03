@@ -36,8 +36,8 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
     } catch {}
   };
   return (
-    <div className="glass rounded-xl p-5 grid grid-cols-1 md:grid-cols-[1fr_300px] gap-4 items-start fade-in-up">
-      <div>
+    <div className="glass rounded-xl p-5 grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 items-start fade-in-up">
+      <div className="panel rounded-lg p-3">
         <div className="flex items-center gap-2">
           {onSelect && (
             <input type="checkbox" checked={!!selected} onChange={(e) => onSelect(story.id, e.target.checked)} />
@@ -65,11 +65,11 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
           ))}
         </div>
       </div>
-      <div className="flex flex-col gap-2 md:w-[300px] md:justify-end md:h-full">
-        <div className="flex items-center gap-2">
-          <button className="px-2 h-9 rounded btn-glass text-red-400 text-xs" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
-          <button className="px-2 h-9 rounded btn-glass text-xs" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
-          <button className="px-2 h-9 rounded btn-glass text-green-400 text-xs" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
+      <div className="flex flex-col gap-2 md:w-[320px] md:justify-end md:h-full">
+        <div className="grid grid-cols-3 gap-2 items-stretch">
+          <button className="px-2 h-10 rounded btn-glass text-red-400 text-xs" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
+          <button className="px-2 h-10 rounded btn-glass text-xs" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
+          <button className="px-2 h-10 rounded btn-glass text-green-400 text-xs" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
         </div>
         <button className="mt-1 px-3 h-10 rounded btn-glass w-full" onClick={copyAll}>{copied ? 'Скопировано' : 'Копировать'}</button>
       </div>

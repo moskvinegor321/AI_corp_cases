@@ -68,3 +68,8 @@ body::before {
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.2);
 }
+
+.panel {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+}
