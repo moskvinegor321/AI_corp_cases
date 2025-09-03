@@ -53,10 +53,12 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
         <div className="mt-2 text-sm text-muted-foreground">
           <span>{new Date(story.createdAt).toLocaleString()}</span>
         </div>
-        <div className={`mt-3 text-sm whitespace-pre-line ${expanded ? '' : 'line-clamp-6'}`}>{story.script}</div>
-        <button className="mt-2 text-xs underline" onClick={() => setExpanded((s) => !s)}>
-          {expanded ? 'Свернуть' : 'Показать полностью'}
-        </button>
+        <div className={`mt-3 text-sm whitespace-pre-line ${expanded ? '' : 'clamp-6'}`}>{story.script}</div>
+        {!expanded && story.script?.length > 600 && (
+          <button className="mt-2 text-xs underline" onClick={() => setExpanded(true)}>
+            Показать полностью
+          </button>
+        )}
         <div className="mt-3 flex gap-2 text-xs flex-wrap">
           {story.sources?.map((s) => (
             <a key={s} href={s} target="_blank" className="underline" rel="noreferrer">
@@ -66,7 +68,7 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
         </div>
       </div>
       <div className="flex flex-col gap-2 md:w-[320px] md:justify-end md:h-full">
-        <div className="grid grid-cols-3 gap-2 items-stretch">
+        <div className="grid grid-cols-3 gap-2 items-center">
           <button className="px-2 h-10 rounded btn-glass text-red-400 text-xs" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
           <button className="px-2 h-10 rounded btn-glass text-xs" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
           <button className="px-2 h-10 rounded btn-glass text-green-400 text-xs" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
