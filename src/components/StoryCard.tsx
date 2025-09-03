@@ -12,6 +12,7 @@ export type Story = {
   noveltyNote?: string | null;
   confidence?: number | null;
   createdAt: string;
+  publishedAt?: string | null;
 };
 
 export function StoryCard({ story, onAction, selected, onSelect }: { story: Story; onAction: (id: string, a: 'publish' | 'reject' | 'triage') => void; selected?: boolean; onSelect?: (id: string, v: boolean) => void }) {
@@ -43,12 +44,6 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
             <input type="checkbox" checked={!!selected} onChange={(e) => onSelect(story.id, e.target.checked)} />
           )}
           <h3 className="font-semibold text-lg tracking-tight">{story.title}</h3>
-          {story.company && <span className="text-xs chip rounded px-2 py-0.5">{story.company}</span>}
-          <span className={`ml-2 text-xs px-2 py-0.5 rounded chip ${
-            story.status === 'published' ? 'border-green-600 text-green-500' : story.status === 'rejected' ? 'border-red-600 text-red-500' : 'border-yellow-600 text-yellow-500'
-          }`}>
-            {story.status === 'published' ? 'Опубликовано' : story.status === 'rejected' ? 'Отклонено' : 'Разобрать'}
-          </span>
         </div>
         <div className="mt-2 text-sm text-muted-foreground">
           <span>{new Date(story.createdAt).toLocaleString()}</span>
@@ -68,6 +63,17 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
         </div>
       </div>
       <div className="flex flex-col gap-2 md:w-[320px] md:justify-end md:h-full">
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          {story.company && <span className="text-xs chip rounded px-2 py-0.5">{story.company}</span>}
+          <span className={`text-xs px-2 py-0.5 rounded chip ${
+            story.status === 'published' ? 'border-green-600 text-green-500' : story.status === 'rejected' ? 'border-red-600 text-red-500' : 'border-yellow-600 text-yellow-500'
+          }`}>
+            {story.status === 'published' ? 'Опубликовано' : story.status === 'rejected' ? 'Отклонено' : 'Разобрать'}
+          </span>
+          {story.publishedAt && (
+            <span className="text-xs chip rounded px-2 py-0.5">Источник: {new Date(story.publishedAt).toLocaleDateString()}</span>
+          )}
+        </div>
         <div className="grid grid-cols-3 gap-2 items-center">
           <button className="px-2 h-10 rounded btn-glass text-red-400 text-xs" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
           <button className="px-2 h-10 rounded btn-glass text-xs" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
