@@ -69,17 +69,31 @@ ${banlistBlock}
     model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
     input: prompt,
     temperature: 0.6,
+    response_format: { type: 'json_object' },
   });
 
   const text: string = (res as unknown as { output_text?: string }).output_text || '';
   let parsed: z.infer<typeof ResponseSchema> | null = null;
-  try {
-    parsed = ResponseSchema.parse(JSON.parse(text));
-  } catch {
-    const match = text.match(/\{[\s\S]*\}$/);
-    if (!match) throw new Error('LLM returned non-JSON');
-    parsed = ResponseSchema.parse(JSON.parse(match[0]));
+  const tryParsers = [
+    () => JSON.parse(text),
+    () => {
+      const fenced = text.match(/```json\s*([\s\S]*?)\s*```/i);
+      if (fenced) return JSON.parse(fenced[1]);
+      throw new Error('no fenced');
+    },
+    () => {
+      const first = text.indexOf('{');
+      const last = text.lastIndexOf('}');
+      if (first !== -1 && last !== -1 && last > first) return JSON.parse(text.slice(first, last + 1));
+      throw new Error('no braces');
+    },
+  ];
+  let raw: unknown;
+  for (const fn of tryParsers) {
+    try { raw = fn(); break; } catch { /* try next */ }
   }
+  if (!raw) throw new Error('LLM returned non-JSON');
+  parsed = ResponseSchema.parse(raw);
 
   const items = (parsed?.items || []).slice(0, n);
   return items;
