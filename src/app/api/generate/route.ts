@@ -41,7 +41,9 @@ export async function POST(req: NextRequest) {
     .map((x) => x.title);
   const existingSlugs = new Set(existing.map((x) => x.titleSlug));
 
-  const items = await generateStories({ banlistTitles, n });
+  // read custom prompt if set
+  const setting = await prisma.setting.findUnique({ where: { key: 'prompt' } });
+  const items = await generateStories({ banlistTitles, n, promptOverride: setting?.value });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
   const created: unknown[] = [];

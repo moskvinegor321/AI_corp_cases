@@ -24,7 +24,7 @@ const ResponseSchema = z.object({ items: z.array(ItemSchema) });
 
 export type GeneratedItem = z.infer<typeof ItemSchema>;
 
-export async function generateStories({ banlistTitles, n }: { banlistTitles: string[]; n: number }) {
+export async function generateStories({ banlistTitles, n, promptOverride }: { banlistTitles: string[]; n: number; promptOverride?: string }) {
   const limit = Math.max(5, Math.min(30, n * 6));
   const docs = await searchNews(
     'AI enterprise adoption OR genAI internal rollout OR LLM policy last 90 days',
@@ -40,7 +40,7 @@ export async function generateStories({ banlistTitles, n }: { banlistTitles: str
     ? banlistTitles.map((t) => `- ${t}`).join('\n')
     : '(пусто)';
 
-  const prompt = `Ты — редактор коротких рилсов (30 секунд) про реальные кейсы использования ИИ в компаниях.
+  const basePrompt = `Ты — редактор коротких рилсов (30 секунд) про реальные кейсы использования ИИ в компаниях.
 
 Цель: выдать НОВЫЕ ${n} историй на русском. Для каждой:
 - title: 1–2 предложения, максимально конкретно (компания, что случилось, чем полезно/неожиданно). Без кликбейта.
@@ -63,6 +63,8 @@ ${banlistBlock}
 
 Ответ строго в JSON по схеме:
 { "items": [ { "title": "...", "script": "...", "company": "...", "sources": ["..."], "novelty_note": "...", "confidence": 0.7 } ] }`;
+
+  const prompt = promptOverride && promptOverride.trim().length > 0 ? promptOverride : basePrompt;
 
   const client = getOpenAIClient();
   const res = await client.responses.create({
