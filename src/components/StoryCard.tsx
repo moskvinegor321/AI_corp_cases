@@ -16,6 +16,25 @@ export type Story = {
 
 export function StoryCard({ story, onAction, selected, onSelect }: { story: Story; onAction: (id: string, a: 'publish' | 'reject' | 'triage') => void; selected?: boolean; onSelect?: (id: string, v: boolean) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyAll = async () => {
+    const lines: string[] = [];
+    lines.push(story.title);
+    if (story.company) lines.push(`Компания: ${story.company}`);
+    lines.push('');
+    lines.push(story.script);
+    if (story.sources && story.sources.length) {
+      lines.push('');
+      lines.push('Источники:');
+      story.sources.forEach((s) => lines.push(`- ${s}`));
+    }
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
   return (
     <div className="border rounded-md p-4 flex gap-4 items-start bg-card fade-in-up">
       <div className="flex-1">
@@ -50,6 +69,7 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
         <button className="px-3 py-1 rounded bg-green-600 text-white transition-transform active:scale-[0.98]" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
         <button className="px-3 py-1 rounded bg-destructive text-destructive-foreground transition-transform active:scale-[0.98]" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
         <button className="px-3 py-1 rounded border transition-transform active:scale-[0.98]" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
+        <button className="px-3 py-1 rounded border transition-colors hover:bg-accent" onClick={copyAll}>{copied ? 'Скопировано' : 'Копировать'}</button>
       </div>
     </div>
   );
