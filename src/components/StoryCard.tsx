@@ -36,8 +36,8 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
     } catch {}
   };
   return (
-    <div className="glass rounded-xl p-5 flex gap-4 items-start fade-in-up relative">
-      <div className="flex-1">
+    <div className="glass rounded-xl p-5 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-4 items-start fade-in-up">
+      <div>
         <div className="flex items-center gap-2">
           {onSelect && (
             <input type="checkbox" checked={!!selected} onChange={(e) => onSelect(story.id, e.target.checked)} />
@@ -65,13 +65,13 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
           ))}
         </div>
       </div>
-      <div className="flex flex-col gap-2 w-64 absolute bottom-3 right-3 items-end">
-        <div className="flex items-center gap-2 justify-end w-full">
-          <button className="flex-1 px-3 py-1 rounded btn-glass text-red-400" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
-          <button className="flex-1 px-3 py-1 rounded btn-glass" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
-          <button className="flex-1 px-3 py-1 rounded btn-glass text-green-400" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
+      <div className="flex flex-col gap-2 md:w-[240px] md:justify-end md:h-full">
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-1 rounded btn-glass text-red-400 text-sm" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
+          <button className="px-3 py-1 rounded btn-glass text-sm" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
+          <button className="px-3 py-1 rounded btn-glass text-green-400 text-sm" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
         </div>
-        <button className="mt-1 px-3 py-2 rounded btn-glass" onClick={copyAll}>{copied ? 'Скопировано' : 'Копировать'}</button>
+        <button className="mt-1 px-3 py-2 rounded btn-glass w-full" onClick={copyAll}>{copied ? 'Скопировано' : 'Копировать'}</button>
       </div>
     </div>
   );
