@@ -6,13 +6,24 @@ import { generateStories } from '@/lib/llm/generateStories';
 
 export const runtime = 'nodejs';
 
+type GenerateBody = { n?: number };
+
+type MinimalItem = {
+  title: string;
+  script: string;
+  company?: string | null;
+  sources?: string[];
+  novelty_note?: string | null;
+  confidence?: number | null;
+};
+
 export async function POST(req: NextRequest) {
   const token = req.headers.get('x-admin-token');
   if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => ({} as any));
+  const body: GenerateBody = await req.json().catch(() => ({} as GenerateBody));
   const n = Number(body?.n || process.env.GENERATE_N || 5);
 
   const excludeRejected = String(process.env.EXCLUDE_REJECTED) === 'true';
@@ -32,10 +43,10 @@ export async function POST(req: NextRequest) {
   const items = await generateStories({ banlistTitles, n });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
-  const created: any[] = [];
+  const created: unknown[] = [];
   const skippedDuplicates: string[] = [];
 
-  for (const it of items) {
+  for (const it of items as MinimalItem[]) {
     const slug = toSlug(it.title);
     if (existingSlugs.has(slug) || isDuplicate(it.title, banlistTitles, threshold)) {
       skippedDuplicates.push(it.title);

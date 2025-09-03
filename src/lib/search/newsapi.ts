@@ -1,6 +1,16 @@
 import axios from 'axios';
 import type { FoundDoc } from './index';
 
+type NewsApiArticle = {
+  title: string;
+  url: string;
+  source?: { name?: string };
+  publishedAt?: string;
+  description?: string;
+};
+
+type NewsApiResponse = { articles?: NewsApiArticle[] };
+
 export async function searchNewsApi(query: string, limit = 20): Promise<FoundDoc[]> {
   const apiKey = process.env.NEWSAPI_KEY;
   if (!apiKey) return [];
@@ -10,9 +20,9 @@ export async function searchNewsApi(query: string, limit = 20): Promise<FoundDoc
     language: 'en',
     sortBy: 'publishedAt',
     pageSize: Math.min(limit, 100),
-  } as any;
-  const { data } = await axios.get(url, { headers: { 'X-Api-Key': apiKey }, params });
-  const items = (data?.articles || []) as any[];
+  } as Record<string, string | number>;
+  const { data } = await axios.get<NewsApiResponse>(url, { headers: { 'X-Api-Key': apiKey }, params });
+  const items = data?.articles ?? [];
   return items.map((a) => ({
     title: a.title,
     url: a.url,

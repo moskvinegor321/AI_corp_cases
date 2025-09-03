@@ -1,19 +1,19 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { HeaderStats } from '@/components/HeaderStats';
 import { Filters, StoryStatus } from '@/components/Filters';
 import { StoryCard, type Story } from '@/components/StoryCard';
 
 export default function Home() {
   const [status, setStatus] = useState<StoryStatus>('all');
-  const [items, setItems] = useState<Story[]>([] as any);
+  const [items, setItems] = useState<Story[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchStories = useCallback(async (s: StoryStatus) => {
     const q = s === 'all' ? '' : `?status=${s}`;
     const res = await fetch(`/api/stories${q}`);
     const data = await res.json();
-    setItems(data.items || []);
+    setItems((data.items || []) as Story[]);
   }, []);
 
   useEffect(() => {

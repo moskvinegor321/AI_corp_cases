@@ -2,7 +2,14 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 import { searchNews } from '@/lib/search';
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAIClient(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    // Defer error to runtime call site rather than import-time to avoid build-time failures
+    throw new Error('OPENAI_API_KEY is not set');
+  }
+  return new OpenAI({ apiKey });
+}
 
 const ItemSchema = z.object({
   title: z.string().min(10),
@@ -57,18 +64,18 @@ ${banlistBlock}
 Ответ строго в JSON по схеме:
 { "items": [ { "title": "...", "script": "...", "company": "...", "sources": ["..."], "novelty_note": "...", "confidence": 0.7 } ] }`;
 
+  const client = getOpenAIClient();
   const res = await client.responses.create({
     model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
     input: prompt,
     temperature: 0.6,
   });
 
-  const text = (res as any).output_text as string;
+  const text: string = (res as unknown as { output_text?: string }).output_text || '';
   let parsed: z.infer<typeof ResponseSchema> | null = null;
   try {
     parsed = ResponseSchema.parse(JSON.parse(text));
   } catch {
-    // attempt to extract JSON block
     const match = text.match(/\{[\s\S]*\}$/);
     if (!match) throw new Error('LLM returned non-JSON');
     parsed = ResponseSchema.parse(JSON.parse(match[0]));
