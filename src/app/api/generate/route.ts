@@ -46,12 +46,23 @@ export async function POST(req: NextRequest) {
   const created: unknown[] = [];
   const skippedDuplicates: string[] = [];
 
+  // Deduplicate within this batch by slug and fuzzy title
+  const batchTitles: string[] = [];
+  const batchSlugs = new Set<string>();
+
   for (const it of items as MinimalItem[]) {
     const slug = toSlug(it.title);
-    if (existingSlugs.has(slug) || isDuplicate(it.title, banlistTitles, threshold)) {
+    if (
+      existingSlugs.has(slug) ||
+      batchSlugs.has(slug) ||
+      isDuplicate(it.title, [...banlistTitles, ...batchTitles], threshold)
+    ) {
       skippedDuplicates.push(it.title);
       continue;
     }
+
+    batchSlugs.add(slug);
+    batchTitles.push(it.title);
 
     const saved = await prisma.story.create({
       data: {

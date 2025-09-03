@@ -74,7 +74,7 @@ export default function Home() {
           </button>
         </div>
       </div>
-      <div className="mt-6 grid gap-4 grid-cols-1 md:grid-cols-2">
+      <div className="mt-6 grid gap-4 grid-cols-1">
         {items.map((it) => (
           <StoryCard key={it.id} story={it} onAction={onAction} />
         ))}
