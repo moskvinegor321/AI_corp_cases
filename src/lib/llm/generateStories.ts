@@ -69,7 +69,6 @@ ${banlistBlock}
     model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
     input: prompt,
     temperature: 0.6,
-    response_format: { type: 'json_object' },
   });
 
   const text: string = (res as unknown as { output_text?: string }).output_text || '';
