@@ -63,15 +63,16 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
         </div>
       </div>
       <div className="flex flex-col gap-2 md:w-[320px] md:justify-end md:h-full">
-        <div className="flex flex-wrap items-center gap-2 justify-end">
+        <div className="flex flex-wrap items-center gap-2 justify-end text-xs text-muted-foreground">
           {story.company && <span className="text-xs chip rounded px-2 py-0.5">{story.company}</span>}
           <span className={`text-xs px-2 py-0.5 rounded chip ${
             story.status === 'published' ? 'border-green-600 text-green-500' : story.status === 'rejected' ? 'border-red-600 text-red-500' : 'border-yellow-600 text-yellow-500'
           }`}>
             {story.status === 'published' ? 'Опубликовано' : story.status === 'rejected' ? 'Отклонено' : 'Разобрать'}
           </span>
+          <span className="px-2 py-0.5">Создано: {new Date(story.createdAt).toLocaleDateString()}</span>
           {story.publishedAt && (
-            <span className="text-xs chip rounded px-2 py-0.5">Источник: {new Date(story.publishedAt).toLocaleDateString()}</span>
+            <span className="px-2 py-0.5">Опубликовано (AION): {new Date(story.publishedAt).toLocaleDateString()}</span>
           )}
         </div>
         <div className="grid grid-cols-3 gap-2 items-center">
