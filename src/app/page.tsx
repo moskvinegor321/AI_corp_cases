@@ -33,6 +33,8 @@ export default function Home() {
 
   const onAction = useCallback(async (id: string, action: 'publish' | 'reject' | 'triage') => {
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+    // optimistic UI
+    setItems((prev) => prev.map((s) => (s.id === id ? { ...s, status: action === 'publish' ? 'published' : action === 'reject' ? 'rejected' : 'triage' } : s)));
     await fetch(`/api/stories/${id}`, {
       method: 'PATCH',
       headers: {
