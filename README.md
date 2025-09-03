@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AION — генератор историй про ИИ в компаниях
 
-## Getting Started
+Мини‑приложение на Next.js 14 (App Router, TS) + Tailwind + Prisma (Postgres) для генерации и модерации коротких историй о том, как компании используют ИИ.
 
-First, run the development server:
+## Быстрый старт
+
+1) Установите зависимости:
+
+```bash
+npm i
+```
+
+2) Заполните `.env` (см. переменные ниже) и примените миграции:
+
+```bash
+# создайте .env из примера
+cp .env.example .env
+# отредактируйте DATABASE_URL и ключи
+
+npx prisma migrate deploy
+npx prisma generate
+```
+
+3) Запуск в dev:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Откройте `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Переменные окружения
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+DATABASE_URL=postgresql://...
 
-## Learn More
+# OpenAI
+OPENAI_API_KEY=...        # TODO: Add to .env
+OPENAI_MODEL=gpt-4.1-mini
+MAX_CONTEXT_TITLES=200
+GENERATE_N=5
 
-To learn more about Next.js, take a look at the following resources:
+# Search
+SEARCH_PROVIDER=newsapi|serper|tavily
+NEWSAPI_KEY=...           # TODO: Add to .env
+SERPER_API_KEY=...        # TODO: Add to .env
+TAVILY_API_KEY=...        # TODO: Add to .env
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Deduplication
+EXCLUDE_REJECTED=false
+SIMILARITY_THRESHOLD=0.82
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Security
+ADMIN_TOKEN=supersecret   # TODO: Add to .env
+# (опционально для клиента — только для локальных тестов)
+NEXT_PUBLIC_ADMIN_TOKEN=supersecret
+```
 
-## Deploy on Vercel
+НИКОГДА не коммитьте реальные секреты. Используйте Vercel Project Env для продакшна.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Аутентификация для мутаций: заголовок `x-admin-token: ${ADMIN_TOKEN}`.
+
+- POST `/api/generate` — сгенерировать N историй (по умолчанию 5)
+- GET `/api/stories?status=triage|published|rejected` — список с подсчётами
+- PATCH `/api/stories/:id` — `{ action: "publish"|"reject"|"triage" }`
+
+Пример curl:
+
+```bash
+curl -X POST http://localhost:3000/api/generate \
+  -H "x-admin-token: $ADMIN_TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"n":5}'
+```
+
+## Деплой на Vercel
+
+1) Подключите репозиторий в Vercel
+2) В Settings → Environment Variables задайте переменные из `.env`
+3) Настройте БД (Neon либо Vercel Postgres) и `DATABASE_URL`
+4) В Build Command оставьте значение по умолчанию, пост‑деплой миграции:
+
+```bash
+npx prisma migrate deploy && npx prisma generate
+```
+
+## Примечания по архитектуре
+
+- Prisma Client генерируется в `src/generated/prisma`
+- Утилиты: `src/lib/{db,slug,dedupe}`
+- Поисковые провайдеры: `src/lib/search/*`
+- LLM: `src/lib/llm/generateStories.ts`
+- API: `src/app/api/*`
+- UI: `src/components/*`, страница `src/app/page.tsx`
+
+## Seed (опционально)
+
+Добавьте сидер `prisma/seed.ts` с примерами и выполните `npx prisma db seed`.

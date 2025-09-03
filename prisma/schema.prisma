@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StoryStatus {
+  triage
+  published
+  rejected
+}
+
+model Story {
+  id            String      @id @default(cuid())
+  title         String
+  titleSlug     String      @unique
+  script        String
+  company       String?
+  sources       String[]
+  status        StoryStatus @default(triage)
+  noveltyNote   String?
+  confidence    Float?
+  origin        String      @default("generated")
+  duplicateOfId String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  publishedAt   DateTime?
+}
+
+model BanTitle {
+  id        String   @id @default(cuid())
+  title     String
+  titleSlug String   @unique
+  createdAt DateTime @default(now())
+}
