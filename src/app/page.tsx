@@ -121,6 +121,16 @@ export default function Home() {
     setPageId(data.page.id as string);
   }, [adminToken]);
 
+  const renamePage = useCallback(async () => {
+    if (!pageId) return;
+    const name = typeof window !== 'undefined' ? window.prompt('Новое название страницы') : '';
+    if (!name || !name.trim()) return;
+    const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+    const res = await fetch(`/api/pages/${pageId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ name: name.trim() }) });
+    const data = await res.json();
+    setPages((prev) => prev.map((p) => (p.id === pageId ? { ...p, name: data.page?.name || name.trim() } : p)));
+  }, [pageId, adminToken]);
+
   return (
     <div className="min-h-screen p-6 md:p-10">
       <div className="glass rounded-2xl p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto_auto] items-center gap-3">
@@ -139,6 +149,7 @@ export default function Home() {
             ))}
           </select>
           <button className="px-2 py-1 rounded btn-glass" onClick={createPage}>Создать страницу</button>
+          <button className="px-2 py-1 rounded btn-glass" onClick={renamePage} disabled={!pageId}>Переименовать</button>
         </div>
         <input
             className="px-2 py-1 rounded btn-glass"
