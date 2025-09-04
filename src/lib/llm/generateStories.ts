@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
-import { searchNews } from '@/lib/search';
+import { searchNews, type FoundDoc } from '@/lib/search';
 
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -24,12 +24,15 @@ const ResponseSchema = z.object({ items: z.array(ItemSchema) });
 
 export type GeneratedItem = z.infer<typeof ItemSchema>;
 
-export async function generateStories({ banlistTitles, n, promptOverride, searchQueryOverride }: { banlistTitles: string[]; n: number; promptOverride?: string; searchQueryOverride?: string }) {
+export async function generateStories({ banlistTitles, n, promptOverride, searchQueryOverride }: { banlistTitles: string[]; n: number; promptOverride?: string; searchQueryOverride?: string }): Promise<{ items: GeneratedItem[]; docs: FoundDoc[] }> {
   const limit = Math.max(5, Math.min(30, n * 6));
   const searchQuery = (searchQueryOverride && searchQueryOverride.trim())
     ? searchQueryOverride.trim()
     : 'AI enterprise adoption OR genAI internal rollout OR LLM policy last 90 days';
   const docs = await searchNews(searchQuery, limit);
+  if (!docs.length) {
+    throw new Error('No sources from search provider. Check SEARCH_PROVIDER and API key.');
+  }
 
   const sourcesBlock = docs
     .slice(0, limit)
@@ -81,7 +84,7 @@ export async function generateStories({ banlistTitles, n, promptOverride, search
   parsed = ResponseSchema.parse(raw);
 
   const items = (parsed?.items || []).slice(0, n);
-  return items;
+  return { items, docs };
 }
 
 

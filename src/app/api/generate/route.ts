@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     promptOverride = undefined;
     searchQueryOverride = undefined;
   }
-  const items = await generateStories({ banlistTitles, n, promptOverride, searchQueryOverride });
+  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride, searchQueryOverride });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
   const created: unknown[] = [];
@@ -89,7 +89,8 @@ export async function POST(req: NextRequest) {
 
     // best-effort parse date from first source url or provider date if any
     const firstSource = (it.sources || [])[0];
-    const providerDate: string | undefined = undefined;
+    const matchedDoc = docs.find((d) => d.url === firstSource);
+    const providerDate: string | undefined = (matchedDoc?.publishedAt as string | undefined);
     const sourceDate = extractPublishedAt(providerDate) || extractPublishedAt(firstSource);
     let saved;
     try {

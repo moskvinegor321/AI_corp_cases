@@ -36,6 +36,8 @@ export async function searchNews(query: string, limit = 20): Promise<FoundDoc[]>
   }
 
   try {
+    // If nothing is configured, do not call LLM with empty sources. Early return to signal missing provider.
+    if (!provider) return [];
     let page = 1;
     while (out.length < limit && page <= 10) {
       const docs = await fetchPage(page);
