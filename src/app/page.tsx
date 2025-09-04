@@ -180,6 +180,20 @@ export default function Home() {
           </select>
           <button className="px-2 py-1 rounded btn-glass" onClick={createPage}>Создать страницу</button>
           <button className="px-2 py-1 rounded btn-glass" onClick={renamePage}>Переименовать</button>
+          <button className="px-2 py-1 rounded btn-glass" onClick={async () => {
+            if (!pageId) return;
+            const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+            const cascade = typeof window !== 'undefined' && window.confirm('Удалить страницу и все её истории?');
+            const params = cascade ? '?cascade=true' : '';
+            await fetch(`/api/pages/${pageId}${params}`, { method: 'DELETE', headers: { 'x-admin-token': token || '' } });
+            // refresh pages list
+            const res = await fetch('/api/pages', { cache: 'no-store' });
+            const data = await res.json();
+            const list = (data.pages || []) as Array<{ id: string; name: string }>;
+            setPages(list);
+            setPageId(list[0]?.id || '');
+            fetchStories(status);
+          }}>Удалить страницу</button>
         </div>
         <input
             className="px-2 py-1 rounded btn-glass"

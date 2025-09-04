@@ -37,4 +37,18 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   return NextResponse.json({ page });
 }
 
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  if (!process.env.ADMIN_TOKEN || req.headers.get('x-admin-token') !== process.env.ADMIN_TOKEN) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const { id } = await ctx.params;
+  const url = new URL(req.url);
+  const cascade = url.searchParams.get('cascade') === 'true';
+  if (cascade) {
+    await prisma.story.deleteMany({ where: { pageId: id } });
+  }
+  await prisma.page.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}
+
 
