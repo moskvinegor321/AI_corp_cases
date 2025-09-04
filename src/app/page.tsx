@@ -13,6 +13,8 @@ export default function Home() {
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [pages, setPages] = useState<Array<{ id: string; name: string }>>([]);
+  const [pageId, setPageId] = useState<string | ''>('');
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
@@ -25,12 +27,15 @@ export default function Home() {
   }, []);
 
   const fetchStories = useCallback(async (s: StoryStatus) => {
-    const q = s === 'all' ? '' : `?status=${s}`;
+    const params = new URLSearchParams();
+    if (s !== 'all') params.set('status', s);
+    if (pageId) params.set('pageId', pageId);
+    const q = params.toString() ? `?${params.toString()}` : '';
     const res = await fetch(`/api/stories${q}`);
     const data = await res.json();
     setItems((data.items || []) as Story[]);
     setSelectedIds({});
-  }, []);
+  }, [pageId]);
 
   useEffect(() => {
     fetchStories(status);
@@ -54,10 +59,10 @@ export default function Home() {
   const generate = useCallback(async () => {
     setLoading(true);
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-    await fetch('/api/generate', { method: 'POST', headers: { 'x-admin-token': token || '' } });
+    await fetch('/api/generate', { method: 'POST', headers: { 'x-admin-token': token || '', 'content-type': 'application/json' }, body: JSON.stringify({ pageId: pageId || undefined }) });
     setLoading(false);
     fetchStories(status);
-  }, [status, fetchStories, adminToken]);
+  }, [status, fetchStories, adminToken, pageId]);
 
   const onSelect = useCallback((id: string, v: boolean) => {
     setSelectedIds((prev) => ({ ...prev, [id]: v }));
@@ -78,19 +83,43 @@ export default function Home() {
   }, [selectedIds, adminToken, status, fetchStories]);
 
   const openPrompt = useCallback(async () => {
-    const res = await fetch('/api/prompt');
-    const data = await res.json();
-    setPromptText(data.prompt || '');
-    setSearchQuery(data.searchQuery || '');
+    if (pageId) {
+      const res = await fetch(`/api/pages/${pageId}`);
+      const data = await res.json();
+      setPromptText(data.page?.prompt || '');
+      setSearchQuery(data.page?.searchQuery || '');
+    } else {
+      const res = await fetch('/api/prompt');
+      const data = await res.json();
+      setPromptText(data.prompt || '');
+      setSearchQuery(data.searchQuery || '');
+    }
     setPromptOpen(true);
   }, []);
 
   const savePrompt = useCallback(async (andGenerate = false) => {
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-    await fetch('/api/prompt', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+    if (pageId) {
+      await fetch(`/api/pages/${pageId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+    } else {
+      await fetch('/api/prompt', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+    }
     setPromptOpen(false);
     if (andGenerate) await generate();
-  }, [adminToken, promptText, searchQuery, generate]);
+  }, [adminToken, promptText, searchQuery, generate, pageId]);
+
+  // load pages on mount
+  useEffect(() => {
+    fetch('/api/pages').then((r) => r.json()).then((d) => setPages(d.pages || [])).catch(() => {});
+  }, []);
+
+  const createPage = useCallback(async () => {
+    const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+    const res = await fetch('/api/pages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ name: 'Новая страница' }) });
+    const data = await res.json();
+    setPages((prev) => [...prev, data.page]);
+    setPageId(data.page.id as string);
+  }, [adminToken]);
 
   return (
     <div className="min-h-screen p-6 md:p-10">
@@ -101,6 +130,15 @@ export default function Home() {
         </div>
         <div className="flex items-center justify-center">
           <Filters value={status} onChange={setStatus} />
+        </div>
+        <div className="flex items-center gap-2">
+          <select className="px-2 py-1 rounded btn-glass" value={pageId} onChange={(e) => setPageId(e.target.value)}>
+            <option value="">(Без страницы)</option>
+            {pages.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          <button className="px-2 py-1 rounded btn-glass" onClick={createPage}>Создать страницу</button>
         </div>
         <input
             className="px-2 py-1 rounded btn-glass"

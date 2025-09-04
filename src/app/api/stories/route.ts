@@ -6,8 +6,12 @@ export const runtime = 'nodejs';
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status') as 'triage' | 'published' | 'rejected' | null;
+  const pageId = searchParams.get('pageId');
 
-  const where = status ? { status } : {};
+  const where = {
+    ...(status ? { status } : {}),
+    ...(pageId ? { pageId } : {}),
+  } as Record<string, unknown>;
   let items = [] as Awaited<ReturnType<typeof prisma.story.findMany>>;
   let counts = [] as Array<{ status: 'triage'|'published'|'rejected'; _count: { _all: number } }>;
   try {

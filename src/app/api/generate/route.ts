@@ -24,8 +24,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body: GenerateBody = await req.json().catch(() => ({} as GenerateBody));
+  const body: GenerateBody & { pageId?: string } = await req.json().catch(() => ({} as GenerateBody));
   const n = Number(body?.n || process.env.GENERATE_N || 5);
+  const pageId = (body as { pageId?: string }).pageId;
 
   const excludeRejected = String(process.env.EXCLUDE_REJECTED) === 'true';
   const existing = await prisma.story.findMany({
@@ -45,10 +46,19 @@ export async function POST(req: NextRequest) {
   let promptOverride: string | undefined = undefined;
   let searchQueryOverride: string | undefined = undefined;
   try {
-    const rows = await prisma.setting.findMany({ where: { key: { in: ['prompt', 'search_query'] } } });
-    const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-    promptOverride = map['prompt'];
-    searchQueryOverride = map['search_query'];
+    if (pageId) {
+      const page = await prisma.page.findUnique({ where: { id: pageId } });
+      if (page) {
+        promptOverride = page.prompt || undefined;
+        searchQueryOverride = page.searchQuery || undefined;
+      }
+    }
+    if (!promptOverride && !searchQueryOverride) {
+      const rows = await prisma.setting.findMany({ where: { key: { in: ['prompt', 'search_query'] } } });
+      const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+      promptOverride = map['prompt'];
+      searchQueryOverride = map['search_query'];
+    }
   } catch {
     promptOverride = undefined;
     searchQueryOverride = undefined;
@@ -95,6 +105,7 @@ export async function POST(req: NextRequest) {
           confidence: typeof it.confidence === 'number' ? it.confidence : null,
           origin: 'generated',
           sourcePublishedAt: sourceDate ? sourceDate : null,
+          pageId: pageId || undefined,
         },
       });
     } catch {
@@ -110,6 +121,7 @@ export async function POST(req: NextRequest) {
           noveltyNote: it.novelty_note || null,
           confidence: typeof it.confidence === 'number' ? it.confidence : null,
           origin: 'generated',
+          pageId: pageId || undefined,
         },
       });
     }
