@@ -84,7 +84,20 @@ export async function generateStories({ banlistTitles, n, promptOverride, search
   const items = (parsed?.items || [])
     .slice(0, n)
     .map((it) => ({ ...it, sources: (it.sources || []).slice(0, 3) }));
-  return { items, docs };
+
+  // sanitize sources: keep only valid URLs; if empty, backfill from provider docs; drop items with no sources at all
+  const isValidUrl = (s: string) => {
+    try { const u = new URL(s); return !!u.protocol && !!u.host; } catch { return false; }
+  };
+  const sanitized = items
+    .map((it) => {
+      let src = (it.sources || []).filter(isValidUrl);
+      if (src.length === 0 && docs.length > 0) src = docs.slice(0, 3).map((d) => d.url);
+      return { ...it, sources: src.slice(0, 3) };
+    })
+    .filter((it) => it.sources && it.sources.length > 0);
+
+  return { items: sanitized as GeneratedItem[], docs };
 }
 
 
