@@ -168,57 +168,63 @@ export default function Home() {
   return (
     <div className="min-h-screen p-6 md:p-10">
       <div className="glass rounded-2xl p-4 header-bar">
-        <div className="flex items-center gap-3">
-          <div className="text-2xl font-bold tracking-tight">AION</div>
-          <HeaderStats pageId={pageId || undefined} />
+        <div className="header-top">
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold tracking-tight">AION</div>
+            <HeaderStats pageId={pageId || undefined} />
+          </div>
+          <div className="flex items-center justify-center">
+            <Filters value={status} onChange={setStatus} />
+          </div>
+          <div className="header-actions justify-end">
+            <input
+              className="px-2 py-1 rounded btn-glass btn-sm"
+              type="password"
+              placeholder="Admin token"
+              value={adminToken}
+              onChange={(e) => saveToken(e.target.value)}
+              style={{ width: 160 }}
+            />
+          </div>
         </div>
-        <div className="flex items-center justify-center">
-          <Filters value={status} onChange={setStatus} />
-        </div>
-        <div className="header-actions">
-          <select className="select-compact" value={pageId} onChange={(e) => setPageId(e.target.value)}>
-            {pages.map((p) => {
-              const color = !p.meta || p.meta.total === 0 ? '⚪' : (p.meta.triage > 0 ? '🟡' : '🟢');
-              const date = p.meta?.lastPublishedAt ? new Date(p.meta.lastPublishedAt).toLocaleDateString() : '';
-              const label = `${color} ${p.name}${date ? ` · ${date}` : ''}`;
-              return (
-                <option key={p.id} value={p.id}>{label}</option>
-              );
-            })}
-          </select>
-          <button className="btn-glass" onClick={createPage}>Создать страницу</button>
-          <button className="btn-glass" onClick={renamePage}>Переименовать</button>
-          <button className="btn-glass" onClick={async () => {
-            if (!pageId) return;
-            const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-            const cascade = typeof window !== 'undefined' && window.confirm('Удалить страницу и все её истории?');
-            const params = cascade ? '?cascade=true' : '';
-            await fetch(`/api/pages/${pageId}${params}`, { method: 'DELETE', headers: { 'x-admin-token': token || '' } });
-            const res = await fetch('/api/pages', { cache: 'no-store' });
-            const data = await res.json();
-            const list = (data.pages || []) as Array<{ id: string; name: string }>;
-            setPages(list);
-            setPageId(list[0]?.id || '');
-            fetchStories(status);
-          }}>Удалить страницу</button>
-        </div>
-        <input
-            className="px-2 py-1 rounded btn-glass"
-            type="password"
-            placeholder="Admin token"
-            value={adminToken}
-            onChange={(e) => saveToken(e.target.value)}
-            style={{ width: 180 }}
-          />
-        <button className="btn-glass" onClick={deleteSelected} disabled={Object.values(selectedIds).every((v) => !v)}>
+        <div className="header-bottom">
+          <div className="header-actions">
+            <select className="select-compact-sm" value={pageId} onChange={(e) => setPageId(e.target.value)}>
+              {pages.map((p) => {
+                const color = !p.meta || p.meta.total === 0 ? '⚪' : (p.meta.triage > 0 ? '🟡' : '🟢');
+                const date = p.meta?.lastPublishedAt ? new Date(p.meta.lastPublishedAt).toLocaleDateString() : '';
+                const label = `${color} ${p.name}${date ? ` · ${date}` : ''}`;
+                return (
+                  <option key={p.id} value={p.id}>{label}</option>
+                );
+              })}
+            </select>
+            <button className="btn-glass btn-sm" onClick={createPage}>Создать</button>
+            <button className="btn-glass btn-sm" onClick={renamePage}>Переименовать</button>
+            <button className="btn-glass btn-sm" onClick={async () => {
+              if (!pageId) return;
+              const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+              const cascade = typeof window !== 'undefined' && window.confirm('Удалить страницу и все её истории?');
+              const params = cascade ? '?cascade=true' : '';
+              await fetch(`/api/pages/${pageId}${params}`, { method: 'DELETE', headers: { 'x-admin-token': token || '' } });
+              const res = await fetch('/api/pages', { cache: 'no-store' });
+              const data = await res.json();
+              const list = (data.pages || []) as Array<{ id: string; name: string }>;
+              setPages(list);
+              setPageId(list[0]?.id || '');
+              fetchStories(status);
+            }}>Удалить</button>
+          </div>
+          <button className="btn-glass btn-sm" onClick={deleteSelected} disabled={Object.values(selectedIds).every((v) => !v)}>
             Удалить выбранные
           </button>
-        <button className="btn-glass" onClick={openPrompt}>
-            Промпт и поисковый запрос
-          </button>
-        <button className="btn-glass" onClick={generate} disabled={loading}>
-            {loading ? 'Генерация…' : 'Сгенерировать 5 новых историй'}
-          </button>
+          <div className="header-actions justify-end">
+            <button className="btn-glass btn-sm" onClick={openPrompt}>Промпт и поиск</button>
+            <button className="btn-glass btn-sm" onClick={generate} disabled={loading}>
+              {loading ? 'Генерация…' : 'Сгенерировать 5 историй'}
+            </button>
+          </div>
+        </div>
       </div>
       <div className="mt-6 grid gap-4 grid-cols-1">
         {items.map((it) => (
@@ -237,11 +243,11 @@ export default function Home() {
               Исключить поисковый запрос (генерация только по промпту)
             </label>
             <div className="mt-3 flex gap-2 justify-end">
-              <button className="btn-glass" onClick={() => setPromptOpen(false)}>Закрыть</button>
-              <button className="btn-glass" onClick={() => savePrompt(false)}>Сохранить</button>
-              <button className="btn-glass" onClick={() => savePrompt(true)}>Сохранить и сгенерировать</button>
+              <button className="btn-glass btn-sm" onClick={() => setPromptOpen(false)}>Закрыть</button>
+              <button className="btn-glass btn-sm" onClick={() => savePrompt(false)}>Сохранить</button>
+              <button className="btn-glass btn-sm" onClick={() => savePrompt(true)}>Сохранить и сгенерировать</button>
               <button
-                className="btn-glass"
+                className="btn-glass btn-sm"
                 onClick={async () => {
                   setPromptText('');
                   setSearchQuery('');
