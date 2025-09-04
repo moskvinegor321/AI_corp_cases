@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
 
     // best-effort parse date from first source url or provider date if any
     const firstSource = (it.sources || [])[0];
-    const sourceDate = extractPublishedAt(it.publishedAt as any) || extractPublishedAt(firstSource);
+    const providerDate: string | undefined = undefined;
+    const sourceDate = extractPublishedAt(providerDate) || extractPublishedAt(firstSource);
     const saved = await prisma.story.create({
       data: {
         title: it.title,
