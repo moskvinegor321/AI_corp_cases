@@ -108,9 +108,22 @@ export default function Home() {
     if (andGenerate) await generate();
   }, [adminToken, promptText, searchQuery, generate, pageId]);
 
-  // load pages on mount
+  // load pages on mount; ensure we always have a selected page
   useEffect(() => {
-    fetch('/api/pages').then((r) => r.json()).then((d) => setPages(d.pages || [])).catch(() => {});
+    fetch('/api/pages')
+      .then((r) => r.json())
+      .then(async (d) => {
+        const list = (d.pages || []) as Array<{ id: string; name: string }>;
+        if (!list.length) {
+          const created = await createPage();
+          setPages([created]);
+          setPageId(created.id);
+        } else {
+          setPages(list);
+          if (!pageId) setPageId(list[0].id);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const createPage = useCallback(async () => {
@@ -143,14 +156,13 @@ export default function Home() {
       <div className="glass rounded-2xl p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto_auto] items-center gap-3">
         <div className="flex items-center gap-3">
           <div className="text-2xl font-bold tracking-tight">AION</div>
-          <HeaderStats />
+          <HeaderStats pageId={pageId || undefined} />
         </div>
         <div className="flex items-center justify-center">
           <Filters value={status} onChange={setStatus} />
         </div>
         <div className="flex items-center gap-2">
           <select className="px-2 py-1 rounded btn-glass" value={pageId} onChange={(e) => setPageId(e.target.value)}>
-            <option value="">(Без страницы)</option>
             {pages.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
