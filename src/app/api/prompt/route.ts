@@ -4,8 +4,13 @@ import { prisma } from '@/lib/db';
 const KEY = 'prompt';
 
 export async function GET() {
-  const row = await prisma.setting.findUnique({ where: { key: KEY } });
-  return NextResponse.json({ prompt: row?.value || '' });
+  try {
+    const row = await prisma.setting.findUnique({ where: { key: KEY } });
+    return NextResponse.json({ prompt: row?.value || '' });
+  } catch (e) {
+    // Fallback if the Setting table does not exist yet (migration not applied)
+    return NextResponse.json({ prompt: '' });
+  }
 }
 
 export async function PUT(req: NextRequest) {

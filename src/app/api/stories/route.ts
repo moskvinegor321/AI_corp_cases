@@ -8,10 +8,17 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get('status') as 'triage' | 'published' | 'rejected' | null;
 
   const where = status ? { status } : {};
-  const [items, counts] = await Promise.all([
-    prisma.story.findMany({ where, orderBy: { createdAt: 'desc' } }),
-    prisma.story.groupBy({ by: ['status'], _count: { _all: true } }),
-  ]);
+  let items = [] as Awaited<ReturnType<typeof prisma.story.findMany>>;
+  let counts = [] as Array<{ status: 'triage'|'published'|'rejected'; _count: { _all: number } }>;
+  try {
+    [items, counts] = await Promise.all([
+      prisma.story.findMany({ where, orderBy: { createdAt: 'desc' } }),
+      prisma.story.groupBy({ by: ['status'], _count: { _all: true } }),
+    ]);
+  } catch {
+    // If migrations not applied yet, return empty state instead of 500
+    return NextResponse.json({ items: [], counts: { triage: 0, published: 0, rejected: 0 } });
+  }
 
   const countsMap = { triage: 0, published: 0, rejected: 0 } as Record<string, number>;
   for (const c of counts) countsMap[c.status] = c._count._all;
