@@ -11,13 +11,13 @@ type SerperNewsItem = {
 
 type SerperResponse = { news?: SerperNewsItem[] };
 
-export async function searchSerper(query: string, limit = 20): Promise<FoundDoc[]> {
+export async function searchSerper(query: string, limit = 20, options?: { page?: number }): Promise<FoundDoc[]> {
   const apiKey = process.env.SERPER_API_KEY;
   if (!apiKey) return [];
   const url = 'https://google.serper.dev/news';
   const { data } = await axios.post<SerperResponse>(
     url,
-    { q: query, num: Math.min(limit, 100) },
+    { q: query, num: Math.min(limit, 100), page: options?.page ?? 1 },
     { headers: { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' } }
   );
   const items = data?.news ?? [];

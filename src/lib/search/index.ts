@@ -24,15 +24,38 @@ export function extractPublishedAt(input?: string): Date | null {
 
 export async function searchNews(query: string, limit = 20): Promise<FoundDoc[]> {
   const provider = (process.env.SEARCH_PROVIDER || '').toLowerCase();
+
+  const seen = new Set<string>();
+  const out: FoundDoc[] = [];
+
+  async function fetchPage(page: number): Promise<FoundDoc[]> {
+    if (provider === 'newsapi') return await searchNewsApi(query, 100, { page });
+    if (provider === 'serper') return await searchSerper(query, 100, { page });
+    if (provider === 'tavily') return await searchTavily(query, 20); // Tavily не поддерживает страницы в текущем API
+    return [];
+  }
+
   try {
-    if (provider === 'newsapi') return await searchNewsApi(query, limit);
-    if (provider === 'serper') return await searchSerper(query, limit);
-    if (provider === 'tavily') return await searchTavily(query, limit);
+    let page = 1;
+    while (out.length < limit && page <= 10) {
+      const docs = await fetchPage(page);
+      if (!docs.length) break;
+      for (const d of docs) {
+        if (out.length >= limit) break;
+        const key = (d.url || '').trim();
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        out.push(d);
+      }
+      page += 1;
+      // если за страницу не добавилось ни одного уникального — прекращаем
+      if (out.length === 0 && page > 2) break;
+    }
   } catch (e) {
     // eslint-disable-next-line no-console
     console.warn('Search provider error:', e);
   }
-  return [];
+  return out;
 }
 
 

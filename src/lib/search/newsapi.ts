@@ -11,7 +11,7 @@ type NewsApiArticle = {
 
 type NewsApiResponse = { articles?: NewsApiArticle[] };
 
-export async function searchNewsApi(query: string, limit = 20): Promise<FoundDoc[]> {
+export async function searchNewsApi(query: string, limit = 20, options?: { page?: number }): Promise<FoundDoc[]> {
   const apiKey = process.env.NEWSAPI_KEY;
   if (!apiKey) return [];
   const url = `https://newsapi.org/v2/everything`;
@@ -20,6 +20,7 @@ export async function searchNewsApi(query: string, limit = 20): Promise<FoundDoc
     language: 'en',
     sortBy: 'publishedAt',
     pageSize: Math.min(limit, 100),
+    ...(options?.page ? { page: options.page } : {}),
   } as Record<string, string | number>;
   const { data } = await axios.get<NewsApiResponse>(url, { headers: { 'X-Api-Key': apiKey }, params });
   const items = data?.articles ?? [];
