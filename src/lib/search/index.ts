@@ -23,7 +23,13 @@ export function extractPublishedAt(input?: string): Date | null {
 }
 
 export async function searchNews(query: string, limit = 20): Promise<FoundDoc[]> {
-  const provider = (process.env.SEARCH_PROVIDER || '').toLowerCase();
+  let provider = (process.env.SEARCH_PROVIDER || '').toLowerCase();
+  // Auto-pick provider if not specified
+  if (!provider) {
+    if (process.env.NEWSAPI_KEY) provider = 'newsapi';
+    else if (process.env.SERPER_API_KEY) provider = 'serper';
+    else if (process.env.TAVILY_API_KEY) provider = 'tavily';
+  }
 
   const seen = new Set<string>();
   const out: FoundDoc[] = [];
@@ -36,7 +42,6 @@ export async function searchNews(query: string, limit = 20): Promise<FoundDoc[]>
   }
 
   try {
-    // If nothing is configured, do not call LLM with empty sources. Early return to signal missing provider.
     if (!provider) return [];
     let page = 1;
     while (out.length < limit && page <= 10) {

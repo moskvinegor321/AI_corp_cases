@@ -30,9 +30,6 @@ export async function generateStories({ banlistTitles, n, promptOverride, search
     ? searchQueryOverride.trim()
     : 'AI enterprise adoption OR genAI internal rollout OR LLM policy last 90 days';
   const docs = await searchNews(searchQuery, limit);
-  if (!docs.length) {
-    throw new Error('No sources from search provider. Check SEARCH_PROVIDER and API key.');
-  }
 
   const sourcesBlock = docs
     .slice(0, limit)
