@@ -15,7 +15,8 @@ const ItemSchema = z.object({
   title: z.string().min(10),
   script: z.string().min(200),
   company: z.string().optional().nullable(),
-  sources: z.array(z.string().url()).min(1).max(3),
+  // allow up to 10 from the model; we'll clamp to 3 later
+  sources: z.array(z.string().url()).min(1).max(10),
   novelty_note: z.string().optional().nullable(),
   confidence: z.number().min(0).max(1).optional().nullable(),
 });
@@ -80,7 +81,9 @@ export async function generateStories({ banlistTitles, n, promptOverride, search
   if (!raw) throw new Error('LLM returned non-JSON');
   parsed = ResponseSchema.parse(raw);
 
-  const items = (parsed?.items || []).slice(0, n);
+  const items = (parsed?.items || [])
+    .slice(0, n)
+    .map((it) => ({ ...it, sources: (it.sources || []).slice(0, 3) }));
   return { items, docs };
 }
 
