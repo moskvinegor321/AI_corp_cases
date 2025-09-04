@@ -84,12 +84,12 @@ export default function Home() {
 
   const openPrompt = useCallback(async () => {
     if (pageId) {
-      const res = await fetch(`/api/pages/${pageId}`);
+      const res = await fetch(`/api/pages/${pageId}`, { cache: 'no-store' });
       const data = await res.json();
       setPromptText(data.page?.prompt || '');
       setSearchQuery(data.page?.searchQuery || '');
     } else {
-      const res = await fetch('/api/prompt');
+      const res = await fetch('/api/prompt', { cache: 'no-store' });
       const data = await res.json();
       setPromptText(data.prompt || '');
       setSearchQuery(data.searchQuery || '');
