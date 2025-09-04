@@ -13,7 +13,7 @@ export default function Home() {
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [pages, setPages] = useState<Array<{ id: string; name: string }>>([]);
+  const [pages, setPages] = useState<Array<{ id: string; name: string; meta?: { triage: number; total: number; lastPublishedAt: string | null } }>>([]);
   const [pageId, setPageId] = useState<string | ''>('');
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export default function Home() {
     fetch('/api/pages')
       .then((r) => r.json())
       .then(async (d) => {
-        const list = (d.pages || []) as Array<{ id: string; name: string }>;
+        const list = (d.pages || []) as Array<{ id: string; name: string; meta?: { triage: number; total: number; lastPublishedAt: string | null } }>;
         if (!list.length) {
           const created = await createPage();
           setPages([created]);
@@ -163,9 +163,14 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-2">
           <select className="px-2 py-1 rounded btn-glass" value={pageId} onChange={(e) => setPageId(e.target.value)}>
-            {pages.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
+            {pages.map((p) => {
+              const color = !p.meta || p.meta.total === 0 ? '⚪' : (p.meta.triage > 0 ? '🟡' : '🟢');
+              const date = p.meta?.lastPublishedAt ? new Date(p.meta.lastPublishedAt).toLocaleDateString() : '';
+              const label = `${color} ${p.name}${date ? ` · ${date}` : ''}`;
+              return (
+                <option key={p.id} value={p.id}>{label}</option>
+              );
+            })}
           </select>
           <button className="px-2 py-1 rounded btn-glass" onClick={createPage}>Создать страницу</button>
           <button className="px-2 py-1 rounded btn-glass" onClick={renamePage}>Переименовать</button>
