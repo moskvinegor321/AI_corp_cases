@@ -41,9 +41,15 @@ export async function POST(req: NextRequest) {
     .map((x) => x.title);
   const existingSlugs = new Set(existing.map((x) => x.titleSlug));
 
-  // read custom prompt if set
-  const setting = await prisma.setting.findUnique({ where: { key: 'prompt' } });
-  const items = await generateStories({ banlistTitles, n, promptOverride: setting?.value });
+  // read custom prompt if set (fallback if Setting table is missing)
+  let promptOverride: string | undefined = undefined;
+  try {
+    const setting = await prisma.setting.findUnique({ where: { key: 'prompt' } });
+    promptOverride = setting?.value;
+  } catch {
+    promptOverride = undefined;
+  }
+  const items = await generateStories({ banlistTitles, n, promptOverride });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
   const created: unknown[] = [];
@@ -71,20 +77,38 @@ export async function POST(req: NextRequest) {
     const firstSource = (it.sources || [])[0];
     const providerDate: string | undefined = undefined;
     const sourceDate = extractPublishedAt(providerDate) || extractPublishedAt(firstSource);
-    const saved = await prisma.story.create({
-      data: {
-        title: it.title,
-        titleSlug: slug,
-        script: it.script,
-        company: it.company || null,
-        sources: (it.sources || []).slice(0, 3),
-        status: 'triage',
-        noveltyNote: it.novelty_note || null,
-        confidence: typeof it.confidence === 'number' ? it.confidence : null,
-        origin: 'generated',
-        sourcePublishedAt: sourceDate ? sourceDate : null,
-      },
-    });
+    let saved;
+    try {
+      saved = await prisma.story.create({
+        data: {
+          title: it.title,
+          titleSlug: slug,
+          script: it.script,
+          company: it.company || null,
+          sources: (it.sources || []).slice(0, 3),
+          status: 'triage',
+          noveltyNote: it.novelty_note || null,
+          confidence: typeof it.confidence === 'number' ? it.confidence : null,
+          origin: 'generated',
+          sourcePublishedAt: sourceDate ? sourceDate : null,
+        },
+      });
+    } catch {
+      // If column sourcePublishedAt is missing (migration not applied), retry without it
+      saved = await prisma.story.create({
+        data: {
+          title: it.title,
+          titleSlug: slug,
+          script: it.script,
+          company: it.company || null,
+          sources: (it.sources || []).slice(0, 3),
+          status: 'triage',
+          noveltyNote: it.novelty_note || null,
+          confidence: typeof it.confidence === 'number' ? it.confidence : null,
+          origin: 'generated',
+        },
+      });
+    }
     created.push(saved);
   }
 
