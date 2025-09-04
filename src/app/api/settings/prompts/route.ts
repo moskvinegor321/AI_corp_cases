@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
   const { contextPrompt, toneOfVoicePrompt } = (await req.json()) as { contextPrompt?: string; toneOfVoicePrompt?: string };
-  const ops: Promise<any>[] = [];
+  const ops: Promise<unknown>[] = [];
   if (contextPrompt !== undefined) {
     ops.push(prisma.setting.upsert({ where: { key: KEYS.context }, update: { value: contextPrompt || '' }, create: { key: KEYS.context, value: contextPrompt || '' } }));
   }

@@ -20,7 +20,8 @@ export async function auditLog(evt: AuditEvent): Promise<void> {
           const row = await prisma.setting.findUnique({ where: { key: 'audit_log' } });
           let arr: unknown[] = [];
           try { arr = row?.value ? JSON.parse(row.value) : []; } catch {}
-          const next = [payload, ...((arr as any[]) || [])].slice(0, 1000);
+          const existing = Array.isArray(arr) ? arr : [];
+          const next = [payload, ...existing].slice(0, 1000);
           return JSON.stringify(next);
         })(),
       },

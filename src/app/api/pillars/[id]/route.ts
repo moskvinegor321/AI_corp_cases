@@ -15,8 +15,9 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     const pillar = await prisma.pillar.update({ where: { id }, data: { name: name.trim() } });
     await auditLog({ entityType: 'pillar', entityId: id, action: 'updated', meta: { name: pillar.name } });
     return NextResponse.json({ pillar });
-  } catch (e: any) {
-    if (String(e?.message || '').toLowerCase().includes('unique')) {
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.toLowerCase().includes('unique')) {
       return NextResponse.json({ error: 'Pillar name must be unique' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Failed to update pillar' }, { status: 500 });

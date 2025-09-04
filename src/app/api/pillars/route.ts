@@ -19,8 +19,9 @@ export async function POST(req: NextRequest) {
     const pillar = await prisma.pillar.create({ data: { name: name.trim() } });
     await auditLog({ entityType: 'pillar', entityId: pillar.id, action: 'created', meta: { name: pillar.name } });
     return NextResponse.json({ pillar });
-  } catch (e: any) {
-    if (String(e?.message || '').toLowerCase().includes('unique')) {
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.toLowerCase().includes('unique')) {
       return NextResponse.json({ error: 'Pillar name must be unique' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Failed to create pillar' }, { status: 500 });

@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const url = new URL(req.url);
   const onlyTasks = url.searchParams.get('onlyTasks') === 'true';
   const status = url.searchParams.get('taskStatus') as 'OPEN'|'IN_PROGRESS'|'DONE'|null;
-  const where: any = { postId: id };
+  const where: { postId: string; isTask?: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE' } = { postId: id };
   if (onlyTasks) where.isTask = true;
   if (status) where.taskStatus = status;
   const comments = await prisma.postComment.findMany({ where, orderBy: { createdAt: 'desc' } });

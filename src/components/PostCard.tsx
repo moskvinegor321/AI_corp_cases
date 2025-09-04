@@ -20,7 +20,7 @@ export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => vo
     try {
       await fetch(`/api/posts/${post.id}/status`, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-admin-token": (process as any).env?.NEXT_PUBLIC_ADMIN_TOKEN || "" },
+        headers: { "content-type": "application/json", "x-admin-token": (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "" },
         body: JSON.stringify({ status, ...extra }),
       });
       onChanged?.();
@@ -35,7 +35,7 @@ export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => vo
     if (!f) return;
     setLoading(true);
     try {
-      const token = (process as any).env?.NEXT_PUBLIC_ADMIN_TOKEN || "";
+      const token = (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
       const signRes = await fetch(`/api/uploads/s3`, {
         method: "POST",
         headers: { "content-type": "application/json", "x-admin-token": token },

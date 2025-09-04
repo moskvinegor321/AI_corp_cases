@@ -15,8 +15,9 @@ export async function POST(req: NextRequest) {
     const publicUrlBase = process.env.S3_PUBLIC_URL_BASE || `https://${bucket}.s3.${process.env.S3_REGION}.amazonaws.com`; // TODO: Add to .env if using CDN
     const publicUrl = `${publicUrlBase}/${key}`;
     return NextResponse.json({ url, key, publicUrl });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Failed to presign' }, { status: 500 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: msg || 'Failed to presign' }, { status: 500 });
   }
 }
 

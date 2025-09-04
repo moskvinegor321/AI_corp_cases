@@ -15,7 +15,7 @@ function parseArray(param: string | null): string[] | undefined {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const status = parseArray(searchParams.get('status')) as any;
+  const status = parseArray(searchParams.get('status')) as ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED')[] | undefined;
   const from = searchParams.get('from');
   const to = searchParams.get('to');
   const pillarId = searchParams.get('pillarId') || undefined;
@@ -25,7 +25,15 @@ export async function GET(req: NextRequest) {
   const sortBy = (searchParams.get('sortBy') || 'updatedAt') as 'createdAt'|'updatedAt'|'scheduledAt'|'publishedAt';
   const sortDir = ((searchParams.get('sortDir') || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc') as 'asc'|'desc';
 
-  const where: any = {};
+  const where: {
+    status?: { in: ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED')[] };
+    pillarId?: string;
+    OR?: Array<Record<string, unknown>>;
+    scheduledAt?: { gte?: Date; lte?: Date };
+    publishedAt?: { gte?: Date; lte?: Date };
+    title?: { contains: string; mode: 'insensitive' };
+    topic?: { contains: string; mode: 'insensitive' };
+  } = {};
   if (status && status.length) where.status = { in: status };
   if (pillarId) where.pillarId = pillarId;
   if (from || to) where.OR = [
