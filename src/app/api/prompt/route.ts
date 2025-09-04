@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin';
 export const dynamic = 'force-dynamic';
 
 const KEY_PROMPT = 'prompt';
@@ -17,9 +18,8 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  if (!process.env.ADMIN_TOKEN || req.headers.get('x-admin-token') !== process.env.ADMIN_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
   const body = (await req.json()) as { prompt?: string; searchQuery?: string };
   const updates: Array<Promise<unknown>> = [];
   if (typeof body.prompt === 'string') {

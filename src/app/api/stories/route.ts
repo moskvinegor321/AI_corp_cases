@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin';
 
 export const runtime = 'nodejs';
 
@@ -31,9 +32,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!process.env.ADMIN_TOKEN || req.headers.get('x-admin-token') !== process.env.ADMIN_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
   const { ids } = (await req.json().catch(() => ({ ids: [] }))) as { ids: string[] };
   if (!Array.isArray(ids) || ids.length === 0) {
     return NextResponse.json({ error: 'No ids provided' }, { status: 400 });

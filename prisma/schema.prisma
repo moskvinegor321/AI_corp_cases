@@ -63,3 +63,65 @@ model Page {
   updatedAt    DateTime @updatedAt
   stories      Story[]
 }
+
+// New models for content product
+
+model Pillar {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  posts  Post[]
+}
+
+enum PostStatus {
+  DRAFT
+  NEEDS_REVIEW
+  READY_TO_PUBLISH
+  PUBLISHED
+}
+
+model Post {
+  id           String     @id @default(cuid())
+  title        String
+  body         String
+  status       PostStatus @default(DRAFT)
+  topic        String?
+  pillarId     String?
+  pillar       Pillar?    @relation(fields: [pillarId], references: [id])
+  scheduledAt  DateTime?
+  publishedAt  DateTime?
+  reviewDueAt  DateTime?
+  source       String?
+  attachments  Attachment[]
+  comments     PostComment[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  mimeType  String?
+  sizeBytes Int?
+  createdAt DateTime @default(now())
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+}
+
+model PostComment {
+  id         String     @id @default(cuid())
+  postId     String
+  post       Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId   String?
+  text       String
+  isTask     Boolean    @default(false)
+  taskStatus TaskStatus?
+  dueAt      DateTime?
+  createdAt  DateTime   @default(now())
+}

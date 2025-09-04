@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auditLog } from '@/lib/audit';
+import { requireAdmin } from '@/lib/admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,9 +18,8 @@ export async function GET(_: NextRequest, ctx: { params: Promise<{ id: string }>
 }
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  if (!process.env.ADMIN_TOKEN || req.headers.get('x-admin-token') !== process.env.ADMIN_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
   const { id } = await ctx.params;
   const body = (await req.json().catch(() => ({}))) as { name?: string; prompt?: string | null; searchQuery?: string | null };
   const normalize = (v: unknown) => {
@@ -34,13 +35,13 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       ...(body.searchQuery !== undefined ? { searchQuery: normalize(body.searchQuery) } : {}),
     },
   });
+  await auditLog({ entityType: 'page', entityId: id, action: 'updated', meta: { name: body.name ?? undefined, hasPrompt: body.prompt !== undefined, hasSearchQuery: body.searchQuery !== undefined } });
   return NextResponse.json({ page });
 }
 
 export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  if (!process.env.ADMIN_TOKEN || req.headers.get('x-admin-token') !== process.env.ADMIN_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
   const { id } = await ctx.params;
   const url = new URL(req.url);
   const cascade = url.searchParams.get('cascade') === 'true';
@@ -48,6 +49,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
     await prisma.story.deleteMany({ where: { pageId: id } });
   }
   await prisma.page.delete({ where: { id } });
+  await auditLog({ entityType: 'page', entityId: id, action: 'deleted', meta: { cascade } });
   return NextResponse.json({ ok: true });
 }
 

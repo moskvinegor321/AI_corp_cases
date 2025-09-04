@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin';
 
 export const runtime = 'nodejs';
 
 export async function PATCH(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-  if (!process.env.ADMIN_TOKEN || req.headers.get('x-admin-token') !== process.env.ADMIN_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
 
   const { id } = await context.params;
   const { action } = (await req.json()) as { action: 'publish' | 'reject' | 'triage' };

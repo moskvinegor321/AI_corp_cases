@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin';
 import { toSlug } from '@/lib/slug';
 import { isDuplicate } from '@/lib/dedupe';
 import { generateStories } from '@/lib/llm/generateStories';
@@ -19,10 +20,8 @@ type MinimalItem = {
 };
 
 export async function POST(req: NextRequest) {
-  const token = req.headers.get('x-admin-token');
-  if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
 
   const body: GenerateBody & { pageId?: string } = await req.json().catch(() => ({} as GenerateBody));
   const n = Number(body?.n || process.env.GENERATE_N || 5);
@@ -45,6 +44,8 @@ export async function POST(req: NextRequest) {
   // read custom prompt and searchQuery if set (fallback if Setting table is missing)
   let promptOverride: string | undefined = undefined;
   let searchQueryOverride: string | undefined = undefined;
+  let contextPrompt: string | undefined = undefined;
+  let toneOfVoicePrompt: string | undefined = undefined;
   try {
     if (pageId) {
       const page = await prisma.page.findUnique({ where: { id: pageId } });
@@ -59,11 +60,26 @@ export async function POST(req: NextRequest) {
       promptOverride = map['prompt'];
       searchQueryOverride = map['search_query'];
     }
+    // context/tov prompts (global)
+    {
+      const rows = await prisma.setting.findMany({ where: { key: { in: ['contextPrompt', 'toneOfVoicePrompt'] } } });
+      const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+      contextPrompt = (map['contextPrompt'] || '').trim() || undefined;
+      toneOfVoicePrompt = (map['toneOfVoicePrompt'] || '').trim() || undefined;
+    }
   } catch {
     promptOverride = undefined;
     searchQueryOverride = undefined;
   }
-  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride, searchQueryOverride, noSearch: !searchQueryOverride });
+  // Build final prompt from context/tov + page prompt if any
+  let finalPrompt: string | undefined = undefined;
+  const parts: string[] = [];
+  if (contextPrompt) parts.push(`# CONTEXT\n${contextPrompt}`);
+  if (toneOfVoicePrompt) parts.push(`# TONE OF VOICE\n${toneOfVoicePrompt}`);
+  if (promptOverride) parts.push(`# TASK\n${promptOverride}`);
+  finalPrompt = parts.length ? parts.join(`\n\n`) : undefined;
+
+  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride, noSearch: !searchQueryOverride });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
   const created: unknown[] = [];

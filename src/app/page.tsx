@@ -14,6 +14,8 @@ export default function Home() {
   const [promptText, setPromptText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [noSearch, setNoSearch] = useState(false);
+  const [contextPrompt, setContextPrompt] = useState('');
+  const [tovPrompt, setTovPrompt] = useState('');
   const [pages, setPages] = useState<Array<{ id: string; name: string; meta?: { triage: number; total: number; lastPublishedAt: string | null } }>>([]);
   const [pageId, setPageId] = useState<string | ''>('');
 
@@ -84,6 +86,15 @@ export default function Home() {
   }, [selectedIds, adminToken, status, fetchStories]);
 
   const openPrompt = useCallback(async () => {
+    // load global context/tov
+    try {
+      const r = await fetch('/api/settings/prompts', { cache: 'no-store' });
+      if (r.ok) {
+        const d = await r.json();
+        setContextPrompt(d.contextPrompt || '');
+        setTovPrompt(d.toneOfVoicePrompt || '');
+      }
+    } catch {}
     if (pageId) {
       const res = await fetch(`/api/pages/${pageId}`, { cache: 'no-store' });
       const data = await res.json();
@@ -235,6 +246,26 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="glass rounded-xl p-4 w-[min(900px,95vw)]">
             <div className="mb-2 font-semibold">Промпт генерации</div>
+            <div className="mb-2 text-sm opacity-80">Контекст и тон сохраняются глобально и будут добавляться к задаче.</div>
+            <div className="grid gap-2">
+              <div>
+                <div className="font-semibold text-sm mb-1">Context Prompt</div>
+                <textarea value={contextPrompt} onChange={(e) => setContextPrompt(e.target.value)} className="w-full h-24 rounded p-2 bg-background" />
+              </div>
+              <div>
+                <div className="font-semibold text-sm mb-1">Tone of Voice Prompt</div>
+                <textarea value={tovPrompt} onChange={(e) => setTovPrompt(e.target.value)} className="w-full h-20 rounded p-2 bg-background" />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  className="btn-glass btn-sm"
+                  onClick={async () => {
+                    const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+                    await fetch('/api/settings/prompts', { method: 'POST', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) });
+                  }}
+                >Сохранить контекст и TOV</button>
+              </div>
+            </div>
             <textarea value={promptText} onChange={(e) => setPromptText(e.target.value)} className="w-full h-72 rounded p-2 bg-background" />
             <div className="mt-3 font-semibold">Поисковый запрос</div>
             <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 rounded p-2 bg-background" placeholder="Например: scientific B2B sales AND AI last 90 days" disabled={noSearch} />

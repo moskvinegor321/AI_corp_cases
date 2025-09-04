@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
-  if (!process.env.ADMIN_TOKEN || req.headers.get('x-admin-token') !== process.env.ADMIN_TOKEN) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
 
   const dbUrl = process.env.DATABASE_URL || '';
   const directUrl = process.env.DIRECT_URL || '';
@@ -34,10 +34,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ env: { hasDbUrl: !!dbUrl, hasDirectUrl: !!directUrl }, db: { host, db }, error: String(e) }, { status: 500 });
   }
 
+  // External dependencies check stubs
+  const deps = {
+    searchProvider: Boolean(process.env.SEARCH_PROVIDER || process.env.NEWSAPI_KEY || process.env.SERPER_API_KEY || process.env.TAVILY_API_KEY),
+    openai: Boolean(process.env.OPENAI_API_KEY),
+    storage: Boolean(process.env.S3_BUCKET || process.env.GCS_BUCKET), // TODO: Add to .env
+  };
+
   return NextResponse.json({
     env: { hasDbUrl: !!dbUrl, hasDirectUrl: !!directUrl },
     db: { host, db },
     exists,
+    deps,
   });
 }
 
