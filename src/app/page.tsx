@@ -114,7 +114,7 @@ export default function Home() {
             Удалить выбранные
           </button>
         <button className="px-4 py-2 rounded btn-glass" onClick={openPrompt}>
-            Промпт
+            Промпт и поисковый запрос
           </button>
         <button className="px-4 py-2 rounded btn-glass" onClick={generate} disabled={loading}>
             {loading ? 'Генерация…' : 'Сгенерировать 5 новых историй'}
