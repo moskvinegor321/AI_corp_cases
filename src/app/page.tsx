@@ -99,10 +99,16 @@ export default function Home() {
 
   const savePrompt = useCallback(async (andGenerate = false) => {
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+    let res: Response | null = null;
     if (pageId) {
-      await fetch(`/api/pages/${pageId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+      res = await fetch(`/api/pages/${pageId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
     } else {
-      await fetch('/api/prompt', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+      res = await fetch('/api/prompt', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+    }
+    if (!res?.ok) {
+      // simple feedback; do not close modal if save failed
+      if (typeof window !== 'undefined') alert('Не удалось сохранить промпт. Проверьте admin token.');
+      return;
     }
     setPromptOpen(false);
     if (andGenerate) await generate();
