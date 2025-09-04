@@ -34,9 +34,9 @@ export function HeaderStats({ pageId }: { pageId?: string }) {
 
   return (
     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-      {render('Triage', total.triage, page?.triage)}
-      {render('Published', total.published, page?.published)}
-      {render('Rejected', total.rejected, page?.rejected)}
+      {render('Разобрать', total.triage, page?.triage)}
+      {render('Опубликовано', total.published, page?.published)}
+      {render('Отклонено', total.rejected, page?.rejected)}
     </div>
   );
 }

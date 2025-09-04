@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   try {
     [items, counts] = await Promise.all([
       prisma.story.findMany({ where, orderBy: { createdAt: 'desc' } }),
-      prisma.story.groupBy({ by: ['status'], _count: { _all: true } }),
+      prisma.story.groupBy({ by: ['status'], _count: { _all: true }, where }),
     ]);
   } catch {
     // If migrations not applied yet, return empty state instead of 500
