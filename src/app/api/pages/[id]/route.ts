@@ -21,12 +21,17 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   }
   const { id } = await ctx.params;
   const body = (await req.json().catch(() => ({}))) as { name?: string; prompt?: string | null; searchQuery?: string | null };
+  const normalize = (v: unknown) => {
+    if (typeof v !== 'string') return v as string | null | undefined;
+    const t = v.trim();
+    return t.length === 0 ? null : t;
+  };
   const page = await prisma.page.update({
     where: { id },
     data: {
       ...(typeof body.name === 'string' ? { name: body.name } : {}),
-      ...(body.prompt !== undefined ? { prompt: body.prompt } : {}),
-      ...(body.searchQuery !== undefined ? { searchQuery: body.searchQuery } : {}),
+      ...(body.prompt !== undefined ? { prompt: normalize(body.prompt) } : {}),
+      ...(body.searchQuery !== undefined ? { searchQuery: normalize(body.searchQuery) } : {}),
     },
   });
   return NextResponse.json({ page });
