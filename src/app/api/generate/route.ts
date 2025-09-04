@@ -41,15 +41,19 @@ export async function POST(req: NextRequest) {
     .map((x) => x.title);
   const existingSlugs = new Set(existing.map((x) => x.titleSlug));
 
-  // read custom prompt if set (fallback if Setting table is missing)
+  // read custom prompt and searchQuery if set (fallback if Setting table is missing)
   let promptOverride: string | undefined = undefined;
+  let searchQueryOverride: string | undefined = undefined;
   try {
-    const setting = await prisma.setting.findUnique({ where: { key: 'prompt' } });
-    promptOverride = setting?.value;
+    const rows = await prisma.setting.findMany({ where: { key: { in: ['prompt', 'search_query'] } } });
+    const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+    promptOverride = map['prompt'];
+    searchQueryOverride = map['search_query'];
   } catch {
     promptOverride = undefined;
+    searchQueryOverride = undefined;
   }
-  const items = await generateStories({ banlistTitles, n, promptOverride });
+  const items = await generateStories({ banlistTitles, n, promptOverride, searchQueryOverride });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
   const created: unknown[] = [];

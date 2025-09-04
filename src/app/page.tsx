@@ -12,6 +12,7 @@ export default function Home() {
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
@@ -80,15 +81,16 @@ export default function Home() {
     const res = await fetch('/api/prompt');
     const data = await res.json();
     setPromptText(data.prompt || '');
+    setSearchQuery(data.searchQuery || '');
     setPromptOpen(true);
   }, []);
 
   const savePrompt = useCallback(async (andGenerate = false) => {
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-    await fetch('/api/prompt', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText }) });
+    await fetch('/api/prompt', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
     setPromptOpen(false);
     if (andGenerate) await generate();
-  }, [adminToken, promptText, generate]);
+  }, [adminToken, promptText, searchQuery, generate]);
 
   return (
     <div className="min-h-screen p-6 md:p-10">
@@ -128,6 +130,8 @@ export default function Home() {
           <div className="glass rounded-xl p-4 w-[min(900px,95vw)]">
             <div className="mb-2 font-semibold">Промпт генерации</div>
             <textarea value={promptText} onChange={(e) => setPromptText(e.target.value)} className="w-full h-72 rounded p-2 bg-background" />
+            <div className="mt-3 font-semibold">Поисковый запрос</div>
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 rounded p-2 bg-background" placeholder="Например: scientific B2B sales AND AI last 90 days" />
             <div className="mt-3 flex gap-2 justify-end">
               <button className="px-3 py-2 rounded btn-glass" onClick={() => setPromptOpen(false)}>Закрыть</button>
               <button className="px-3 py-2 rounded btn-glass" onClick={() => savePrompt(false)}>Сохранить</button>

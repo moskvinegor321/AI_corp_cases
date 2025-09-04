@@ -24,12 +24,12 @@ const ResponseSchema = z.object({ items: z.array(ItemSchema) });
 
 export type GeneratedItem = z.infer<typeof ItemSchema>;
 
-export async function generateStories({ banlistTitles, n, promptOverride }: { banlistTitles: string[]; n: number; promptOverride?: string }) {
+export async function generateStories({ banlistTitles, n, promptOverride, searchQueryOverride }: { banlistTitles: string[]; n: number; promptOverride?: string; searchQueryOverride?: string }) {
   const limit = Math.max(5, Math.min(30, n * 6));
-  const docs = await searchNews(
-    'AI enterprise adoption OR genAI internal rollout OR LLM policy last 90 days',
-    limit
-  );
+  const searchQuery = (searchQueryOverride && searchQueryOverride.trim())
+    ? searchQueryOverride.trim()
+    : 'AI enterprise adoption OR genAI internal rollout OR LLM policy last 90 days';
+  const docs = await searchNews(searchQuery, limit);
 
   const sourcesBlock = docs
     .slice(0, limit)
