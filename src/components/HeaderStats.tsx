@@ -4,20 +4,39 @@ import { useEffect, useState } from 'react';
 type Counts = { triage: number; published: number; rejected: number };
 
 export function HeaderStats({ pageId }: { pageId?: string }) {
-  const [counts, setCounts] = useState<Counts>({ triage: 0, published: 0, rejected: 0 });
+  const [total, setTotal] = useState<Counts>({ triage: 0, published: 0, rejected: 0 });
+  const [page, setPage] = useState<Counts | null>(null);
+
+  // overall counts
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (pageId) params.set('pageId', pageId);
-    fetch(`/api/stories${params.toString() ? `?${params.toString()}` : ''}`)
+    fetch('/api/stories')
       .then((r) => r.json())
-      .then((d) => setCounts(d.counts as Counts))
+      .then((d) => setTotal(d.counts as Counts))
       .catch(() => {});
+  }, []);
+
+  // page counts
+  useEffect(() => {
+    if (!pageId) { setPage(null); return; }
+    const params = new URLSearchParams();
+    params.set('pageId', pageId);
+    fetch(`/api/stories?${params.toString()}`)
+      .then((r) => r.json())
+      .then((d) => setPage(d.counts as Counts))
+      .catch(() => setPage(null));
   }, [pageId]);
+
+  const render = (label: string, t: number, p?: number) => (
+    <span>
+      {label}: <b className="text-foreground">{t}</b>{p !== undefined ? <span> (<b className="text-foreground">{p}</b>)</span> : null}
+    </span>
+  );
+
   return (
     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-      <span>Triage: <b className="text-foreground">{counts.triage}</b></span>
-      <span>Published: <b className="text-foreground">{counts.published}</b></span>
-      <span>Rejected: <b className="text-foreground">{counts.rejected}</b></span>
+      {render('Triage', total.triage, page?.triage)}
+      {render('Published', total.published, page?.published)}
+      {render('Rejected', total.rejected, page?.rejected)}
     </div>
   );
 }
