@@ -119,17 +119,24 @@ export default function Home() {
     const data = await res.json();
     setPages((prev) => [...prev, data.page]);
     setPageId(data.page.id as string);
+    return data.page as { id: string; name: string };
   }, [adminToken]);
 
   const renamePage = useCallback(async () => {
-    if (!pageId) return;
+    let targetId = pageId;
+    if (!targetId) {
+      const created = await createPage();
+      if (!created) return;
+      targetId = created.id;
+    }
     const name = typeof window !== 'undefined' ? window.prompt('Новое название страницы') : '';
     if (!name || !name.trim()) return;
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-    const res = await fetch(`/api/pages/${pageId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ name: name.trim() }) });
+    const res = await fetch(`/api/pages/${targetId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ name: name.trim() }) });
     const data = await res.json();
-    setPages((prev) => prev.map((p) => (p.id === pageId ? { ...p, name: data.page?.name || name.trim() } : p)));
-  }, [pageId, adminToken]);
+    setPages((prev) => prev.map((p) => (p.id === targetId ? { ...p, name: data.page?.name || name.trim() } : p)));
+    setPageId(targetId);
+  }, [pageId, adminToken, createPage]);
 
   return (
     <div className="min-h-screen p-6 md:p-10">
@@ -149,7 +156,7 @@ export default function Home() {
             ))}
           </select>
           <button className="px-2 py-1 rounded btn-glass" onClick={createPage}>Создать страницу</button>
-          <button className="px-2 py-1 rounded btn-glass" onClick={renamePage} disabled={!pageId}>Переименовать</button>
+          <button className="px-2 py-1 rounded btn-glass" onClick={renamePage}>Переименовать</button>
         </div>
         <input
             className="px-2 py-1 rounded btn-glass"
