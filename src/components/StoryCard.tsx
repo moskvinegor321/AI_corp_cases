@@ -29,7 +29,12 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
     if (story.sources && story.sources.length) {
       lines.push('');
       lines.push('Источники:');
-      story.sources.forEach((s) => lines.push(`- ${s}`));
+      story.sources.forEach((s, i) => {
+        const suffix = i === 0 && story.sourcePublishedAt
+          ? ` (опубликовано: ${new Date(story.sourcePublishedAt).toLocaleString()})`
+          : '';
+        lines.push(`- ${s}${suffix}`);
+      });
     }
     try {
       await navigator.clipboard.writeText(lines.join('\n'));
@@ -55,12 +60,16 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
             Показать полностью
           </button>
         )}
-        <div className="mt-3 flex gap-2 text-xs flex-wrap">
-          {story.sources?.map((s) => (
-            <a key={s} href={s} target="_blank" className="underline" rel="noreferrer">
-              {new URL(s).host}
-            </a>
-          ))}
+        <div className="mt-3 flex gap-3 text-xs flex-wrap items-center">
+          {story.sources?.map((s, i) => {
+            const host = (() => { try { return new URL(s).host; } catch { return s; } })();
+            const dateLabel = i === 0 && story.sourcePublishedAt ? ` · ${new Date(story.sourcePublishedAt).toLocaleString()}` : '';
+            return (
+              <a key={s} href={s} target="_blank" className="underline" rel="noreferrer">
+                {host}{dateLabel}
+              </a>
+            );
+          })}
         </div>
       </div>
       <div className="flex flex-col gap-2 md:w-[320px] md:justify-end md:h-full">
