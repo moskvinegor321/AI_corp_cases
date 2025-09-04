@@ -13,6 +13,7 @@ export default function Home() {
   const [promptOpen, setPromptOpen] = useState(false);
   const [promptText, setPromptText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [noSearch, setNoSearch] = useState(false);
   const [pages, setPages] = useState<Array<{ id: string; name: string; meta?: { triage: number; total: number; lastPublishedAt: string | null } }>>([]);
   const [pageId, setPageId] = useState<string | ''>('');
 
@@ -59,10 +60,10 @@ export default function Home() {
   const generate = useCallback(async () => {
     setLoading(true);
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-    await fetch('/api/generate', { method: 'POST', headers: { 'x-admin-token': token || '', 'content-type': 'application/json' }, body: JSON.stringify({ pageId: pageId || undefined }) });
+    await fetch('/api/generate', { method: 'POST', headers: { 'x-admin-token': token || '', 'content-type': 'application/json' }, body: JSON.stringify({ pageId: pageId || undefined, noSearch }) });
     setLoading(false);
     fetchStories(status);
-  }, [status, fetchStories, adminToken, pageId]);
+  }, [status, fetchStories, adminToken, pageId, noSearch]);
 
   const onSelect = useCallback((id: string, v: boolean) => {
     setSelectedIds((prev) => ({ ...prev, [id]: v }));
@@ -88,11 +89,13 @@ export default function Home() {
       const data = await res.json();
       setPromptText(data.page?.prompt || '');
       setSearchQuery(data.page?.searchQuery || '');
+      setNoSearch(!data.page?.searchQuery);
     } else {
       const res = await fetch('/api/prompt', { cache: 'no-store' });
       const data = await res.json();
       setPromptText(data.prompt || '');
       setSearchQuery(data.searchQuery || '');
+      setNoSearch(!data.searchQuery);
     }
     setPromptOpen(true);
   }, [pageId]);
@@ -228,11 +231,23 @@ export default function Home() {
             <div className="mb-2 font-semibold">Промпт генерации</div>
             <textarea value={promptText} onChange={(e) => setPromptText(e.target.value)} className="w-full h-72 rounded p-2 bg-background" />
             <div className="mt-3 font-semibold">Поисковый запрос</div>
-            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 rounded p-2 bg-background" placeholder="Например: scientific B2B sales AND AI last 90 days" />
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 rounded p-2 bg-background" placeholder="Например: scientific B2B sales AND AI last 90 days" disabled={noSearch} />
+            <label className="mt-2 flex items-center gap-2 text-sm opacity-80">
+              <input type="checkbox" checked={noSearch} onChange={(e) => setNoSearch(e.target.checked)} />
+              Исключить поисковый запрос (генерация только по промпту)
+            </label>
             <div className="mt-3 flex gap-2 justify-end">
               <button className="btn-glass" onClick={() => setPromptOpen(false)}>Закрыть</button>
               <button className="btn-glass" onClick={() => savePrompt(false)}>Сохранить</button>
               <button className="btn-glass" onClick={() => savePrompt(true)}>Сохранить и сгенерировать</button>
+              <button
+                className="btn-glass"
+                onClick={async () => {
+                  setPromptText('');
+                  setSearchQuery('');
+                  await savePrompt(false);
+                }}
+              >Сбросить на дефолт</button>
             </div>
           </div>
         </div>

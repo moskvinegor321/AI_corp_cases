@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     promptOverride = undefined;
     searchQueryOverride = undefined;
   }
-  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride, searchQueryOverride });
+  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride, searchQueryOverride, noSearch: !searchQueryOverride });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
   const created: unknown[] = [];
