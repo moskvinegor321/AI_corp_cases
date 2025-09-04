@@ -81,23 +81,20 @@ export async function generateStories({ banlistTitles, n, promptOverride, search
   if (!raw) throw new Error('LLM returned non-JSON');
   parsed = ResponseSchema.parse(raw);
 
+  // Always use provider URLs only to avoid выдуманные источники.
+  const providerUrls = docs.map((d) => d.url).filter((u) => {
+    try { new URL(u); return true; } catch { return false; }
+  });
+
   const items = (parsed?.items || [])
     .slice(0, n)
-    .map((it) => ({ ...it, sources: (it.sources || []).slice(0, 3) }));
+    .map((it) => ({
+      ...it,
+      // take only real provider URLs; if none – leave empty array so UI hides the block
+      sources: providerUrls.slice(0, 3),
+    }));
 
-  // sanitize sources: keep only valid URLs; if empty, backfill from provider docs; drop items with no sources at all
-  const isValidUrl = (s: string) => {
-    try { const u = new URL(s); return !!u.protocol && !!u.host; } catch { return false; }
-  };
-  const sanitized = items
-    .map((it) => {
-      let src = (it.sources || []).filter(isValidUrl);
-      if (src.length === 0 && docs.length > 0) src = docs.slice(0, 3).map((d) => d.url);
-      return { ...it, sources: src.slice(0, 3) };
-    })
-    .filter((it) => it.sources && it.sources.length > 0);
-
-  return { items: sanitized as GeneratedItem[], docs };
+  return { items: items as GeneratedItem[], docs };
 }
 
 

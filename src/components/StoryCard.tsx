@@ -60,8 +60,9 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
             Показать полностью
           </button>
         )}
+        {story.sources && story.sources.length > 0 && (
         <div className="mt-3 flex gap-3 text-xs flex-wrap items-center">
-          {story.sources?.map((s, i) => {
+          {story.sources.map((s, i) => {
             const host = (() => { try { return new URL(s).host; } catch { return s; } })();
             const dateLabel = i === 0 && story.sourcePublishedAt ? ` · ${new Date(story.sourcePublishedAt).toLocaleString()}` : '';
             return (
@@ -71,6 +72,7 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
             );
           })}
         </div>
+        )}
       </div>
       <div className="flex flex-col gap-2 md:w-[320px] md:justify-end md:h-full">
         <div className="flex flex-wrap items-center gap-2 justify-end text-xs text-muted-foreground">
