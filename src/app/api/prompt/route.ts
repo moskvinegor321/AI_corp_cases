@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+export const dynamic = 'force-dynamic';
 
 const KEY_PROMPT = 'prompt';
 const KEY_SEARCH = 'search_query';

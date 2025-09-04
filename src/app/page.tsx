@@ -95,15 +95,20 @@ export default function Home() {
       setSearchQuery(data.searchQuery || '');
     }
     setPromptOpen(true);
-  }, []);
+  }, [pageId]);
 
   const savePrompt = useCallback(async (andGenerate = false) => {
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
     let res: Response | null = null;
+    const payload = {
+      prompt: (promptText || '').trim() === '' ? null : promptText,
+      searchQuery: (searchQuery || '').trim() === '' ? null : searchQuery,
+    } as { prompt: string | null; searchQuery: string | null };
     if (pageId) {
-      res = await fetch(`/api/pages/${pageId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+      res = await fetch(`/api/pages/${pageId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify(payload) });
     } else {
-      res = await fetch('/api/prompt', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+      // global defaults cannot be cleared via UI to avoid breaking other страниц; keep behavior as-is
+      res = await fetch('/api/prompt', { method: 'PUT', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify(payload) });
     }
     if (!res?.ok) {
       // simple feedback; do not close modal if save failed
