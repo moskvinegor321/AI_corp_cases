@@ -15,9 +15,11 @@ export async function searchNewsApi(query: string, limit = 20, options?: { page?
   const apiKey = process.env.NEWSAPI_KEY;
   if (!apiKey) return [];
   const url = `https://newsapi.org/v2/everything`;
+  // rudimentary language detection: if Cyrillic present -> ru, else en
+  const hasCyrillic = /[\u0400-\u04FF]/.test(query);
   const params = {
     q: query,
-    language: 'en',
+    language: hasCyrillic ? 'ru' : 'en',
     sortBy: 'publishedAt',
     pageSize: Math.min(limit, 100),
     ...(options?.page ? { page: options.page } : {}),

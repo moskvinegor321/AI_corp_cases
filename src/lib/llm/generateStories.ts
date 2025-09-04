@@ -48,7 +48,7 @@ export async function generateStories({ banlistTitles, n, promptOverride, search
     ? `${promptOverride.trim()}\n\n(Соблюдай требования ниже.)`
     : defaultTask;
 
-  const prompt = `${taskBlock}\n\nСВЕЖИЕ ИСТОЧНИКИ ДЛЯ ОПОРА (до ${limit} штук, выбери лучшие):\n${sourcesBlock}\n\nБАНЛИСТ (заголовки публиковавшихся тем, не повторяйся):\n${banlistBlock}\n\n${jsonInstruction}`;
+  const prompt = `${taskBlock}\n\nИСПОЛЬЗУЙ ТЕМУ ПОИСКА: «${searchQuery}». Не отклоняйся от темы.\n\nСВЕЖИЕ ИСТОЧНИКИ ДЛЯ ОПОРА (до ${limit} штук, выбери лучшие):\n${sourcesBlock}\n\nБАНЛИСТ (заголовки публиковавшихся тем, не повторяйся):\n${banlistBlock}\n\n${jsonInstruction}`;
 
   const client = getOpenAIClient();
   const res = await client.responses.create({
