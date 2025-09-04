@@ -164,7 +164,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-6 md:p-10">
-      <div className="glass rounded-2xl p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto_auto] items-center gap-3">
+      <div className="glass rounded-2xl p-4 header-bar">
         <div className="flex items-center gap-3">
           <div className="text-2xl font-bold tracking-tight">AION</div>
           <HeaderStats pageId={pageId || undefined} />
@@ -172,8 +172,8 @@ export default function Home() {
         <div className="flex items-center justify-center">
           <Filters value={status} onChange={setStatus} />
         </div>
-        <div className="flex items-center gap-2">
-          <select className="px-2 py-1 rounded btn-glass" value={pageId} onChange={(e) => setPageId(e.target.value)}>
+        <div className="header-actions">
+          <select className="select-compact" value={pageId} onChange={(e) => setPageId(e.target.value)}>
             {pages.map((p) => {
               const color = !p.meta || p.meta.total === 0 ? '⚪' : (p.meta.triage > 0 ? '🟡' : '🟢');
               const date = p.meta?.lastPublishedAt ? new Date(p.meta.lastPublishedAt).toLocaleDateString() : '';
@@ -183,15 +183,14 @@ export default function Home() {
               );
             })}
           </select>
-          <button className="px-2 py-1 rounded btn-glass" onClick={createPage}>Создать страницу</button>
-          <button className="px-2 py-1 rounded btn-glass" onClick={renamePage}>Переименовать</button>
-          <button className="px-2 py-1 rounded btn-glass" onClick={async () => {
+          <button className="btn-glass" onClick={createPage}>Создать страницу</button>
+          <button className="btn-glass" onClick={renamePage}>Переименовать</button>
+          <button className="btn-glass" onClick={async () => {
             if (!pageId) return;
             const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
             const cascade = typeof window !== 'undefined' && window.confirm('Удалить страницу и все её истории?');
             const params = cascade ? '?cascade=true' : '';
             await fetch(`/api/pages/${pageId}${params}`, { method: 'DELETE', headers: { 'x-admin-token': token || '' } });
-            // refresh pages list
             const res = await fetch('/api/pages', { cache: 'no-store' });
             const data = await res.json();
             const list = (data.pages || []) as Array<{ id: string; name: string }>;
@@ -208,13 +207,13 @@ export default function Home() {
             onChange={(e) => saveToken(e.target.value)}
             style={{ width: 180 }}
           />
-        <button className="px-3 py-2 rounded btn-glass" onClick={deleteSelected} disabled={Object.values(selectedIds).every((v) => !v)}>
+        <button className="btn-glass" onClick={deleteSelected} disabled={Object.values(selectedIds).every((v) => !v)}>
             Удалить выбранные
           </button>
-        <button className="px-4 py-2 rounded btn-glass" onClick={openPrompt}>
+        <button className="btn-glass" onClick={openPrompt}>
             Промпт и поисковый запрос
           </button>
-        <button className="px-4 py-2 rounded btn-glass" onClick={generate} disabled={loading}>
+        <button className="btn-glass" onClick={generate} disabled={loading}>
             {loading ? 'Генерация…' : 'Сгенерировать 5 новых историй'}
           </button>
       </div>
@@ -231,9 +230,9 @@ export default function Home() {
             <div className="mt-3 font-semibold">Поисковый запрос</div>
             <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 rounded p-2 bg-background" placeholder="Например: scientific B2B sales AND AI last 90 days" />
             <div className="mt-3 flex gap-2 justify-end">
-              <button className="px-3 py-2 rounded btn-glass" onClick={() => setPromptOpen(false)}>Закрыть</button>
-              <button className="px-3 py-2 rounded btn-glass" onClick={() => savePrompt(false)}>Сохранить</button>
-              <button className="px-3 py-2 rounded btn-glass" onClick={() => savePrompt(true)}>Сохранить и сгенерировать</button>
+              <button className="btn-glass" onClick={() => setPromptOpen(false)}>Закрыть</button>
+              <button className="btn-glass" onClick={() => savePrompt(false)}>Сохранить</button>
+              <button className="btn-glass" onClick={() => savePrompt(true)}>Сохранить и сгенерировать</button>
             </div>
           </div>
         </div>
