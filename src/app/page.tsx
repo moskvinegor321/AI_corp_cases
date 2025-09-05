@@ -78,7 +78,6 @@ export default function Home() {
         <div className="text-2xl font-bold tracking-tight">Посты</div>
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
-          <input className="px-2 py-1 rounded btn-glass btn-sm w-[240px]" placeholder="Поиск по заголовку/теме/тексту" value={query} onChange={(e)=>setQuery(e.target.value)} />
           <select className="select-compact-sm" value={filterPillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setFilterPillarId(v); }}>
             <option value="">Все страницы</option>
             {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
@@ -147,6 +146,10 @@ export default function Home() {
           <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
           {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
+      </div>
+
+      <div className="mt-2">
+        <input className="w-full max-w-[720px] px-3 py-2 rounded bg-background border border-white/10" placeholder="Поиск по заголовку, теме или тексту" value={query} onChange={(e)=>setQuery(e.target.value)} />
       </div>
 
       {stats && (
