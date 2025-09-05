@@ -281,8 +281,13 @@ export default function Home() {
                 try {
                   setSavingPrompts(true);
                   const r1 = await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) });
-                  const r2 = await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
-                  if (!r1.ok || !r2.ok) { alert('Не удалось сохранить'); return; }
+                  let rMain: Response;
+                  if (filterPillarId) {
+                    rMain = await fetch(`/api/pages/${filterPillarId}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
+                  } else {
+                    rMain = await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
+                  }
+                  if (!r1.ok || !rMain.ok) { alert('Не удалось сохранить'); return; }
                   setPromptOpen(false);
                 } finally { setSavingPrompts(false); }
               }}>{savingPrompts? 'Сохранение…' : 'Сохранить'}</button>
