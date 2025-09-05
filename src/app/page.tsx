@@ -109,7 +109,22 @@ export default function Home() {
             <div className="text-lg font-semibold">Новый пост</div>
             <label className="grid gap-1 text-sm">
               <span>Заголовок</span>
-              <input className="bg-background rounded p-2" value={form.title} onChange={(e)=>setForm(f=>({...f, title: e.target.value}))} />
+              <input className="bg-background rounded p-2" value={form.title} onChange={async (e)=>{
+                const title = e.target.value;
+                setForm(f=>({ ...f, title }));
+                if (title.trim().length > 3) {
+                  try {
+                    const q = encodeURIComponent(title.trim());
+                    const r = await fetch(`/api/posts?search=${q}&pillarId=${encodeURIComponent(form.pillarId||'')}&pageSize=3`);
+                    const d = await r.json();
+                    if (Array.isArray(d.items) && d.items.length) {
+                      (e.currentTarget as HTMLInputElement).setCustomValidity(`Похожих постов: ${d.items.length}`);
+                    } else {
+                      (e.currentTarget as HTMLInputElement).setCustomValidity('');
+                    }
+                  } catch { /* ignore */ }
+                }
+              }} />
             </label>
             <label className="grid gap-1 text-sm">
               <span>Текст</span>

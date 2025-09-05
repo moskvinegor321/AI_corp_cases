@@ -11,6 +11,7 @@ export type Post = {
   topic?: string | null;
   pillar?: { id: string; name: string } | null;
   body?: string | null;
+  source?: string | null;
 };
 
 export function PostCard({ post, onChanged, onToggleComments }: { post: Post; onChanged?: () => void; onToggleComments?: () => void }) {
@@ -76,6 +77,7 @@ export function PostCard({ post, onChanged, onToggleComments }: { post: Post; on
           <div className="text-xs opacity-70">{post.status}</div>
         </div>
         <div className="text-xs opacity-80 flex gap-3 flex-wrap">
+          {post.source && <span className="chip px-2 py-0.5 rounded text-xs">{post.source}</span>}
           {post.pillar?.name && <span>Страница: {post.pillar.name}</span>}
           {post.topic && <span>Тема: {post.topic}</span>}
           {post.scheduledAt && <span>Запланировано: {new Date(post.scheduledAt).toLocaleString()}</span>}
