@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePostFilters, type PostStatus } from "@/lib/filters/posts";
 import type { Post } from "@/components/PostCard";
+import PostModal from "@/app/calendar/PostModal";
 
 export default function TablePage() {
   const [items, setItems] = useState<Post[]>([]);
@@ -11,6 +12,7 @@ export default function TablePage() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [pillarsOpen, setPillarsOpen] = useState(false);
   const [pillarIds, setPillarIds] = useState<string[]>([]);
+  const [openPost, setOpenPost] = useState<Post | null>(null);
 
   const load = async () => {
     const params = new URLSearchParams();
@@ -93,22 +95,24 @@ export default function TablePage() {
 
       {view === 'matrix' ? (
         <div className="overflow-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm glass rounded-xl overflow-hidden">
             <thead>
-              <tr>
-                <th className="text-left p-2">Дата</th>
-                {pillars.map(p => (<th key={p.id} className="text-left p-2">{p.name}</th>))}
+              <tr className="bg-white/5">
+                <th className="text-left p-3">Дата</th>
+                {pillars.map(p => (<th key={p.id} className="text-left p-3">{p.name}</th>))}
               </tr>
             </thead>
             <tbody>
               {Array.from(new Set(items.map(i => (i.scheduledAt || i.publishedAt ? new Date(i.scheduledAt||i.publishedAt!).toISOString().slice(0,10) : '—')))).sort().map(day => (
-                <tr key={day} className="align-top">
-                  <td className="p-2 font-medium">{day}</td>
+                <tr key={day} className="align-top border-t border-white/10">
+                  <td className="p-3 font-medium">{day}</td>
                   {pillars.map(p => (
-                    <td key={p.id} className="p-2">
+                    <td key={p.id} className="p-3">
                       <div className="grid gap-1">
                         {items.filter(i => (i.pillar?.id===p.id) && ((i.scheduledAt||i.publishedAt) && new Date(i.scheduledAt||i.publishedAt!).toISOString().slice(0,10)===day)).map(i => (
-                          <div key={i.id} className="text-xs chip rounded px-2 py-1">{i.title} — {i.status}</div>
+                          <div key={i.id} className="text-xs chip rounded px-2 py-1 hover:bg-white/10 cursor-pointer" onClick={()=> setOpenPost(i)}>
+                            {i.title} — {i.status}
+                          </div>
                         ))}
                       </div>
                     </td>
@@ -135,7 +139,7 @@ export default function TablePage() {
                 <tr key={i.id} className="border-t border-white/10 hover:bg-white/5">
                   <td className="p-3">{i.pillar?.name || ''}</td>
                   <td className="p-3">{i.topic || ''}</td>
-                  <td className="p-3">{i.title}</td>
+                  <td className="p-3"><span className="hover:underline cursor-pointer" onClick={()=> setOpenPost(i)}>{i.title}</span></td>
                   <td className="p-3">
                     {({
                       DRAFT:'Разбор',
@@ -151,6 +155,12 @@ export default function TablePage() {
             </tbody>
           </table>
         </div>
+      )}
+      {openPost && (
+        <>
+          <div className="fixed inset-0 bg-black/80 z-40" onClick={()=> setOpenPost(null)} />
+          <PostModal post={openPost} onClose={()=> setOpenPost(null)} onChanged={()=>{ setOpenPost(null); load(); }} />
+        </>
       )}
     </div>
   );
