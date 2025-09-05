@@ -20,6 +20,7 @@ export default function Home() {
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [drafts, setDrafts] = useState<Record<string, CommentDraft>>({});
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
+  const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'>>([]);
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
@@ -27,6 +28,7 @@ export default function Home() {
     const params = new URLSearchParams();
     const pid = typeof overridePillarId === 'string' ? overridePillarId : form.pillarId;
     if (pid) params.set('pillarId', pid);
+    if (statuses.length) params.set('status', JSON.stringify(statuses));
     const r = await fetch(`/api/posts?${params.toString()}`);
     const d = await r.json();
     setItems(d.items || []);
@@ -39,7 +41,7 @@ export default function Home() {
     if (saved) setAdminToken(saved);
   }, []);
 
-  useEffect(() => { load(); }, [form.pillarId]);
+  useEffect(() => { load(); }, [form.pillarId, JSON.stringify(statuses)]);
 
   const saveToken = (t: string) => { setAdminToken(t); if (typeof window !== 'undefined') localStorage.setItem('aion_admin_token', t); };
 
@@ -57,6 +59,15 @@ export default function Home() {
           <select className="select-compact-sm" value={form.pillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setForm(f=>({ ...f, pillarId: v })); }}>
             <option value="">Все страницы</option>
             {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
+          </select>
+          <select className="select-compact-sm" multiple value={statuses as unknown as string[]} onChange={(e)=>{
+            const opts = Array.from(e.target.selectedOptions).map(o=>o.value as 'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED');
+            setStatuses(opts);
+          }}>
+            <option value="NEEDS_REVIEW">NEEDS_REVIEW</option>
+            <option value="READY_TO_PUBLISH">READY_TO_PUBLISH</option>
+            <option value="PUBLISHED">PUBLISHED</option>
+            <option value="DRAFT">DRAFT</option>
           </select>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             const name = typeof window!=='undefined' ? window.prompt('Название новой страницы/столпа') : '';
