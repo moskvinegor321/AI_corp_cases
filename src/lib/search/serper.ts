@@ -24,10 +24,14 @@ export async function searchSerper(query: string, limit = 20, options?: { page?:
 
   const headers = { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' } as const;
 
-  // Prefer news endpoint; if 400 (plan restriction) fallback to /search
+  // Prefer news endpoint; if 400 (plan restriction) or empty results, fallback to /search
   async function tryEndpoint(endpoint: 'news' | 'search'): Promise<SerperResponse | null> {
     try {
       const { data } = await axios.post<SerperResponse>(`https://google.serper.dev/${endpoint}`, payload, { headers });
+      if (process.env.DEBUG_SEARCH === 'true') {
+        // eslint-disable-next-line no-console
+        console.log(`[serper] ${endpoint} q="${query}" page=${page} → news:${data.news?.length||0} organic:${data.organic?.length||0}`);
+      }
       return data;
     } catch (e: unknown) {
       // 400 indicates plan not supporting endpoint or bad params; fall through
@@ -36,8 +40,11 @@ export async function searchSerper(query: string, limit = 20, options?: { page?:
   }
 
   const prefer = (process.env.SERPER_ENDPOINT as 'news' | 'search' | undefined) || 'news';
-  const first = await tryEndpoint(prefer);
-  const data = first ?? (await tryEndpoint(prefer === 'news' ? 'search' : 'news')) ?? {};
+  let data = await tryEndpoint(prefer);
+  // Fallback if empty payload (some plans return 200 with empty array)
+  if (!data || ((data.news?.length || 0) + (data.organic?.length || 0)) === 0) {
+    data = (await tryEndpoint(prefer === 'news' ? 'search' : 'news')) ?? data;
+  }
 
   const news = data.news || [];
   const organic = data.organic || [];
