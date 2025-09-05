@@ -16,10 +16,9 @@ export async function POST(req: NextRequest) {
   const path = `${prefix ? `${prefix.replace(/\/$/, '')}/` : ''}${Date.now()}_${safeName}`;
 
   // Create a signed URL for upload via POST to storage API
-  const expiresSec = 60 * 5; // 5 minutes
   // Using createSignedUploadUrl (if available) or upload via service role
   // We will use createSignedUploadUrl to allow client direct upload without exposing keys
-  // @ts-ignore - available in supabase-js >= 2.39
+  // @ts-expect-error - available in supabase-js >= 2.39
   const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path, { upsert: true, contentType });
   if (error || !data) {
     return NextResponse.json({ error: error?.message || 'Failed to create signed upload url' }, { status: 500 });

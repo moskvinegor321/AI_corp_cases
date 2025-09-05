@@ -95,7 +95,7 @@ export default function Home() {
             {taskFilterOpen && (
               <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[260px] grid gap-2">
                 <div className="text-xs opacity-80">Статус задачи</div>
-                <select className="bg-background rounded p-2" value={taskStatus} onChange={(e)=>setTaskStatus(e.target.value as any)}>
+                <select className="bg-background rounded p-2" value={taskStatus} onChange={(e)=>setTaskStatus(e.target.value as ''|'OPEN'|'IN_PROGRESS'|'DONE')}>
                   <option value="">Любой</option>
                   <option value="OPEN">OPEN</option>
                   <option value="IN_PROGRESS">IN_PROGRESS</option>

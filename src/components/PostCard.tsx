@@ -93,7 +93,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         body: JSON.stringify({ name: f.name, url: publicUrl, mimeType: f.type, sizeBytes: f.size }),
       });
       onChanged?.();
-    } catch (e) {
+    } catch {
       alert("Не удалось загрузить файл");
     } finally {
       setLoading(false);
