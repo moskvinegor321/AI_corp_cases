@@ -15,7 +15,7 @@ function parseArray(param: string | null): string[] | undefined {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const status = parseArray(searchParams.get('status')) as ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED')[] | undefined;
+  const status = parseArray(searchParams.get('status')) as ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED')[] | undefined;
   const from = searchParams.get('from');
   const to = searchParams.get('to');
   const pillarId = searchParams.get('pillarId') || undefined;
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   const sortDir = ((searchParams.get('sortDir') || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc') as 'asc'|'desc';
 
   const where: {
-    status?: { in: ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED')[] };
+    status?: { in: ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED')[] };
     pillarId?: string;
     OR?: Array<Record<string, unknown>>;
     scheduledAt?: { gte?: Date; lte?: Date };

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 export type Post = {
   id: string;
   title: string;
-  status: "DRAFT" | "NEEDS_REVIEW" | "READY_TO_PUBLISH" | "PUBLISHED";
+  status: "DRAFT" | "NEEDS_REVIEW" | "READY_TO_PUBLISH" | "PUBLISHED" | "REJECTED";
   scheduledAt?: string | null;
   publishedAt?: string | null;
   reviewDueAt?: string | null;
@@ -32,6 +32,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
     NEEDS_REVIEW: 'Ревью',
     READY_TO_PUBLISH: 'Запланирован',
     PUBLISHED: 'Опубликован',
+    REJECTED: 'Отклонён',
   } as const;
 
   const resolveKind = (mime?: string | null, name?: string) => {
@@ -177,7 +178,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         </div>
       </div>
       <div className="relative flex flex-col gap-2 md:items-end">
-        <div className="flex gap-2 flex-wrap md:justify-end">
+        <div className="flex gap-2 flex-wrap md:justify-end text-[12px]">
         <button className="btn-glass btn-sm bg-blue-500/20 text-blue-300" disabled={loading} onClick={() => {
           // default now + 1 hour
           const base = new Date();
@@ -196,6 +197,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           if (!confirm("Отметить как опубликовано сейчас?")) return;
           await callStatus("PUBLISHED");
         }}>Опубликовано</button>
+        <button className="btn-glass btn-sm bg-red-600/20 text-red-400" disabled={loading} onClick={async () => { await callStatus('REJECTED'); }}>Отклонить</button>
         </div>
         {picker && (
           <div className="absolute top-full mt-2 left-0 glass rounded-xl p-3 z-10 w-64 grid gap-2">

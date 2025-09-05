@@ -18,6 +18,15 @@ export function validateStatusTransition(current: Post, payload: StatusPayload):
 
   const data: StatusUpdate = { status };
 
+  if (status === 'REJECTED') {
+    // allow rejecting from any non-published state, clear scheduling
+    if (current.status === 'PUBLISHED') return { ok: false, error: 'cannot reject published' };
+    data.scheduledAt = null as unknown as undefined;
+    data.publishedAt = null as unknown as undefined;
+    data.reviewDueAt = null as unknown as undefined;
+    return { ok: true, data };
+  }
+
   if (status === 'READY_TO_PUBLISH') {
     if (!scheduledAt) return { ok: false, error: 'scheduledAt required' };
     data.scheduledAt = new Date(scheduledAt);
@@ -33,7 +42,7 @@ export function validateStatusTransition(current: Post, payload: StatusPayload):
   }
 
   // Prevent going backwards from PUBLISHED unless explicitly allowed later
-  const order: Record<PostStatus, number> = { DRAFT: 1, NEEDS_REVIEW: 2, READY_TO_PUBLISH: 3, PUBLISHED: 4 } as const;
+  const order: Record<PostStatus, number> = { DRAFT: 1, NEEDS_REVIEW: 2, READY_TO_PUBLISH: 3, PUBLISHED: 4, REJECTED: 5 } as const;
   if (order[status] < order[current.status]) {
     return { ok: false, error: 'invalid transition' };
   }

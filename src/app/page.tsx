@@ -18,7 +18,7 @@ export default function Home() {
   const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: '', body: '' });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [filterPillarId, setFilterPillarId] = useState<string|undefined>(undefined);
-  const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'>>([]);
+  const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED'>>([]);
   const [statusOpen, setStatusOpen] = useState(false);
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
@@ -56,11 +56,12 @@ export default function Home() {
           <div className="relative">
             <button className="btn-glass btn-sm" onClick={()=>setStatusOpen((v)=>!v)}>
               {(() => {
-                const labels: Record<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED', string> = {
+                const labels: Record<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED', string> = {
                   DRAFT: 'Разбор',
                   NEEDS_REVIEW: 'Ревью',
                   READY_TO_PUBLISH: 'Запланирован',
                   PUBLISHED: 'Опубликован',
+                  REJECTED: 'Отклонён',
                 };
                 return statuses.length === 0 ? 'Все статусы' : statuses.map((s) => labels[s]).join(', ');
               })()}
@@ -72,7 +73,8 @@ export default function Home() {
                   { code: 'NEEDS_REVIEW', label: 'Ревью' },
                   { code: 'READY_TO_PUBLISH', label: 'Запланирован' },
                   { code: 'PUBLISHED', label: 'Опубликован' },
-                ] as Array<{code:'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'; label: string}>).map(opt=> (
+                  { code: 'REJECTED', label: 'Отклонён' },
+                ] as Array<{code:'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED'; label: string}>).map(opt=> (
                   <label key={opt.code} className="flex items-center gap-2 text-sm py-1">
                     <input type="checkbox" checked={statuses.includes(opt.code)} onChange={(e)=>{
                       setStatuses(prev=> e.target.checked ? [...prev, opt.code] : prev.filter(s=>s!==opt.code));
