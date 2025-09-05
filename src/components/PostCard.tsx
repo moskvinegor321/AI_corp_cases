@@ -223,8 +223,8 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         </div>
       </div>
       <div className="relative flex flex-col gap-2 md:items-end">
-        <div className="flex gap-2 flex-wrap md:justify-end text-[11px]">
-        <button className="btn-glass bg-indigo-500/20 text-indigo-300 px-2 py-0.5" disabled={loading} onClick={() => {
+        <div className="flex gap-2 flex-wrap md:justify-end text-[10px]">
+        <button className="btn-glass bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 whitespace-nowrap" disabled={loading} onClick={() => {
           // default now + 1 hour
           const base = new Date();
           base.setMinutes(base.getMinutes() + 60);
@@ -232,19 +232,19 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           setDt(local);
           setPicker('review');
         }}>На ревью</button>
-        <button className="btn-glass bg-amber-500/20 text-amber-300 px-2 py-0.5" disabled={loading} onClick={() => {
+        <button className="btn-glass bg-amber-500/20 text-amber-300 px-1.5 py-0.5 whitespace-nowrap" disabled={loading} onClick={() => {
           const base = post.scheduledAt ? new Date(post.scheduledAt) : new Date();
           const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000).toISOString().slice(0,16);
           setDt(local);
           setPicker('schedule');
         }}>Запланировать</button>
-        <button className="btn-glass bg-green-600/20 text-green-400 px-2 py-0.5" disabled={loading} onClick={() => {
+        <button className="btn-glass bg-green-600/20 text-green-400 px-1.5 py-0.5 whitespace-nowrap" disabled={loading} onClick={() => {
           const base = new Date();
           const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000).toISOString().slice(0,16);
           setDt(local);
           setPicker('publish');
         }}>Опубликовано</button>
-        <button className="btn-glass bg-red-600/20 text-red-400 px-2 py-0.5" disabled={loading} onClick={async () => { await callStatus('REJECTED'); }}>Отклонить</button>
+        <button className="btn-glass bg-red-600/20 text-red-400 px-1.5 py-0.5 whitespace-nowrap" disabled={loading} onClick={async () => { await callStatus('REJECTED'); }}>Отклонить</button>
         </div>
         {picker && (
           <>
@@ -267,9 +267,9 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           </>
         )}
         <div className="flex gap-2 flex-wrap md:justify-end opacity-90">
-          <button className="btn-glass text-[11px] px-2 py-0.5" onClick={()=>setCommentsOpen((v)=>!v)}>Комментарии</button>
-          <button className="btn-glass text-[11px] px-2 py-0.5" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
-          <button className="btn-glass text-[11px] px-2 py-0.5" onClick={() => onEdit?.(post)}>Редактировать</button>
+          <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={()=>setCommentsOpen((v)=>!v)}>Комментарии</button>
+          <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
+          <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={() => onEdit?.(post)}>Редактировать</button>
           <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
         </div>
       </div>
