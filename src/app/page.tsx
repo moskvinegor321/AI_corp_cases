@@ -10,6 +10,7 @@ export default function Home() {
   const [items, setItems] = useState<PostWithComments[]>([]);
   const [adminToken, setAdminToken] = useState<string>('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string|undefined>(undefined);
   const [promptOpen, setPromptOpen] = useState(false);
   const [contextPrompt, setContextPrompt] = useState('');
   const [tovPrompt, setTovPrompt] = useState('');
@@ -101,7 +102,7 @@ export default function Home() {
       <div className="grid gap-3">
         {items.map((p)=> (
           <div key={p.id} className="grid gap-2">
-            <PostCard post={p} onChanged={load} onToggleComments={()=>setOpenComments(prev=>({ ...prev, [p.id]: !prev[p.id] }))} />
+            <PostCard post={p} onChanged={load} onToggleComments={()=>setOpenComments(prev=>({ ...prev, [p.id]: !prev[p.id] }))} onEdit={(post)=>{ setEditingId(post.id); setForm({ title: post.title, body: post.body||'', topic: post.topic||undefined, pillarId: post.pillar?.id||undefined }); setModalOpen(true); }} />
             {!!(p.comments && p.comments.length) && (
               <div className="grid gap-1 mt-1">
                 {p.comments.slice(0, 10).map((c) => (
@@ -146,7 +147,7 @@ export default function Home() {
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="glass rounded-xl p-4 w-[min(700px,95vw)] grid gap-3">
-            <div className="text-lg font-semibold">Новый пост</div>
+            <div className="text-lg font-semibold">{editingId ? 'Редактировать пост' : 'Новый пост'}</div>
             <label className="grid gap-1 text-sm">
               <span>Заголовок</span>
               <input className="bg-background rounded p-2" value={form.title} onChange={async (e)=>{
@@ -184,10 +185,12 @@ export default function Home() {
               </label>
             </div>
             <div className="flex gap-2 justify-end">
-              <button className="btn-glass btn-sm" onClick={()=>setModalOpen(false)}>Отмена</button>
+              <button className="btn-glass btn-sm" onClick={()=>{ setModalOpen(false); setEditingId(undefined); }}>
+                Отмена
+              </button>
               <button className="btn-glass btn-sm" disabled={!form.title.trim()} onClick={async ()=>{
                 // duplicate hint (soft)
-                if (form.title.trim().length > 3) {
+                if (!editingId && form.title.trim().length > 3) {
                   const q = encodeURIComponent(form.title.trim());
                   const r = await fetch(`/api/posts?search=${q}&pillarId=${encodeURIComponent(form.pillarId||'')}&pageSize=5`);
                   const d = await r.json().catch(()=>({ items: [] }));
@@ -196,9 +199,14 @@ export default function Home() {
                     if (!proceed) return;
                   }
                 }
-                const res = await fetch('/api/posts', { method: 'POST', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ ...form, source: 'manual' }) });
-                if (!res.ok) { alert('Не удалось создать пост'); return; }
-                setModalOpen(false); setForm({ title:'', body:'' }); await load();
+                if (editingId) {
+                  const res = await fetch(`/api/posts/${editingId}`, { method: 'PATCH', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ title: form.title, body: form.body, topic: form.topic, pillarId: form.pillarId }) });
+                  if (!res.ok) { alert('Не удалось обновить пост'); return; }
+                } else {
+                  const res = await fetch('/api/posts', { method: 'POST', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ ...form, source: 'manual' }) });
+                  if (!res.ok) { alert('Не удалось создать пост'); return; }
+                }
+                setModalOpen(false); setEditingId(undefined); setForm({ title:'', body:'' }); await load();
               }}>Сохранить</button>
             </div>
           </div>

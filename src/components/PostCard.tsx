@@ -14,7 +14,7 @@ export type Post = {
   source?: string | null;
 };
 
-export function PostCard({ post, onChanged, onToggleComments }: { post: Post; onChanged?: () => void; onToggleComments?: () => void }) {
+export function PostCard({ post, onChanged, onToggleComments, onEdit }: { post: Post; onChanged?: () => void; onToggleComments?: () => void; onEdit?: (post: Post) => void }) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [picker, setPicker] = useState<null | 'review' | 'schedule'>(null);
@@ -113,6 +113,7 @@ export function PostCard({ post, onChanged, onToggleComments }: { post: Post; on
           if (!confirm("Отметить как опубликовано сейчас?")) return;
           await callStatus("PUBLISHED");
         }}>Опубликовано</button>
+        <button className="btn-glass btn-sm" onClick={() => onEdit?.(post)}>Редактировать</button>
         <button className="btn-glass btn-sm" onClick={onToggleComments}>Комментарии</button>
         <button className="btn-glass btn-sm" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
         <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
