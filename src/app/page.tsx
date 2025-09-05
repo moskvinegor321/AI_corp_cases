@@ -232,7 +232,7 @@ export default function Home() {
           <div className="header-actions justify-end">
             <button className="btn-glass btn-sm" onClick={openPrompt}>Промпт и поиск</button>
             <button className="btn-glass btn-sm" onClick={generate} disabled={loading}>
-              {loading ? 'Генерация…' : 'Сгенерировать 5 историй'}
+              {loading ? 'Генерация…' : 'Сгенерировать 5 постов'}
             </button>
           </div>
         </div>

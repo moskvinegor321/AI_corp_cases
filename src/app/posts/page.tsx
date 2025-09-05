@@ -7,12 +7,23 @@ export default function PostsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: "", body: "" });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
+  const [adminToken, setAdminToken] = useState<string>("");
   const load = async () => {
     const r = await fetch(`/api/posts`);
     const d = await r.json();
     setItems(d.items || []);
   };
-  useEffect(() => { load(); fetch('/api/pillars').then(r=>r.json()).then(d=>setPillars(d.pillars||[])); }, []);
+  useEffect(() => {
+    load();
+    fetch('/api/pillars').then(r=>r.json()).then(d=>setPillars(d.pillars||[]));
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
+    if (saved) setAdminToken(saved);
+  }, []);
+
+  const saveToken = (t: string) => {
+    setAdminToken(t);
+    if (typeof window !== 'undefined') localStorage.setItem('aion_admin_token', t);
+  };
 
   const canSave = useMemo(() => (form.title || '').trim().length > 0, [form.title]);
 
@@ -21,6 +32,9 @@ export default function PostsPage() {
       <div className="flex items-center justify-between">
         <div className="text-xl font-semibold">Посты</div>
         <button className="btn-glass btn-sm" onClick={()=>setModalOpen(true)}>Добавить пост</button>
+      </div>
+      <div className="flex items-center gap-2">
+        <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
       </div>
       <div className="grid gap-3">
         {items.map((p) => (
@@ -56,7 +70,7 @@ export default function PostsPage() {
             <div className="flex gap-2 justify-end">
               <button className="btn-glass btn-sm" onClick={()=>setModalOpen(false)}>Отмена</button>
               <button className="btn-glass btn-sm" disabled={!canSave} onClick={async ()=>{
-                const token = (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '';
+                const token = adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '';
                 const res = await fetch('/api/posts', { method: 'POST', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ ...form, source: 'manual' }) });
                 if (!res.ok) { alert('Не удалось создать пост'); return; }
                 setModalOpen(false); setForm({ title:'', body:'' }); await load();
