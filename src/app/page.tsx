@@ -10,6 +10,7 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string|undefined>(undefined);
   const [promptOpen, setPromptOpen] = useState(false);
+  const [savingPrompts, setSavingPrompts] = useState(false);
   const [contextPrompt, setContextPrompt] = useState('');
   const [tovPrompt, setTovPrompt] = useState('');
   const [promptText, setPromptText] = useState('');
@@ -276,7 +277,15 @@ export default function Home() {
             </label>
             <div className="mt-3 flex gap-2 justify-end">
               <button className="btn-glass btn-sm" onClick={()=>setPromptOpen(false)}>Закрыть</button>
-              <button className="btn-glass btn-sm" onClick={async ()=>{ await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) }); await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery }) }); }}>Сохранить</button>
+              <button className="btn-glass btn-sm" disabled={savingPrompts} onClick={async ()=>{
+                try {
+                  setSavingPrompts(true);
+                  const r1 = await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) });
+                  const r2 = await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery }) });
+                  if (!r1.ok || !r2.ok) { alert('Не удалось сохранить'); return; }
+                  setPromptOpen(false);
+                } finally { setSavingPrompts(false); }
+              }}>{savingPrompts? 'Сохранение…' : 'Сохранить'}</button>
             </div>
           </div>
         </div>
