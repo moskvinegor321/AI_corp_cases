@@ -32,7 +32,12 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   const { id } = await ctx.params;
   await prisma.attachment.deleteMany({ where: { postId: id } }).catch(()=>{});
   await prisma.postComment.deleteMany({ where: { postId: id } }).catch(()=>{});
-  await prisma.post.delete({ where: { id } });
+  try {
+    await prisma.post.delete({ where: { id } });
+  } catch (e: unknown) {
+    // Make idempotent: if already deleted, return ok
+    return NextResponse.json({ ok: true, note: 'already deleted' });
+  }
   return NextResponse.json({ ok: true });
 }
 
