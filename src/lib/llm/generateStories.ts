@@ -13,7 +13,8 @@ function getOpenAIClient(): OpenAI {
 
 const ItemSchema = z.object({
   title: z.string().min(10),
-  script: z.string().min(200),
+  // relax minimal length to reduce brittle failures while still discouraging empty content
+  script: z.string().min(100),
   company: z.string().optional().nullable(),
   // allow up to 10 from the model; we'll clamp to 3 later
   // relax: accept any strings; we'll replace with provider URLs later
