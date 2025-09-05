@@ -7,13 +7,14 @@ export default function TablePage() {
   const [items, setItems] = useState<Post[]>([]);
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [view, setView] = useState<'matrix'|'list'>('matrix');
-  const { filters, setStatuses, setRange } = usePostFilters();
+  const { filters, setStatuses, setRange, setPillar } = usePostFilters();
 
   const load = async () => {
     const params = new URLSearchParams();
     if (filters.statuses?.length) params.set('status', JSON.stringify(filters.statuses));
     if (filters.from) params.set('from', filters.from);
     if (filters.to) params.set('to', filters.to);
+    if (filters.pillarId) params.set('pillarId', filters.pillarId);
     const r = await fetch(`/api/posts?${params.toString()}`); const d = await r.json(); setItems(d.items || []);
     const rp = await fetch(`/api/pillars`); const dp = await rp.json(); setPillars(dp.pillars || []);
   };
@@ -39,6 +40,11 @@ export default function TablePage() {
           <option value="PUBLISHED">PUBLISHED</option>
           <option value="NEEDS_REVIEW">NEEDS_REVIEW</option>
           <option value="DRAFT">DRAFT</option>
+          <option value="REJECTED">REJECTED</option>
+        </select>
+        <select className="select-compact-sm" value={filters.pillarId||''} onChange={(e)=> setPillar(e.target.value||undefined)}>
+          <option value="">Все страницы</option>
+          {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
         </select>
         <input className="select-compact-sm" type="date" value={filters.from?.slice(0,10) || ""} onChange={(e)=>setRange(e.target.value? new Date(e.target.value).toISOString(): undefined, filters.to)} />
         <input className="select-compact-sm" type="date" value={filters.to?.slice(0,10) || ""} onChange={(e)=>setRange(filters.from, e.target.value? new Date(e.target.value).toISOString(): undefined)} />
@@ -49,19 +55,19 @@ export default function TablePage() {
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="text-left p-2">Тема</th>
+                <th className="text-left p-2">Дата</th>
                 {pillars.map(p => (<th key={p.id} className="text-left p-2">{p.name}</th>))}
               </tr>
             </thead>
             <tbody>
-              {topics.map(topic => (
-                <tr key={topic} className="align-top">
-                  <td className="p-2 font-medium">{topic}</td>
+              {Array.from(new Set(items.map(i => (i.scheduledAt || i.publishedAt ? new Date(i.scheduledAt||i.publishedAt!).toISOString().slice(0,10) : '—')))).sort().map(day => (
+                <tr key={day} className="align-top">
+                  <td className="p-2 font-medium">{day}</td>
                   {pillars.map(p => (
                     <td key={p.id} className="p-2">
                       <div className="grid gap-1">
-                        {items.filter(i => (i.pillar?.id===p.id) && (i.topic===topic)).map(i => (
-                          <div key={i.id} className="text-xs chip rounded px-2 py-1">{i.title} — {i.status} {i.scheduledAt? new Date(i.scheduledAt).toLocaleDateString(): i.publishedAt? new Date(i.publishedAt).toLocaleDateString(): ''}</div>
+                        {items.filter(i => (i.pillar?.id===p.id) && ((i.scheduledAt||i.publishedAt) && new Date(i.scheduledAt||i.publishedAt!).toISOString().slice(0,10)===day)).map(i => (
+                          <div key={i.id} className="text-xs chip rounded px-2 py-1">{i.title} — {i.status}</div>
                         ))}
                       </div>
                     </td>

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
 
-export type PostStatus = 'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED';
+export type PostStatus = 'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED';
 export type PostFilters = { statuses: PostStatus[]; from?: string; to?: string; pillarId?: string; search?: string };
 
 function parseFromUrl(): PostFilters {
