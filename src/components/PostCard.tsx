@@ -36,7 +36,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
     REJECTED: 'Отклонён',
   } as const;
   const statusClass: Record<Post["status"], string> = {
-    DRAFT: 'bg-blue-500/20 text-blue-300',
+    DRAFT: 'bg-gray-500/30 text-gray-300',
     NEEDS_REVIEW: 'bg-indigo-500/20 text-indigo-300',
     READY_TO_PUBLISH: 'bg-amber-500/20 text-amber-300',
     PUBLISHED: 'bg-green-600/20 text-green-400',
@@ -206,8 +206,8 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         </div>
       </div>
       <div className="relative flex flex-col gap-2 md:items-end">
-        <div className="flex gap-2 flex-wrap md:justify-end text-[12px]">
-        <button className="btn-glass btn-sm bg-blue-500/20 text-blue-300" disabled={loading} onClick={() => {
+        <div className="flex gap-2 flex-wrap md:justify-end text-[11px]">
+        <button className="btn-glass bg-indigo-500/20 text-indigo-300 px-2 py-0.5" disabled={loading} onClick={() => {
           // default now + 1 hour
           const base = new Date();
           base.setMinutes(base.getMinutes() + 60);
@@ -215,17 +215,17 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           setDt(local);
           setPicker('review');
         }}>На ревью</button>
-        <button className="btn-glass btn-sm bg-amber-500/20 text-amber-300" disabled={loading} onClick={() => {
+        <button className="btn-glass bg-amber-500/20 text-amber-300 px-2 py-0.5" disabled={loading} onClick={() => {
           const base = post.scheduledAt ? new Date(post.scheduledAt) : new Date();
           const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000).toISOString().slice(0,16);
           setDt(local);
           setPicker('schedule');
         }}>Запланировать</button>
-        <button className="btn-glass btn-sm bg-green-600/20 text-green-400" disabled={loading} onClick={async () => {
+        <button className="btn-glass bg-green-600/20 text-green-400 px-2 py-0.5" disabled={loading} onClick={async () => {
           if (!confirm("Отметить как опубликовано сейчас?")) return;
           await callStatus("PUBLISHED");
         }}>Опубликовано</button>
-        <button className="btn-glass btn-sm bg-red-600/20 text-red-400" disabled={loading} onClick={async () => { await callStatus('REJECTED'); }}>Отклонить</button>
+        <button className="btn-glass bg-red-600/20 text-red-400 px-2 py-0.5" disabled={loading} onClick={async () => { await callStatus('REJECTED'); }}>Отклонить</button>
         </div>
         {picker && (
           <>
