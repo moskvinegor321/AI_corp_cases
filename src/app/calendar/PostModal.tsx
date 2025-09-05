@@ -13,7 +13,7 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="relative max-w-[1100px] w-[95vw]" onClick={(e)=> e.stopPropagation()}>
+      <div className="relative w-[95vw] max-w-[1100px] max-h-[90vh] overflow-auto" onClick={(e)=> e.stopPropagation()}>
         <button
           aria-label="Закрыть"
           className="btn-glass btn-sm absolute -top-3 -right-3"
