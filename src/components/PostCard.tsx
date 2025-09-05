@@ -55,9 +55,10 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
   const callStatus = async (status: Post["status"], extra?: { scheduledAt?: string; reviewDueAt?: string; publishedAt?: string }) => {
     setLoading(true);
     try {
+      const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
       await fetch(`/api/posts/${post.id}/status`, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-admin-token": (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "" },
+        headers: { "content-type": "application/json", "x-admin-token": token },
         body: JSON.stringify({ status, ...extra }),
       });
       onChanged?.();
@@ -227,7 +228,9 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         <button className="btn-glass btn-sm bg-red-600/20 text-red-400" disabled={loading} onClick={async () => { await callStatus('REJECTED'); }}>Отклонить</button>
         </div>
         {picker && (
-          <div className="absolute top-full mt-2 left-0 glass rounded-xl p-3 z-10 w-64 grid gap-2">
+          <>
+          <div className="fixed inset-0 bg-black/60 z-10" />
+          <div className="absolute top-full mt-2 left-0 glass rounded-xl p-3 z-20 w-64 grid gap-2">
             <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
             <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
             <div className="flex gap-2 justify-end">
@@ -241,6 +244,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
               }}>Сохранить</button>
             </div>
           </div>
+          </>
         )}
         <div className="flex gap-2 flex-wrap md:justify-end opacity-90">
           <button className="btn-glass text-[11px] px-2 py-0.5" onClick={()=>setCommentsOpen((v)=>!v)}>Комментарии</button>
