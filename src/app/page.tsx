@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PostCard, type Post } from '@/components/PostCard';
 
 type PostWithComments = Post;
@@ -20,6 +20,8 @@ export default function Home() {
   const [filterPillarId, setFilterPillarId] = useState<string|undefined>(undefined);
   const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED'>>([]);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
@@ -27,9 +29,20 @@ export default function Home() {
     const params = new URLSearchParams();
     if (filterPillarId) params.set('pillarId', filterPillarId);
     if (statuses.length) params.set('status', JSON.stringify(statuses));
-    const r = await fetch(`/api/posts?${params.toString()}`);
-    const d = await r.json();
-    setItems(d.items || []);
+    try {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setLoading(true);
+      const r = await fetch(`/api/posts?${params.toString()}`, { signal: controller.signal });
+      if (!r.ok) throw new Error('failed');
+      const d = await r.json();
+      setItems(d.items || []);
+    } catch (e) {
+      // ignore aborts
+    } finally {
+      setLoading(false);
+    }
   }, [filterPillarId, statuses]);
 
   useEffect(() => {
@@ -39,7 +52,10 @@ export default function Home() {
     if (saved) setAdminToken(saved);
   }, [load]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const t = setTimeout(() => { load(); }, 150);
+    return () => { clearTimeout(t); abortRef.current?.abort(); };
+  }, [load]);
 
   const saveToken = (t: string) => { setAdminToken(t); if (typeof window !== 'undefined') localStorage.setItem('aion_admin_token', t); };
 
@@ -115,6 +131,7 @@ export default function Home() {
             setPromptOpen(true);
           }}>Промпт и поиск</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
+          {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
       </div>
 

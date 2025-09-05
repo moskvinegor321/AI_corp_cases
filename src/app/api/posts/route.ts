@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     prisma.post.findMany({
       where,
       orderBy: { [sortBy]: sortDir },
-      include: { attachments: true, comments: true, pillar: true },
+      include: { attachments: true, comments: { orderBy: { createdAt: 'desc' }, take: 5 }, pillar: true },
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
