@@ -23,6 +23,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const [query, setQuery] = useState('');
+  const [stats, setStats] = useState<{ total: number; byStatus: Record<string, number> } | null>(null);
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
@@ -58,6 +59,16 @@ export default function Home() {
     const t = setTimeout(() => { load(); }, 150);
     return () => { clearTimeout(t); abortRef.current?.abort(); };
   }, [load]);
+
+  useEffect(()=>{
+    const fetchStats = async () => {
+      const p = new URLSearchParams(); if (filterPillarId) p.set('pillarId', filterPillarId);
+      const r = await fetch(`/api/posts/stats?${p.toString()}`);
+      const d = await r.json();
+      setStats(d);
+    };
+    fetchStats();
+  }, [filterPillarId]);
 
   const saveToken = (t: string) => { setAdminToken(t); if (typeof window !== 'undefined') localStorage.setItem('aion_admin_token', t); };
 
@@ -137,6 +148,17 @@ export default function Home() {
           {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
       </div>
+
+      {stats && (
+        <div className="flex items-center gap-2 flex-wrap opacity-90">
+          <span className="chip px-3 py-1 rounded">Всего: {stats.total}</span>
+          <span className="chip px-3 py-1 rounded">Разбор: {stats.byStatus.DRAFT || 0}</span>
+          <span className="chip px-3 py-1 rounded">Ревью: {stats.byStatus.NEEDS_REVIEW || 0}</span>
+          <span className="chip px-3 py-1 rounded">Запланирован: {stats.byStatus.READY_TO_PUBLISH || 0}</span>
+          <span className="chip px-3 py-1 rounded">Опубликован: {stats.byStatus.PUBLISHED || 0}</span>
+          <span className="chip px-3 py-1 rounded">Отклонён: {stats.byStatus.REJECTED || 0}</span>
+        </div>
+      )}
 
       <div className="grid gap-3">
         {items.map((p)=> (
