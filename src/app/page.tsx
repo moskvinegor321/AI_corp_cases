@@ -55,14 +55,15 @@ export default function Home() {
             try { const r = await fetch('/api/settings/prompts',{cache:'no-store'}); if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }} catch {}
             setPromptOpen(true);
           }}>Промпт и поиск</button>
-          <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId||undefined, n:5 }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
+          <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId||undefined, n:5, searchQuery, noSearch }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
         </div>
       </div>
 
       <div className="grid gap-3">
         {items.map((p)=> (
           <div key={p.id} className="grid gap-2">
-            <PostCard post={p} onChanged={load} onToggleComments={()=>setDraft(p.id,{ ...drafts[p.id], text: (drafts[p.id]?.text||'') })} />
+            <PostCard post={p} onChanged={load} onToggleComments={()=>setDraft(p.id,{ ...drafts[p.id], text: (drafts[p.id]?.text||'') , isTask: drafts[p.id]?.isTask||false })} />
+            {!!drafts[p.id] && (
             <div className="panel rounded-lg p-3 grid gap-2">
               <div className="font-semibold text-sm">Комментарий / задача</div>
               <textarea className="bg-background rounded p-2 h-20" value={drafts[p.id]?.text||''} onChange={(e)=>setDraft(p.id,{ text: e.target.value })} placeholder="Текст комментария" />
@@ -84,6 +85,7 @@ export default function Home() {
                 }}>Добавить</button>
               </div>
             </div>
+            )}
           </div>
         ))}
       </div>
@@ -116,6 +118,16 @@ export default function Home() {
             <div className="flex gap-2 justify-end">
               <button className="btn-glass btn-sm" onClick={()=>setModalOpen(false)}>Отмена</button>
               <button className="btn-glass btn-sm" disabled={!form.title.trim()} onClick={async ()=>{
+                // duplicate hint (soft)
+                if (form.title.trim().length > 3) {
+                  const q = encodeURIComponent(form.title.trim());
+                  const r = await fetch(`/api/posts?search=${q}&pillarId=${encodeURIComponent(form.pillarId||'')}&pageSize=5`);
+                  const d = await r.json().catch(()=>({ items: [] }));
+                  if (Array.isArray(d.items) && d.items.length) {
+                    const proceed = typeof window!=='undefined' ? window.confirm(`Найдены похожие посты (${d.items.length}). Все равно создать?`) : true;
+                    if (!proceed) return;
+                  }
+                }
                 const res = await fetch('/api/posts', { method: 'POST', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ ...form, source: 'manual' }) });
                 if (!res.ok) { alert('Не удалось создать пост'); return; }
                 setModalOpen(false); setForm({ title:'', body:'' }); await load();

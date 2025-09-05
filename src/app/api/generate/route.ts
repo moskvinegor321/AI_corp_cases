@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const body: GenerateBody & { pageId?: string; pillarId?: string } = await req.json().catch(() => ({} as GenerateBody));
+  const body: GenerateBody & { pageId?: string; pillarId?: string; searchQuery?: string; noSearch?: boolean } = await req.json().catch(() => ({} as GenerateBody));
   const n = Number(body?.n || process.env.GENERATE_N || 5);
   const pageId = (body as { pageId?: string }).pageId;
   const pillarId = (body as { pillarId?: string }).pillarId;
@@ -80,7 +80,10 @@ export async function POST(req: NextRequest) {
   if (promptOverride) parts.push(`# TASK\n${promptOverride}`);
   finalPrompt = parts.length ? parts.join(`\n\n`) : undefined;
 
-  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride, noSearch: !searchQueryOverride });
+  // Allow overriding search from request body
+  const searchOverride = typeof body.searchQuery === 'string' && body.searchQuery.trim().length > 0 ? body.searchQuery.trim() : searchQueryOverride;
+  const noSearchFinal = body.noSearch === true ? true : !searchOverride;
+  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride: searchOverride, noSearch: noSearchFinal });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
   const created: unknown[] = [];
