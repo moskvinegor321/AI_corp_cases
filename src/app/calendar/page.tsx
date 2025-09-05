@@ -114,10 +114,7 @@ export default function CalendarPage() {
             </div>
           )}
         </div>
-        <select className="select-compact-sm" value={filters.pillarId||''} onChange={(e)=> setPillar(e.target.value||undefined)}>
-          <option value="">Все страницы</option>
-          {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
-        </select>
+        {/* Удалён одиночный селектор столпов; используем только мультиселектор ниже */}
         <div className="relative">
           <button className="btn-glass btn-sm" onClick={()=> setPillarsOpen(v=>!v)}>
             {pillarIds.length ? `Столпы (${pillarIds.length})` : 'Все столпы'}
@@ -186,7 +183,7 @@ export default function CalendarPage() {
       </div>
       {openPost && (
         <>
-          <div className="fixed inset-0 bg-black/70 z-40" onClick={()=> setOpenPost(null)} />
+          <div className="fixed inset-0 bg-black/80 z-40" onClick={()=> setOpenPost(null)} />
           <PostModal post={openPost} onClose={()=> setOpenPost(null)} onChanged={()=>{ setOpenPost(null); load(); }} />
         </>
       )}

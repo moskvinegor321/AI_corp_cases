@@ -142,7 +142,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
             )}
             {post.status === 'READY_TO_PUBLISH' && editSchedule && (
               <>
-                <div className="fixed inset-0 bg-black/70 z-40" />
+                <div className="fixed inset-0 bg-black/80 z-40" />
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                   <div className="panel rounded-xl p-3 w-64 grid gap-2">
                     <div className="text-xs opacity-80">Дата/время публикации</div>
@@ -277,7 +277,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         </div>
         {picker && (
           <>
-            <div className="fixed inset-0 bg-black/70 z-40" />
+            <div className="fixed inset-0 bg-black/80 z-40" />
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <div className="panel rounded-xl p-3 w-64 grid gap-2">
                 <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : picker === 'publish' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
