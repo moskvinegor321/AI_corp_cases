@@ -93,7 +93,7 @@ export function StoryCard({ story, onAction, selected, onSelect }: { story: Stor
         <div className="grid grid-cols-3 gap-2 items-center">
           <button className="px-2 h-10 rounded btn-glass text-red-400 text-xs" onClick={() => onAction(story.id, 'reject')}>Отклонить</button>
           <button className="px-2 h-10 rounded btn-glass text-xs" onClick={() => onAction(story.id, 'triage')}>Разобрать</button>
-          <button className="px-2 h-10 rounded btn-glass text-green-400 text-xs" onClick={() => onAction(story.id, 'publish')}>Опубликовать</button>
+          <button className="px-2 h-10 rounded btn-glass text-green-400 text-xs" onClick={() => onAction(story.id, 'publish')}>Опубликовано</button>
         </div>
         <button className="mt-1 px-3 h-10 rounded btn-glass w-full" onClick={copyAll}>{copied ? 'Скопировано' : 'Копировать'}</button>
       </div>

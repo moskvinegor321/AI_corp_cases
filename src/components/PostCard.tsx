@@ -33,6 +33,11 @@ export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => vo
   const onFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+    // basic validation: 25MB limit and allowed types
+    const maxBytes = 25 * 1024 * 1024;
+    const allowed = [/^image\//, /^application\/pdf$/, /^text\//, /^video\//];
+    if (f.size > maxBytes) { alert('Файл больше 25MB'); e.currentTarget.value = ''; return; }
+    if (!allowed.some((re) => re.test(f.type || ''))) { alert('Недопустимый тип файла'); e.currentTarget.value = ''; return; }
     setLoading(true);
     try {
       const token = (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";

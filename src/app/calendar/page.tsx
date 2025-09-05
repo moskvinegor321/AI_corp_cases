@@ -17,7 +17,15 @@ export default function CalendarPage() {
     const d = await r.json();
     setItems(d.items || []);
   };
-  useEffect(() => { load(); }, [JSON.stringify(filters)]);
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.statuses?.length) params.set('status', JSON.stringify(filters.statuses));
+    if (filters.from) params.set('from', filters.from);
+    if (filters.to) params.set('to', filters.to);
+    const q = params.toString();
+    if (typeof window !== 'undefined') window.history.replaceState({}, '', q ? `?${q}` : location.pathname);
+    load();
+  }, [JSON.stringify(filters)]);
 
   const groups = useMemo(() => {
     const map: Record<string, Post[]> = {};
