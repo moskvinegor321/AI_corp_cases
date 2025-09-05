@@ -28,6 +28,7 @@ export default function Home() {
   const abortRef = useRef<AbortController | null>(null);
   const [query, setQuery] = useState('');
   const [stats, setStats] = useState<{ total: number; byStatus: Record<string, number> } | null>(null);
+  const [generatingText, setGeneratingText] = useState(false);
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
@@ -227,7 +228,9 @@ export default function Home() {
               <span>Текст</span>
               <textarea className="bg-background rounded p-2 h-40" value={form.body} onChange={(e)=>setForm(f=>({...f, body: e.target.value}))} />
               <div className="flex justify-end">
-                <button className="btn-glass btn-sm" disabled={!form.title.trim() || !form.pillarId} onClick={async ()=>{
+                <button className="btn-glass btn-sm" disabled={!form.title.trim() || !form.pillarId || generatingText} onClick={async ()=>{
+                  setGeneratingText(true);
+                  document.dispatchEvent(new Event('aion:load:start'));
                   try {
                     const token = adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '';
                     const r = await fetch('/api/generate/preview', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId, title: form.title, topic: form.topic }) });
@@ -235,7 +238,8 @@ export default function Home() {
                     if (d?.text) setForm(f=> ({ ...f, body: d.text }));
                     else alert('Не удалось сгенерировать текст');
                   } catch { alert('Не удалось сгенерировать текст'); }
-                }}>Сгенерировать текст</button>
+                  finally { setGeneratingText(false); document.dispatchEvent(new Event('aion:load:end')); }
+                }}>{generatingText ? 'Генерация…' : 'Сгенерировать текст'}</button>
               </div>
             </label>
             <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
