@@ -16,7 +16,7 @@ export type Post = {
   comments?: Array<{ id: string; text: string; isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'|null; dueAt?: string | null; createdAt: string }>;
 };
 
-export function PostCard({ post, onChanged, onToggleComments, onEdit, adminToken }: { post: Post; onChanged?: () => void; onToggleComments?: () => void; onEdit?: (post: Post) => void; adminToken?: string }) {
+export function PostCard({ post, onChanged, onToggleComments: _onToggleComments, onEdit, adminToken }: { post: Post; onChanged?: () => void; onToggleComments?: () => void; onEdit?: (post: Post) => void; adminToken?: string }) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [picker, setPicker] = useState<null | 'review' | 'schedule'>(null);
@@ -82,8 +82,6 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit, adminToken
       });
       onChanged?.();
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
       alert("Не удалось загрузить файл");
     } finally {
       setLoading(false);

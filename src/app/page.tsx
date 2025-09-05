@@ -1,10 +1,8 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PostCard, type Post } from '@/components/PostCard';
 
-type CommentDraft = { text: string; isTask: boolean; taskStatus: 'OPEN'|'IN_PROGRESS'|'DONE'|''; dueAt?: string };
-type PostComment = { id: string; text: string; isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'|null; dueAt?: string|null; createdAt: string };
-type PostWithComments = Post & { comments?: PostComment[] };
+type PostWithComments = Post;
 
 export default function Home() {
   const [items, setItems] = useState<PostWithComments[]>([]);
@@ -20,38 +18,30 @@ export default function Home() {
   const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: '', body: '' });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [filterPillarId, setFilterPillarId] = useState<string|undefined>(undefined);
-  const [drafts, setDrafts] = useState<Record<string, CommentDraft>>({});
-  const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'>>([]);
   const [statusOpen, setStatusOpen] = useState(false);
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
-  const load = async (overridePillarId?: string) => {
+  const load = useCallback(async () => {
     const params = new URLSearchParams();
-    const pid = typeof overridePillarId === 'string' ? overridePillarId : filterPillarId;
-    if (pid) params.set('pillarId', pid);
+    if (filterPillarId) params.set('pillarId', filterPillarId);
     if (statuses.length) params.set('status', JSON.stringify(statuses));
     const r = await fetch(`/api/posts?${params.toString()}`);
     const d = await r.json();
     setItems(d.items || []);
-  };
+  }, [filterPillarId, statuses]);
 
   useEffect(() => {
     load();
     fetch('/api/pillars').then(r=>r.json()).then(d=>setPillars(d.pillars||[]));
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
     if (saved) setAdminToken(saved);
-  }, []);
+  }, [load]);
 
-  useEffect(() => { load(); }, [filterPillarId, JSON.stringify(statuses)]);
+  useEffect(() => { load(); }, [load]);
 
   const saveToken = (t: string) => { setAdminToken(t); if (typeof window !== 'undefined') localStorage.setItem('aion_admin_token', t); };
-
-  const setDraft = (id: string, patch: Partial<CommentDraft>) => setDrafts((prev) => ({
-    ...prev,
-    [id]: { ...(prev[id] || { text: '', isTask: false, taskStatus: '' as const }), ...patch },
-  }));
 
   return (
     <div className="p-6 grid gap-4">
@@ -65,10 +55,15 @@ export default function Home() {
           </select>
           <div className="relative">
             <button className="btn-glass btn-sm" onClick={()=>setStatusOpen((v)=>!v)}>
-              {statuses.length===0 ? 'Все статусы' : ['DRAFT','NEEDS_REVIEW','READY_TO_PUBLISH','PUBLISHED']
-                .filter(s=>statuses.includes(s as any))
-                .map(s=>({DRAFT:'Разбор',NEEDS_REVIEW:'Ревью',READY_TO_PUBLISH:'Запланирован',PUBLISHED:'Опубликован'} as const)[s as 'DRAFT'])
-                .join(', ')}
+              {(() => {
+                const labels: Record<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED', string> = {
+                  DRAFT: 'Разбор',
+                  NEEDS_REVIEW: 'Ревью',
+                  READY_TO_PUBLISH: 'Запланирован',
+                  PUBLISHED: 'Опубликован',
+                };
+                return statuses.length === 0 ? 'Все статусы' : statuses.map((s) => labels[s]).join(', ');
+              })()}
             </button>
             {statusOpen && (
               <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[220px]">
