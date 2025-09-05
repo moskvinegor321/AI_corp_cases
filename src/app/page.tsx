@@ -53,7 +53,7 @@ export default function Home() {
               <textarea className="bg-background rounded p-2 h-20" value={drafts[p.id]?.text||''} onChange={(e)=>setDraft(p.id,{ text: e.target.value })} placeholder="Текст комментария" />
               <div className="flex items-center gap-2 text-sm">
                 <label className="flex items-center gap-2"><input type="checkbox" checked={!!drafts[p.id]?.isTask} onChange={(e)=>setDraft(p.id,{ isTask: e.target.checked })} /> это задача</label>
-                <select className="select-compact-sm" value={drafts[p.id]?.taskStatus||''} onChange={(e)=>setDraft(p.id,{ taskStatus: (e.target.value as any) })} disabled={!drafts[p.id]?.isTask}>
+                <select className="select-compact-sm" value={drafts[p.id]?.taskStatus||''} onChange={(e)=>setDraft(p.id,{ taskStatus: e.target.value as 'OPEN'|'IN_PROGRESS'|'DONE'|'' })} disabled={!drafts[p.id]?.isTask}>
                   <option value="">Статус задачи…</option>
                   <option value="OPEN">OPEN</option>
                   <option value="IN_PROGRESS">IN_PROGRESS</option>
