@@ -280,7 +280,7 @@ export default function Home() {
             </label>
             <div className="mt-3 flex gap-2 justify-end">
               <button className="btn-glass btn-sm" onClick={()=>setPromptOpen(false)}>Закрыть</button>
-              <button className="btn-glass btn-sm" onClick={async ()=>{ await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) }); }}>Сохранить контекст и TOV</button>
+              <button className="btn-glass btn-sm" onClick={async ()=>{ await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) }); await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery }) }); }}>Сохранить</button>
             </div>
           </div>
         </div>
