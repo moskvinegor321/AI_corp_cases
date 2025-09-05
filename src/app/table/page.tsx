@@ -1,17 +1,23 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { usePostFilters, type PostStatus } from "@/lib/filters/posts";
 import type { Post } from "@/components/PostCard";
 
 export default function TablePage() {
   const [items, setItems] = useState<Post[]>([]);
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [view, setView] = useState<'matrix'|'list'>('matrix');
+  const { filters, setStatuses, setRange } = usePostFilters();
 
   const load = async () => {
-    const r = await fetch(`/api/posts`); const d = await r.json(); setItems(d.items || []);
+    const params = new URLSearchParams();
+    if (filters.statuses?.length) params.set('status', JSON.stringify(filters.statuses));
+    if (filters.from) params.set('from', filters.from);
+    if (filters.to) params.set('to', filters.to);
+    const r = await fetch(`/api/posts?${params.toString()}`); const d = await r.json(); setItems(d.items || []);
     const rp = await fetch(`/api/pillars`); const dp = await rp.json(); setPillars(dp.pillars || []);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [JSON.stringify(filters)]);
 
   const topics = useMemo(() => {
     return Array.from(new Set(items.map(i => i.topic || '').filter(Boolean))).sort();
@@ -19,12 +25,23 @@ export default function TablePage() {
 
   return (
     <div className="p-6 grid gap-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="text-xl font-semibold">Таблица</div>
         <select className="select-compact-sm" value={view} onChange={(e)=>setView(e.target.value as 'matrix'|'list')}>
           <option value="matrix">Матрица</option>
           <option value="list">Список</option>
         </select>
+        <select className="select-compact-sm" multiple value={filters.statuses as unknown as string[]} onChange={(e)=>{
+          const opts = Array.from(e.target.selectedOptions).map(o=>o.value as PostStatus);
+          setStatuses(opts);
+        }}>
+          <option value="READY_TO_PUBLISH">READY_TO_PUBLISH</option>
+          <option value="PUBLISHED">PUBLISHED</option>
+          <option value="NEEDS_REVIEW">NEEDS_REVIEW</option>
+          <option value="DRAFT">DRAFT</option>
+        </select>
+        <input className="select-compact-sm" type="date" value={filters.from?.slice(0,10) || ""} onChange={(e)=>setRange(e.target.value? new Date(e.target.value).toISOString(): undefined, filters.to)} />
+        <input className="select-compact-sm" type="date" value={filters.to?.slice(0,10) || ""} onChange={(e)=>setRange(filters.from, e.target.value? new Date(e.target.value).toISOString(): undefined)} />
       </div>
 
       {view === 'matrix' ? (
