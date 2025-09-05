@@ -126,9 +126,9 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
             <span className={`chip px-2 py-0.5 rounded ${statusClass[post.status]}`}>{statusLabel[post.status]}</span>
             {post.status === 'READY_TO_PUBLISH' && !editSchedule && (
               <>
-                <span className="opacity-60">{post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : '—'}</span>
-                <button
-                  className="btn-glass btn-sm"
+                <span
+                  className="opacity-60 cursor-pointer hover:underline"
+                  title="Изменить дату/время публикации"
                   onClick={() => {
                     const base = post.scheduledAt ? new Date(post.scheduledAt) : new Date();
                     const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000)
@@ -137,7 +137,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                     setDt(local);
                     setEditSchedule(true);
                   }}
-                >Изменить</button>
+                >{post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : '—'}</span>
               </>
             )}
             {post.status === 'READY_TO_PUBLISH' && editSchedule && null}
