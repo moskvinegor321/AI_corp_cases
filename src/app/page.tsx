@@ -18,7 +18,7 @@ export default function Home() {
   const [noSearch, setNoSearch] = useState(false);
   const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: '', body: '' });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
-  const [filterPillarId, setFilterPillarId] = useState<string|undefined>(undefined);
+  const [filterPillarIds, setFilterPillarIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED'>>([]);
   const [statusOpen, setStatusOpen] = useState(false);
   const [taskFilterOpen, setTaskFilterOpen] = useState(false);
@@ -33,7 +33,7 @@ export default function Home() {
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
-    if (filterPillarId) params.set('pillarId', filterPillarId);
+    if (filterPillarIds.length) params.set('pillarId', JSON.stringify(filterPillarIds));
     if (statuses.length) params.set('status', JSON.stringify(statuses));
     if (taskStatus) params.set('taskStatus', taskStatus);
     if (assignee) params.set('assignee', assignee);
@@ -55,7 +55,7 @@ export default function Home() {
       setLoading(false);
       document.dispatchEvent(new Event('aion:load:end'));
     }
-  }, [filterPillarId, statuses, query, taskStatus, assignee]);
+  }, [filterPillarIds, statuses, query, taskStatus, assignee]);
 
   useEffect(() => {
     load();
@@ -71,13 +71,13 @@ export default function Home() {
 
   useEffect(()=>{
     const fetchStats = async () => {
-      const p = new URLSearchParams(); if (filterPillarId) p.set('pillarId', filterPillarId);
+      const p = new URLSearchParams(); if (filterPillarIds.length) p.set('pillarId', JSON.stringify(filterPillarIds));
       const r = await fetch(`/api/posts/stats?${p.toString()}`);
       const d = await r.json();
       setStats(d);
     };
     fetchStats();
-  }, [filterPillarId]);
+  }, [filterPillarIds]);
 
   const saveToken = (t: string) => { setAdminToken(t); if (typeof window !== 'undefined') localStorage.setItem('aion_admin_token', t); };
 
@@ -87,10 +87,24 @@ export default function Home() {
         <div className="text-2xl font-bold tracking-tight">Посты</div>
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
-          <select className="select-compact-sm" value={filterPillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setFilterPillarId(v); }}>
-            <option value="">Все страницы</option>
-            {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
-          </select>
+          <div className="relative">
+            <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(v=>!v)}>{filterPillarIds.length? `Страницы (${filterPillarIds.length})` : 'Страницы'}</button>
+            {statusOpen && (
+              <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[260px] grid gap-2">
+                {pillars.map(p=> (
+                  <label key={p.id} className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={filterPillarIds.includes(p.id)} onChange={(e)=>{
+                      setFilterPillarIds(prev=> e.target.checked ? [...prev, p.id] : prev.filter(x=>x!==p.id));
+                    }} /> {p.name}
+                  </label>
+                ))}
+                <div className="flex gap-2 justify-end">
+                  <button className="btn-glass btn-sm" onClick={()=>{ setFilterPillarIds([]); setStatusOpen(false); }}>Сбросить</button>
+                  <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(false)}>Готово</button>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="relative">
             <button className="btn-glass btn-sm" onClick={()=>setTaskFilterOpen((v)=>!v)}>
               {taskStatus || assignee ? `Задачи: ${taskStatus || ''} ${assignee? '→ '+assignee: ''}` : 'Задачи'}
@@ -127,12 +141,12 @@ export default function Home() {
             setPillars(prev=>[...prev, created]);
             setForm(f=>({ ...f, pillarId: created.id }));
           }}>Создать страницу</button>
-          <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarId })); setModalOpen(true); }}>Добавить пост</button>
+          <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarIds[0] })); setModalOpen(true); }}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             try {
               // Load page-scoped prompt if pillar selected
-              if (filterPillarId) {
-                const pr = await fetch(`/api/pages/${filterPillarId}`, { cache: 'no-store' });
+              if (filterPillarIds[0]) {
+                const pr = await fetch(`/api/pages/${filterPillarIds[0]}`, { cache: 'no-store' });
                 const pd = await pr.json();
                 setPromptText(pd.page?.prompt || '');
                 setSearchQuery(pd.page?.searchQuery || '');
@@ -143,7 +157,7 @@ export default function Home() {
             } catch {}
             setPromptOpen(true);
           }}>Промпт и поиск</button>
-          <button className="btn-glass btn-sm" onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать 5 постов</button>
+          <button className="btn-glass btn-sm" onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarIds[0]||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать 5 постов</button>
           {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
       </div>
@@ -284,8 +298,8 @@ export default function Home() {
                   setSavingPrompts(true);
                   const r1 = await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) });
                   let rMain: Response;
-                  if (filterPillarId) {
-                    rMain = await fetch(`/api/pages/${filterPillarId}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
+                  if (filterPillarIds[0]) {
+                    rMain = await fetch(`/api/pages/${filterPillarIds[0]}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
                   } else {
                     rMain = await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
                   }

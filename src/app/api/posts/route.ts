@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   const status = parseArray(searchParams.get('status')) as ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED')[] | undefined;
   const from = searchParams.get('from');
   const to = searchParams.get('to');
-  const pillarId = searchParams.get('pillarId') || undefined;
+  const pillarIds = parseArray(searchParams.get('pillarId'));
   const search = searchParams.get('search') || undefined;
   const taskStatus = (searchParams.get('taskStatus') || undefined) as 'OPEN'|'IN_PROGRESS'|'DONE'|undefined;
   const assignee = searchParams.get('assignee') || undefined;
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
   const where: {
     status?: { in: ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED')[] };
-    pillarId?: string;
+    pillarId?: string | { in: string[] };
     OR?: Array<Record<string, unknown>>;
     scheduledAt?: { gte?: Date; lte?: Date };
     publishedAt?: { gte?: Date; lte?: Date };
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     comments?: { some: { isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'; assignee?: string | null } };
   } = {};
   if (status && status.length) where.status = { in: status };
-  if (pillarId) where.pillarId = pillarId;
+  if (pillarIds && pillarIds.length) where.pillarId = { in: pillarIds };
   if (from || to) where.OR = [
     { scheduledAt: { gte: from ? new Date(from) : undefined, lte: to ? new Date(to) : undefined } },
     { publishedAt: { gte: from ? new Date(from) : undefined, lte: to ? new Date(to) : undefined } },
