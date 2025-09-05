@@ -23,7 +23,7 @@ export default async function PostPage({ params }: { params: RouteParams }) {
     attachments: post.attachments.map(a=>({ id: a.id, name: a.name, url: a.url, mimeType: a.mimeType, sizeBytes: (a.sizeBytes as number|null) })),
     comments: post.comments.map(c=>({ id: c.id, text: c.text, isTask: c.isTask, taskStatus: (c.taskStatus as 'OPEN'|'IN_PROGRESS'|'DONE'|null), dueAt: c.dueAt ? c.dueAt.toISOString() : null, createdAt: c.createdAt.toISOString(), assignee: c.assignee })),
   };
-  return <ClientPost post={clientPost as any} />;
+  return <ClientPost post={clientPost} />;
 }
 
 
