@@ -31,7 +31,7 @@ export default function RootLayout({
         <div className="p-4">
           <nav className="glass rounded-xl p-2 mb-4 flex gap-3 text-sm">
             <Link className="btn-glass btn-sm" href="/">Посты</Link>
-            <Link className="btn-glass btn-sm" href="/stories">Генерация</Link>
+            {/* Генерация перенесена на главную как фича создания постов */}
             <Link className="btn-glass btn-sm" href="/calendar">Календарь</Link>
             <Link className="btn-glass btn-sm" href="/table">Таблица</Link>
           </nav>

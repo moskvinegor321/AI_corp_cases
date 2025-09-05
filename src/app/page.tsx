@@ -8,6 +8,12 @@ export default function Home() {
   const [items, setItems] = useState<Post[]>([]);
   const [adminToken, setAdminToken] = useState<string>('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [contextPrompt, setContextPrompt] = useState('');
+  const [tovPrompt, setTovPrompt] = useState('');
+  const [promptText, setPromptText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [noSearch, setNoSearch] = useState(false);
   const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: '', body: '' });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [drafts, setDrafts] = useState<Record<string, CommentDraft>>({});
@@ -41,6 +47,11 @@ export default function Home() {
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
           <button className="btn-glass btn-sm" onClick={()=>setModalOpen(true)}>Добавить пост</button>
+          <button className="btn-glass btn-sm" onClick={async ()=>{
+            try { const r = await fetch('/api/settings/prompts',{cache:'no-store'}); if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }} catch {}
+            setPromptOpen(true);
+          }}>Промпт и поиск</button>
+          <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId||undefined, n:5 }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
         </div>
       </div>
 
@@ -105,6 +116,35 @@ export default function Home() {
                 if (!res.ok) { alert('Не удалось создать пост'); return; }
                 setModalOpen(false); setForm({ title:'', body:'' }); await load();
               }}>Сохранить</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {promptOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className="glass rounded-xl p-4 w-[min(900px,95vw)]">
+            <div className="mb-2 font-semibold">Промпт генерации</div>
+            <div className="grid gap-2">
+              <div>
+                <div className="font-semibold text-sm mb-1">Context Prompt</div>
+                <textarea value={contextPrompt} onChange={(e)=>setContextPrompt(e.target.value)} className="w-full h-24 rounded p-2 bg-background" />
+              </div>
+              <div>
+                <div className="font-semibold text-sm mb-1">Tone of Voice Prompt</div>
+                <textarea value={tovPrompt} onChange={(e)=>setTovPrompt(e.target.value)} className="w-full h-20 rounded p-2 bg-background" />
+              </div>
+            </div>
+            <textarea value={promptText} onChange={(e)=>setPromptText(e.target.value)} className="w-full h-48 rounded p-2 bg-background mt-2" />
+            <div className="mt-3 font-semibold">Поисковый запрос</div>
+            <input value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} className="w-full h-10 rounded p-2 bg-background" placeholder="Например: scientific B2B sales AND AI last 90 days" disabled={noSearch} />
+            <label className="mt-2 flex items-center gap-2 text-sm opacity-80">
+              <input type="checkbox" checked={noSearch} onChange={(e)=>setNoSearch(e.target.checked)} />
+              Исключить поисковый запрос (генерация только по промпту)
+            </label>
+            <div className="mt-3 flex gap-2 justify-end">
+              <button className="btn-glass btn-sm" onClick={()=>setPromptOpen(false)}>Закрыть</button>
+              <button className="btn-glass btn-sm" onClick={async ()=>{ await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) }); }}>Сохранить контекст и TOV</button>
             </div>
           </div>
         </div>

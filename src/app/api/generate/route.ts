@@ -23,9 +23,10 @@ export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const body: GenerateBody & { pageId?: string } = await req.json().catch(() => ({} as GenerateBody));
+  const body: GenerateBody & { pageId?: string; pillarId?: string } = await req.json().catch(() => ({} as GenerateBody));
   const n = Number(body?.n || process.env.GENERATE_N || 5);
   const pageId = (body as { pageId?: string }).pageId;
+  const pillarId = (body as { pillarId?: string }).pillarId;
 
   const excludeRejected = String(process.env.EXCLUDE_REJECTED) === 'true';
   const existing = await prisma.story.findMany({
@@ -108,41 +109,18 @@ export async function POST(req: NextRequest) {
     const matchedDoc = docs.find((d) => d.url === firstSource);
     const providerDate: string | undefined = (matchedDoc?.publishedAt as string | undefined);
     const sourceDate = extractPublishedAt(providerDate) || extractPublishedAt(firstSource);
-    let saved;
-    try {
-      saved = await prisma.story.create({
-        data: {
-          title: it.title,
-          titleSlug: slug,
-          script: it.script,
-          company: it.company || null,
-          sources: (it.sources || []).slice(0, 3),
-          status: 'triage',
-          noveltyNote: it.novelty_note || null,
-          confidence: typeof it.confidence === 'number' ? it.confidence : null,
-          origin: 'generated',
-          sourcePublishedAt: sourceDate ? sourceDate : null,
-          pageId: pageId || undefined,
-        },
-      });
-    } catch {
-      // If column sourcePublishedAt is missing (migration not applied), retry without it
-      saved = await prisma.story.create({
-        data: {
-          title: it.title,
-          titleSlug: slug,
-          script: it.script,
-          company: it.company || null,
-          sources: (it.sources || []).slice(0, 3),
-          status: 'triage',
-          noveltyNote: it.novelty_note || null,
-          confidence: typeof it.confidence === 'number' ? it.confidence : null,
-          origin: 'generated',
-          pageId: pageId || undefined,
-        },
-      });
-    }
-    created.push(saved);
+    // Create Post directly with status NEEDS_REVIEW ("На разбор"), source='ai'
+    const post = await prisma.post.create({
+      data: {
+        title: it.title,
+        body: it.script,
+        status: 'NEEDS_REVIEW',
+        topic: it.company || null,
+        pillarId: pillarId || null,
+        source: 'ai',
+      },
+    });
+    created.push(post);
   }
 
   return NextResponse.json({ created, skippedDuplicates });
