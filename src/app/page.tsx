@@ -46,6 +46,10 @@ export default function Home() {
         <div className="text-2xl font-bold tracking-tight">Посты</div>
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
+          <select className="select-compact-sm" value={form.pillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setForm(f=>({ ...f, pillarId: v })); load(); }}>
+            <option value="">Все страницы</option>
+            {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
+          </select>
           <button className="btn-glass btn-sm" onClick={()=>setModalOpen(true)}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             try { const r = await fetch('/api/settings/prompts',{cache:'no-store'}); if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }} catch {}
@@ -58,7 +62,7 @@ export default function Home() {
       <div className="grid gap-3">
         {items.map((p)=> (
           <div key={p.id} className="grid gap-2">
-            <PostCard post={p} onChanged={load} />
+            <PostCard post={p} onChanged={load} onToggleComments={()=>setDraft(p.id,{ ...drafts[p.id], text: (drafts[p.id]?.text||'') })} />
             <div className="panel rounded-lg p-3 grid gap-2">
               <div className="font-semibold text-sm">Комментарий / задача</div>
               <textarea className="bg-background rounded p-2 h-20" value={drafts[p.id]?.text||''} onChange={(e)=>setDraft(p.id,{ text: e.target.value })} placeholder="Текст комментария" />

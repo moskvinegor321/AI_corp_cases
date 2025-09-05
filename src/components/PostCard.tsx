@@ -10,9 +10,10 @@ export type Post = {
   reviewDueAt?: string | null;
   topic?: string | null;
   pillar?: { id: string; name: string } | null;
+  body?: string | null;
 };
 
-export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => void }) {
+export function PostCard({ post, onChanged, onToggleComments }: { post: Post; onChanged?: () => void; onToggleComments?: () => void }) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [picker, setPicker] = useState<null | 'review' | 'schedule'>(null);
@@ -68,19 +69,24 @@ export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => vo
   };
 
   return (
-    <div className="panel rounded-lg p-3 flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="font-semibold text-sm">{post.title}</div>
-        <div className="text-xs opacity-70">{post.status}</div>
+    <div className="glass rounded-xl p-3 grid grid-cols-1 md:grid-cols-[1fr_320px] gap-3 items-start">
+      <div className="panel rounded-lg p-3 grid gap-2">
+        <div className="flex items-center justify-between">
+          <div className="font-semibold text-sm">{post.title}</div>
+          <div className="text-xs opacity-70">{post.status}</div>
+        </div>
+        <div className="text-xs opacity-80 flex gap-3 flex-wrap">
+          {post.pillar?.name && <span>Страница: {post.pillar.name}</span>}
+          {post.topic && <span>Тема: {post.topic}</span>}
+          {post.scheduledAt && <span>Запланировано: {new Date(post.scheduledAt).toLocaleString()}</span>}
+          {post.publishedAt && <span>Опубликовано: {new Date(post.publishedAt).toLocaleString()}</span>}
+          {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString()}</span>}
+        </div>
+        {post.body && (
+          <div className="text-sm opacity-90 whitespace-pre-line clamp-6">{post.body}</div>
+        )}
       </div>
-      <div className="text-xs opacity-80 flex gap-3 flex-wrap">
-        {post.pillar?.name && <span>Страница: {post.pillar.name}</span>}
-        {post.topic && <span>Тема: {post.topic}</span>}
-        {post.scheduledAt && <span>Запланировано: {new Date(post.scheduledAt).toLocaleString()}</span>}
-        {post.publishedAt && <span>Опубликовано: {new Date(post.publishedAt).toLocaleString()}</span>}
-        {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString()}</span>}
-      </div>
-      <div className="flex gap-2 flex-wrap relative">
+      <div className="flex gap-2 flex-wrap relative md:justify-end">
         <button className="btn-glass btn-sm" disabled={loading} onClick={() => {
           // default now + 1 hour
           const base = new Date();
@@ -99,6 +105,7 @@ export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => vo
           if (!confirm("Отметить как опубликовано сейчас?")) return;
           await callStatus("PUBLISHED");
         }}>Опубликовано</button>
+        <button className="btn-glass btn-sm" onClick={onToggleComments}>Комментарии</button>
         <button className="btn-glass btn-sm" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
         <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
 
