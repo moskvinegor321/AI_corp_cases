@@ -168,36 +168,37 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         )}
         <div className={`grid gap-2 mt-2 ${((post.comments && post.comments.length) || commentsOpen) ? 'border-t border-white/10 pt-2' : ''}`}>
           {!!(post.comments && post.comments.length) && (
-            <div className="grid gap-1">
-              {post.comments.slice(0, 10).map((c, i) => (
-                <div key={c.id} className={`text-xs opacity-80 pt-1 flex items-center gap-2 ${i>0 ? 'border-t border-white/10' : ''}`}>
-                  {c.isTask && (
-                    <>
-                      <button className="chip px-2 py-0.5 rounded text-[10px] hover:opacity-80" onClick={()=> setStatusEdit({ id: c.id, value: (c.taskStatus || 'OPEN') as 'OPEN'|'IN_PROGRESS'|'DONE' })}>
-                        {c.taskStatus || 'OPEN'}
-                      </button>
-                      {statusEdit?.id === c.id && (
-                        <span className="flex items-center gap-1">
-                          <select className="select-compact-sm" value={statusEdit.value} onChange={(e)=> setStatusEdit({ id: c.id, value: e.target.value as 'OPEN'|'IN_PROGRESS'|'DONE' })}>
-                            <option value="OPEN">OPEN</option>
-                            <option value="IN_PROGRESS">IN_PROGRESS</option>
-                            <option value="DONE">DONE</option>
-                          </select>
-                          <button className="btn-glass btn-sm" onClick={async ()=>{
-                            const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
-                            await fetch(`/api/posts/${post.id}/comments/${c.id}`, { method:'PATCH', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ taskStatus: statusEdit.value }) });
-                            setStatusEdit(null);
-                            onChanged?.();
-                          }}>OK</button>
-                          <button className="btn-glass btn-sm" onClick={()=> setStatusEdit(null)}>✕</button>
-                        </span>
-                      )}
-                    </>
+            <div className="panel rounded-lg p-2 grid gap-1">
+              {post.comments.slice(0, 10).map((c) => (
+                <div key={c.id} className="text-xs flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <button
+                      className="chip px-2 py-0.5 rounded text-[10px] hover:opacity-80"
+                      onClick={()=> c.isTask && setStatusEdit({ id: c.id, value: (c.taskStatus || 'OPEN') as 'OPEN'|'IN_PROGRESS'|'DONE' })}
+                    >
+                      {c.isTask ? (c.taskStatus || 'OPEN') : 'comment'}
+                    </button>
+                    <span className="truncate">{c.text}</span>
+                    {c.assignee && <span className="opacity-60 whitespace-nowrap">→ {c.assignee}</span>}
+                    <span className="opacity-60 whitespace-nowrap">{new Date(c.createdAt).toLocaleString()}</span>
+                    {c.dueAt && <span className="opacity-60 whitespace-nowrap">⏰ {new Date(c.dueAt).toLocaleString()}</span>}
+                  </div>
+                  {c.isTask && statusEdit?.id === c.id && (
+                    <span className="flex items-center gap-1">
+                      <select className="select-compact-sm" value={statusEdit.value} onChange={(e)=> setStatusEdit({ id: c.id, value: e.target.value as 'OPEN'|'IN_PROGRESS'|'DONE' })}>
+                        <option value="OPEN">OPEN</option>
+                        <option value="IN_PROGRESS">IN_PROGRESS</option>
+                        <option value="DONE">DONE</option>
+                      </select>
+                      <button className="btn-glass btn-sm" onClick={async ()=>{
+                        const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+                        await fetch(`/api/posts/${post.id}/comments/${c.id}`, { method:'PATCH', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ taskStatus: statusEdit.value }) });
+                        setStatusEdit(null);
+                        onChanged?.();
+                      }}>OK</button>
+                      <button className="btn-glass btn-sm" onClick={()=> setStatusEdit(null)}>✕</button>
+                    </span>
                   )}
-                  <span className="truncate">{c.text}</span>
-                  {c.assignee && <span className="opacity-60">→ {c.assignee}</span>}
-                  <span className="opacity-60">{new Date(c.createdAt).toLocaleString()}</span>
-                  {c.dueAt && <span className="opacity-60">⏰ {new Date(c.dueAt).toLocaleString()}</span>}
                 </div>
               ))}
             </div>
