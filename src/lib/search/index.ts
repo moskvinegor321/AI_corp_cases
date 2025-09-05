@@ -23,44 +23,53 @@ export function extractPublishedAt(input?: string): Date | null {
 }
 
 export async function searchNews(query: string, limit = 20): Promise<FoundDoc[]> {
-  let provider = (process.env.SEARCH_PROVIDER || '').toLowerCase();
-  // Auto-pick provider if not specified
-  if (!provider) {
-    if (process.env.NEWSAPI_KEY) provider = 'newsapi';
-    else if (process.env.SERPER_API_KEY) provider = 'serper';
-    else if (process.env.TAVILY_API_KEY) provider = 'tavily';
+  const explicit = (process.env.SEARCH_PROVIDER || '').toLowerCase();
+  const candidates: Array<'serper' | 'newsapi' | 'tavily'> = [];
+  // Build preference list. Prefer Serper if available, then NewsAPI, then Tavily.
+  if (explicit) {
+    if (explicit === 'serper' && process.env.SERPER_API_KEY) candidates.push('serper');
+    else if (explicit === 'newsapi' && process.env.NEWSAPI_KEY) candidates.push('newsapi');
+    else if (explicit === 'tavily' && process.env.TAVILY_API_KEY) candidates.push('tavily');
   }
+  if (process.env.SERPER_API_KEY && !candidates.includes('serper')) candidates.push('serper');
+  if (process.env.NEWSAPI_KEY && !candidates.includes('newsapi')) candidates.push('newsapi');
+  if (process.env.TAVILY_API_KEY && !candidates.includes('tavily')) candidates.push('tavily');
+
+  if (candidates.length === 0) return [];
 
   const seen = new Set<string>();
   const out: FoundDoc[] = [];
 
-  async function fetchPage(page: number): Promise<FoundDoc[]> {
-    if (provider === 'newsapi') return await searchNewsApi(query, 100, { page });
-    if (provider === 'serper') return await searchSerper(query, 100, { page });
-    if (provider === 'tavily') return await searchTavily(query, 20); // Tavily не поддерживает столпы в текущем API
-    return [];
-  }
-
-  try {
-    if (!provider) return [];
+  async function fetchFromProvider(provider: 'serper' | 'newsapi' | 'tavily'): Promise<FoundDoc[]> {
+    const local: FoundDoc[] = [];
     let page = 1;
-    while (out.length < limit && page <= 10) {
-      const docs = await fetchPage(page);
+    while (local.length < limit && page <= 10) {
+      let docs: FoundDoc[] = [];
+      if (provider === 'newsapi') docs = await searchNewsApi(query, 100, { page });
+      else if (provider === 'serper') docs = await searchSerper(query, 100, { page });
+      else if (provider === 'tavily') docs = await searchTavily(query, 20);
       if (!docs.length) break;
       for (const d of docs) {
-        if (out.length >= limit) break;
+        if (local.length >= limit) break;
         const key = (d.url || '').trim();
         if (!key || seen.has(key)) continue;
         seen.add(key);
-        out.push(d);
+        local.push(d);
       }
       page += 1;
-      // если за столп не добавилось ни одного уникального — прекращаем
-      if (out.length === 0 && page > 2) break;
+      if (local.length === 0 && page > 2) break;
     }
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn('Search provider error:', e);
+    return local;
+  }
+
+  for (const provider of candidates) {
+    try {
+      const docs = await fetchFromProvider(provider);
+      if (docs.length) return docs; // success
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn(`Search provider error (${provider}):`, e);
+    }
   }
   return out;
 }

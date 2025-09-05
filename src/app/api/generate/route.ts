@@ -95,6 +95,10 @@ export async function POST(req: NextRequest) {
     console.log('[generate] params', { pillarId, n, searchQuery: searchOverride, noSearch: noSearchFinal });
   }
   const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride: searchOverride, noSearch: noSearchFinal });
+  if (process.env.DEBUG_GENERATE === 'true') {
+    // eslint-disable-next-line no-console
+    console.log('[generate] docs', docs.slice(0, 5));
+  }
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
   const created: unknown[] = [];
