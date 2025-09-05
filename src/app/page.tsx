@@ -21,9 +21,10 @@ export default function Home() {
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
-  const load = async () => {
+  const load = async (overridePillarId?: string) => {
     const params = new URLSearchParams();
-    if (form.pillarId) params.set('pillarId', form.pillarId);
+    const pid = typeof overridePillarId === 'string' ? overridePillarId : form.pillarId;
+    if (pid) params.set('pillarId', pid);
     const r = await fetch(`/api/posts?${params.toString()}`);
     const d = await r.json();
     setItems(d.items || []);
@@ -35,6 +36,8 @@ export default function Home() {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
     if (saved) setAdminToken(saved);
   }, []);
+
+  useEffect(() => { load(); }, [form.pillarId]);
 
   const saveToken = (t: string) => { setAdminToken(t); if (typeof window !== 'undefined') localStorage.setItem('aion_admin_token', t); };
 
@@ -49,7 +52,7 @@ export default function Home() {
         <div className="text-2xl font-bold tracking-tight">Посты</div>
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
-          <select className="select-compact-sm" value={form.pillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setForm(f=>({ ...f, pillarId: v })); load(); }}>
+          <select className="select-compact-sm" value={form.pillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setForm(f=>({ ...f, pillarId: v })); }}>
             <option value="">Все страницы</option>
             {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
           </select>
@@ -61,7 +64,6 @@ export default function Home() {
             const created = (await res.json()).pillar as { id: string; name: string };
             setPillars(prev=>[...prev, created]);
             setForm(f=>({ ...f, pillarId: created.id }));
-            await load();
           }}>Создать страницу</button>
           <button className="btn-glass btn-sm" onClick={()=>setModalOpen(true)}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
