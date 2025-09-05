@@ -4,7 +4,7 @@ import { PostCard, type Post } from "@/components/PostCard";
 
 export default function PostModal({ post, onClose, onChanged, adminToken }: { post: Post; onClose: ()=>void; onChanged: ()=>void; adminToken?: string }){
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: post.title, body: post.body || "", topic: post.topic || undefined, pillarId: post.pillar?.id || undefined });
+  const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string; searchQuery?: string; noSearch?: boolean }>({ title: post.title, body: post.body || "", topic: post.topic || undefined, pillarId: post.pillar?.id || undefined, searchQuery: (post as unknown as { searchQuery?: string|null }).searchQuery || '', noSearch: false });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const token = useMemo(() => adminToken || (typeof window !== 'undefined' ? (localStorage.getItem('aion_admin_token') || '') : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "", [adminToken]);
   const [generatingText, setGeneratingText] = useState(false);
@@ -24,7 +24,7 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
           ✕
         </button>
         <div className="pt-8 pr-1">
-          <PostCard post={post} onChanged={onChanged} onEdit={() => { setEditing(true); setForm({ title: post.title, body: post.body || "", topic: post.topic || undefined, pillarId: post.pillar?.id || undefined }); }} adminToken={adminToken} />
+          <PostCard post={post} onChanged={onChanged} onEdit={() => { setEditing(true); setForm({ title: post.title, body: post.body || "", topic: post.topic || undefined, pillarId: post.pillar?.id || undefined, searchQuery: (post as unknown as { searchQuery?: string|null }).searchQuery || '', noSearch: false }); }} adminToken={adminToken} />
         </div>
 
         {editing && (
@@ -43,7 +43,7 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
                     setGeneratingText(true);
                     document.dispatchEvent(new Event('aion:load:start'));
                     try {
-                      const r = await fetch('/api/generate/preview', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId, title: form.title, topic: form.topic }) });
+                      const r = await fetch('/api/generate/preview', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId, title: form.title, topic: form.topic, searchQuery: form.searchQuery, noSearch: form.noSearch }) });
                       const d = await r.json();
                       if (d?.text) setForm(f=> ({ ...f, body: d.text }));
                       else alert('Не удалось сгенерировать текст');
@@ -65,10 +65,15 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
                   </select>
                 </label>
               </div>
+              <div className="grid gap-1 text-sm">
+                <span>Поисковый запрос</span>
+                <input className="bg-background rounded p-2" value={form.searchQuery||''} onChange={(e)=> setForm(f=> ({ ...f, searchQuery: e.target.value }))} placeholder="Запрос для источников" />
+                <label className="flex items-center gap-2 text-xs opacity-80"><input type="checkbox" checked={!!form.noSearch} onChange={(e)=> setForm(f=> ({ ...f, noSearch: e.target.checked }))} /> Исключить поиск при генерации текста</label>
+              </div>
               <div className="flex gap-2 justify-end">
                 <button className="btn-glass btn-sm" onClick={()=> setEditing(false)}>Отмена</button>
                 <button className="btn-glass btn-sm" disabled={!form.title.trim()} onClick={async ()=>{
-                  const res = await fetch(`/api/posts/${post.id}`, { method:'PATCH', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ title: form.title, body: form.body, topic: form.topic, pillarId: form.pillarId }) });
+                  const res = await fetch(`/api/posts/${post.id}`, { method:'PATCH', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ title: form.title, body: form.body, topic: form.topic, pillarId: form.pillarId, searchQuery: form.searchQuery }) });
                   if (!res.ok) { alert('Не удалось обновить пост'); return; }
                   setEditing(false);
                   onChanged();

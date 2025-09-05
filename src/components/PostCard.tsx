@@ -13,6 +13,7 @@ export type Post = {
   body?: string | null;
   source?: string | null;
   createdAt?: string;
+  searchQuery?: string | null;
   attachments?: Array<{ id: string; name: string; url: string; mimeType?: string | null; sizeBytes?: number | null }>;
   comments?: Array<{ id: string; text: string; isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'|null; dueAt?: string | null; createdAt: string; assignee?: string | null }>;
 };
