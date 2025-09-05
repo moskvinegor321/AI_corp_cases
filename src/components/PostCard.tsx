@@ -168,7 +168,13 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           <>
             <div ref={bodyRef} className="text-sm opacity-90 whitespace-pre-line" style={expanded ? { overflow: 'visible' } : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.body}</div>
             {(overflowing || expanded) && (
-              <button className="btn-glass btn-sm mt-1" onClick={()=> setExpanded(v=>!v)}>{expanded ? 'Скрыть' : 'Показать полностью'}</button>
+              <button
+                className="mt-1 text-[10px] underline opacity-80 hover:opacity-100 p-0"
+                style={{ background: 'transparent', border: 'none' }}
+                onClick={()=> setExpanded(v=>!v)}
+              >
+                {expanded ? 'Скрыть' : 'Показать полностью'}
+              </button>
             )}
           </>
         )}
