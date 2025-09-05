@@ -18,7 +18,16 @@ function parseFromUrl(): PostFilters {
 }
 
 export function usePostFilters(defaults?: Partial<PostFilters>) {
-  const [filters, setFilters] = useState<PostFilters>(() => ({ statuses: [], ...parseFromUrl(), ...defaults }));
+  const [filters, setFilters] = useState<PostFilters>(() => {
+    const merged = { ...parseFromUrl(), ...(defaults || {}) } as Partial<PostFilters>;
+    return {
+      statuses: merged.statuses && merged.statuses.length ? merged.statuses : [],
+      from: merged.from,
+      to: merged.to,
+      pillarId: merged.pillarId,
+      search: merged.search,
+    };
+  });
 
   useEffect(() => {
     const sp = new URLSearchParams();
