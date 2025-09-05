@@ -12,6 +12,7 @@ export type Post = {
   pillar?: { id: string; name: string } | null;
   body?: string | null;
   source?: string | null;
+  createdAt?: string;
   attachments?: Array<{ id: string; name: string; url: string; mimeType?: string | null; sizeBytes?: number | null }>;
   comments?: Array<{ id: string; text: string; isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'|null; dueAt?: string | null; createdAt: string; assignee?: string | null }>;
 };
@@ -148,9 +149,10 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           {post.source && <span className="chip px-2 py-0.5 rounded text-xs">{post.source}</span>}
           {post.pillar?.name && <span>Столп: {post.pillar.name}</span>}
           {post.topic && <span>Тема: {post.topic}</span>}
-          {post.scheduledAt && <span>Запланировано: {new Date(post.scheduledAt).toLocaleString()}</span>}
-          {post.publishedAt && <span>Опубликовано: {new Date(post.publishedAt).toLocaleString()}</span>}
-          {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString()}</span>}
+          {post.createdAt && <span>Создан: {new Date(post.createdAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
+          {post.scheduledAt && <span>Запланировано: {new Date(post.scheduledAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
+          {post.publishedAt && <span>Опубликовано: {new Date(post.publishedAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
+          {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
         </div>
         {post.body && (
           <div className="text-sm opacity-90 whitespace-pre-line" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.body}</div>
@@ -322,26 +324,40 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
         </div>
       </div>
-      {post.attachments && post.attachments.length > 0 && (
-        <div className="panel rounded-lg p-2 grid gap-1">
-          {post.attachments.map((a) => (
-            <div key={a.id} className="text-xs flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="chip px-2 py-0.5 rounded text-[10px]">{resolveKind(a.mimeType, a.name)}</span>
-                <a href={a.url} target="_blank" rel="noreferrer" className="truncate hover:underline">{a.name}</a>
-                {typeof a.sizeBytes === 'number' && <span className="opacity-60 whitespace-nowrap">{(a.sizeBytes/1024/1024).toFixed(1)} MB</span>}
-              </div>
-              <button className="btn-glass btn-sm" onClick={async ()=>{
-                const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
-                const ok = typeof window !== 'undefined' ? window.confirm('Удалить файл?') : true;
-                if (!ok) return;
-                await fetch(`/api/posts/${post.id}/attachments/${a.id}`, { method: 'DELETE', headers: { 'x-admin-token': token } });
-                onChanged?.();
-              }}>✕</button>
-            </div>
-          ))}
+      <div className="grid gap-2">
+        <div className="text-xs opacity-80 flex items-center gap-2 flex-wrap">
+          <span className="chip px-2 py-0.5 rounded text-[10px]">Источники</span>
+          { (post as any).sources && Array.isArray((post as any).sources) && (post as any).sources.length > 0 ? (
+            <span className="flex items-center gap-2 flex-wrap">
+              {((post as unknown as { sources: string[] }).sources).slice(0,3).map((u, i) => (
+                <a key={i} href={u} target="_blank" rel="noreferrer" className="hover:underline truncate max-w-[220px]">{new URL(u).hostname}</a>
+              ))}
+            </span>
+          ) : (
+            <span className="opacity-70">GPT Generated</span>
+          )}
         </div>
-      )}
+        {post.attachments && post.attachments.length > 0 && (
+          <div className="panel rounded-lg p-2 grid gap-1">
+            {post.attachments.map((a) => (
+              <div key={a.id} className="text-xs flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="chip px-2 py-0.5 rounded text-[10px]">{resolveKind(a.mimeType, a.name)}</span>
+                  <a href={a.url} target="_blank" rel="noreferrer" className="truncate hover:underline">{a.name}</a>
+                  {typeof a.sizeBytes === 'number' && <span className="opacity-60 whitespace-nowrap">{(a.sizeBytes/1024/1024).toFixed(1)} MB</span>}
+                </div>
+                <button className="btn-glass btn-sm" onClick={async ()=>{
+                  const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+                  const ok = typeof window !== 'undefined' ? window.confirm('Удалить файл?') : true;
+                  if (!ok) return;
+                  await fetch(`/api/posts/${post.id}/attachments/${a.id}`, { method: 'DELETE', headers: { 'x-admin-token': token } });
+                  onChanged?.();
+                }}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
