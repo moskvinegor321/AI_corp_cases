@@ -17,11 +17,14 @@ export default function Home() {
   const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: '', body: '' });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [drafts, setDrafts] = useState<Record<string, CommentDraft>>({});
+  const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
   const load = async () => {
-    const r = await fetch(`/api/posts`);
+    const params = new URLSearchParams();
+    if (form.pillarId) params.set('pillarId', form.pillarId);
+    const r = await fetch(`/api/posts?${params.toString()}`);
     const d = await r.json();
     setItems(d.items || []);
   };
@@ -50,20 +53,30 @@ export default function Home() {
             <option value="">Все страницы</option>
             {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
           </select>
+          <button className="btn-glass btn-sm" onClick={async ()=>{
+            const name = typeof window!=='undefined' ? window.prompt('Название новой страницы/столпа') : '';
+            if (!name || !name.trim()) return;
+            const res = await fetch('/api/pillars', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ name: name.trim() }) });
+            if (!res.ok) { alert('Не удалось создать страницу'); return; }
+            const created = (await res.json()).pillar as { id: string; name: string };
+            setPillars(prev=>[...prev, created]);
+            setForm(f=>({ ...f, pillarId: created.id }));
+            await load();
+          }}>Создать страницу</button>
           <button className="btn-glass btn-sm" onClick={()=>setModalOpen(true)}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             try { const r = await fetch('/api/settings/prompts',{cache:'no-store'}); if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }} catch {}
             setPromptOpen(true);
           }}>Промпт и поиск</button>
-          <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId||undefined, n:5, searchQuery, noSearch }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
+          <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
         </div>
       </div>
 
       <div className="grid gap-3">
         {items.map((p)=> (
           <div key={p.id} className="grid gap-2">
-            <PostCard post={p} onChanged={load} onToggleComments={()=>setDraft(p.id,{ ...drafts[p.id], text: (drafts[p.id]?.text||'') , isTask: drafts[p.id]?.isTask||false })} />
-            {!!drafts[p.id] && (
+            <PostCard post={p} onChanged={load} onToggleComments={()=>setOpenComments(prev=>({ ...prev, [p.id]: !prev[p.id] }))} />
+            {openComments[p.id] && (
             <div className="panel rounded-lg p-3 grid gap-2">
               <div className="font-semibold text-sm">Комментарий / задача</div>
               <textarea className="bg-background rounded p-2 h-20" value={drafts[p.id]?.text||''} onChange={(e)=>setDraft(p.id,{ text: e.target.value })} placeholder="Текст комментария" />
