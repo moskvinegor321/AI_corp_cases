@@ -19,7 +19,7 @@ export type Post = {
 export function PostCard({ post, onChanged, onToggleComments: _onToggleComments, onEdit, adminToken }: { post: Post; onChanged?: () => void; onToggleComments?: () => void; onEdit?: (post: Post) => void; adminToken?: string }) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [picker, setPicker] = useState<null | 'review' | 'schedule'>(null);
+  const [picker, setPicker] = useState<null | 'review' | 'schedule' | 'publish'>(null);
   const [dt, setDt] = useState<string>('');
   const [editSchedule, setEditSchedule] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -238,9 +238,11 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           setDt(local);
           setPicker('schedule');
         }}>Запланировать</button>
-        <button className="btn-glass bg-green-600/20 text-green-400 px-2 py-0.5" disabled={loading} onClick={async () => {
-          if (!confirm("Отметить как опубликовано сейчас?")) return;
-          await callStatus("PUBLISHED");
+        <button className="btn-glass bg-green-600/20 text-green-400 px-2 py-0.5" disabled={loading} onClick={() => {
+          const base = new Date();
+          const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+          setDt(local);
+          setPicker('publish');
         }}>Опубликовано</button>
         <button className="btn-glass bg-red-600/20 text-red-400 px-2 py-0.5" disabled={loading} onClick={async () => { await callStatus('REJECTED'); }}>Отклонить</button>
         </div>
@@ -248,7 +250,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           <>
           <div className="fixed inset-0 bg-black/60 z-10" />
           <div className="absolute top-full mt-2 left-0 glass rounded-xl p-3 z-20 w-64 grid gap-2">
-            <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
+            <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : picker === 'publish' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
             <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
             <div className="flex gap-2 justify-end">
               <button className="btn-glass btn-sm" onClick={()=>setPicker(null)}>Отмена</button>
@@ -257,6 +259,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                 const iso = new Date(dt).toISOString();
                 if (picker === 'schedule') await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
                 if (picker === 'review') await callStatus('NEEDS_REVIEW', { reviewDueAt: iso });
+                if (picker === 'publish') await callStatus('PUBLISHED', { publishedAt: iso });
                 setPicker(null);
               }}>Сохранить</button>
             </div>
