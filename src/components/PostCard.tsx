@@ -92,7 +92,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
   };
 
   return (
-    <div className="glass rounded-xl p-3 grid grid-cols-1 md:grid-cols-[1fr_320px] gap-3 items-start">
+    <div className="glass rounded-xl p-3 grid grid-cols-1 md:grid-cols-[1fr_380px] gap-3 items-start">
       <div className="panel rounded-lg p-3 grid gap-2">
         <div className="flex items-center justify-between">
           <div className="font-semibold text-sm">{post.title}</div>
@@ -236,9 +236,9 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           </div>
         )}
         <div className="flex gap-2 flex-wrap md:justify-end opacity-90">
-          <button className="btn-glass btn-sm" onClick={()=>setCommentsOpen((v)=>!v)}>Комментарии</button>
-          <button className="btn-glass btn-sm" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
-          <button className="btn-glass btn-sm" onClick={() => onEdit?.(post)}>Редактировать</button>
+          <button className="btn-glass text-[11px] px-2 py-0.5" onClick={()=>setCommentsOpen((v)=>!v)}>Комментарии</button>
+          <button className="btn-glass text-[11px] px-2 py-0.5" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
+          <button className="btn-glass text-[11px] px-2 py-0.5" onClick={() => onEdit?.(post)}>Редактировать</button>
           <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
         </div>
       </div>
