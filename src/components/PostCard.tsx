@@ -35,6 +35,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
   const [overflowing, setOverflowing] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const [reviewAssignee, setReviewAssignee] = useState<string>('Егор');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const el = bodyRef.current;
@@ -350,6 +351,25 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         <div className="flex gap-2 flex-wrap md:justify-end opacity-90">
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={()=>setCommentsOpen((v)=>!v)}>Комментарии</button>
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
+          <button
+            className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap"
+            title="Копировать ссылку на пост"
+            onClick={async ()=>{
+              const base = (typeof window!== 'undefined')
+                ? window.location.origin
+                : ((process.env as unknown as { NEXT_PUBLIC_APP_URL?: string }).NEXT_PUBLIC_APP_URL || '');
+              const url = `${base}/table?post=${post.id}`;
+              try {
+                await navigator.clipboard.writeText(url);
+                setCopied(true); setTimeout(()=> setCopied(false), 1500);
+              } catch {
+                // fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = url; document.body.appendChild(textarea); textarea.select();
+                try { document.execCommand('copy'); setCopied(true); setTimeout(()=> setCopied(false), 1500); } finally { document.body.removeChild(textarea); }
+              }
+            }}
+          >{copied? 'Ссылка скопирована' : 'Скопировать ссылку'}</button>
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={() => onEdit?.(post)}>Редактировать</button>
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={async ()=>{
             const ok = typeof window!=='undefined' ? window.confirm('Удалить пост? Это действие необратимо.') : true;

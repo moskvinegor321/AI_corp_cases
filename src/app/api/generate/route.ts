@@ -87,6 +87,10 @@ export async function POST(req: NextRequest) {
   }
   const searchOverride = typeof body.searchQuery === 'string' && body.searchQuery.trim().length > 0 ? body.searchQuery.trim() : searchQueryOverride;
   const noSearchFinal = body.noSearch === true ? true : !searchOverride;
+  if (process.env.DEBUG_GENERATE === 'true') {
+    // eslint-disable-next-line no-console
+    console.log('[generate] params', { pillarId, n, searchQuery: searchOverride, noSearch: noSearchFinal });
+  }
   const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride: searchOverride, noSearch: noSearchFinal });
 
   const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
@@ -127,16 +131,7 @@ export async function POST(req: NextRequest) {
         source: 'ai',
       },
     });
-    // Persist sources as attachments for visibility in UI
-    try {
-      const urls = Array.isArray(it.sources) ? it.sources.slice(0, 3) : [];
-      for (const u of urls) {
-        try {
-          const host = new URL(u).hostname;
-          await prisma.attachment.create({ data: { postId: post.id, name: host, url: u, mimeType: 'text/url' } });
-        } catch {}
-      }
-    } catch {}
+    // Do not persist sources as files; we may store them later in a dedicated column
     created.push(post);
   }
 
