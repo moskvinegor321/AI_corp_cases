@@ -16,8 +16,13 @@ export default function TablePage() {
     if (filters.from) params.set('from', filters.from);
     if (filters.to) params.set('to', filters.to);
     if (filters.pillarId) params.set('pillarId', filters.pillarId);
-    const r = await fetch(`/api/posts?${params.toString()}`); const d = await r.json(); setItems(d.items || []);
-    const rp = await fetch(`/api/pillars`); const dp = await rp.json(); setPillars(dp.pillars || []);
+    document.dispatchEvent(new Event('aion:load:start'));
+    try {
+      const r = await fetch(`/api/posts?${params.toString()}`); const d = await r.json(); setItems(d.items || []);
+      const rp = await fetch(`/api/pillars`); const dp = await rp.json(); setPillars(dp.pillars || []);
+    } finally {
+      document.dispatchEvent(new Event('aion:load:end'));
+    }
   };
   useEffect(() => { load(); }, [JSON.stringify(filters)]);
 

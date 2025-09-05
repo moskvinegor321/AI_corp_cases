@@ -34,10 +34,15 @@ export default function CalendarPage() {
     if (filters.from) params.set("from", filters.from);
     if (filters.to) params.set("to", filters.to);
     if (filters.pillarId) params.set('pillarId', filters.pillarId);
-    const r = await fetch(`/api/posts?${params.toString()}`);
-    const d = await r.json();
-    setItems(d.items || []);
-    const rp = await fetch('/api/pillars'); const dp = await rp.json(); setPillars(dp.pillars||[]);
+    document.dispatchEvent(new Event('aion:load:start'));
+    try {
+      const r = await fetch(`/api/posts?${params.toString()}`);
+      const d = await r.json();
+      setItems(d.items || []);
+      const rp = await fetch('/api/pillars'); const dp = await rp.json(); setPillars(dp.pillars||[]);
+    } finally {
+      document.dispatchEvent(new Event('aion:load:end'));
+    }
   };
   useEffect(() => { load(); }, [JSON.stringify(filters)]);
 
@@ -131,9 +136,10 @@ export default function CalendarPage() {
                        const ok = typeof window!=='undefined' ? window.confirm('Перенести публикацию на этот день?') : true;
                        if (!ok) return;
                        const schedule = new Date(`${isoDay}T09:00:00.000Z`);
+                       document.dispatchEvent(new Event('aion:load:start'));
                        await fetch(`/api/posts/${data.id}/status`, { method:'POST', headers: { 'content-type':'application/json', ...tokenHeader() }, body: JSON.stringify({ status:'READY_TO_PUBLISH', scheduledAt: schedule.toISOString() }) });
                        await load();
-                     } catch {}
+                     } catch {} finally { document.dispatchEvent(new Event('aion:load:end')); }
                    }}>
                 <div className="text-xs font-medium opacity-80">{d.getUTCDate()}</div>
                 <div className="flex flex-col gap-1">
