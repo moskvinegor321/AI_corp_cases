@@ -201,8 +201,8 @@ export default function Home() {
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="glass rounded-xl p-4 w-[min(700px,95vw)] grid gap-3">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center">
+          <div className="panel rounded-xl p-4 w-[min(700px,95vw)] grid gap-3">
             <div className="text-lg font-semibold">{editingId ? 'Редактировать пост' : 'Новый пост'}</div>
             <label className="grid gap-1 text-sm">
               <span>Заголовок</span>
