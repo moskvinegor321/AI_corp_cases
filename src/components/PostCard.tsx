@@ -15,6 +15,8 @@ export type Post = {
 export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => void }) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [picker, setPicker] = useState<null | 'review' | 'schedule'>(null);
+  const [dt, setDt] = useState<string>('');
   const callStatus = async (status: Post["status"], extra?: { scheduledAt?: string; reviewDueAt?: string; publishedAt?: string }) => {
     setLoading(true);
     try {
@@ -78,18 +80,20 @@ export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => vo
         {post.publishedAt && <span>Опубликовано: {new Date(post.publishedAt).toLocaleString()}</span>}
         {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString()}</span>}
       </div>
-      <div className="flex gap-2 flex-wrap">
-        <button className="btn-glass btn-sm" disabled={loading} onClick={async () => {
-          const v = prompt("Укажите дату разбора (ISO или локальное 'YYYY-MM-DDThh:mm')");
-          if (!v) return;
-          const iso = new Date(v).toISOString();
-          await callStatus("NEEDS_REVIEW", { reviewDueAt: iso });
+      <div className="flex gap-2 flex-wrap relative">
+        <button className="btn-glass btn-sm" disabled={loading} onClick={() => {
+          // default now + 1 hour
+          const base = new Date();
+          base.setMinutes(base.getMinutes() + 60);
+          const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+          setDt(local);
+          setPicker('review');
         }}>Отдать на разбор</button>
-        <button className="btn-glass btn-sm" disabled={loading} onClick={async () => {
-          const v = prompt("Укажите дату публикации (ISO или 'YYYY-MM-DDThh:mm')");
-          if (!v) return;
-          const iso = new Date(v).toISOString();
-          await callStatus("READY_TO_PUBLISH", { scheduledAt: iso });
+        <button className="btn-glass btn-sm" disabled={loading} onClick={() => {
+          const base = post.scheduledAt ? new Date(post.scheduledAt) : new Date();
+          const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+          setDt(local);
+          setPicker('schedule');
         }}>Готово к публикации</button>
         <button className="btn-glass btn-sm" disabled={loading} onClick={async () => {
           if (!confirm("Отметить как опубликовано сейчас?")) return;
@@ -97,6 +101,23 @@ export function PostCard({ post, onChanged }: { post: Post; onChanged?: () => vo
         }}>Опубликовано</button>
         <button className="btn-glass btn-sm" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
         <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
+
+        {picker && (
+          <div className="absolute top-full mt-2 left-0 glass rounded-xl p-3 z-10 w-64 grid gap-2">
+            <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : 'Дата/время разбора'}</div>
+            <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
+            <div className="flex gap-2 justify-end">
+              <button className="btn-glass btn-sm" onClick={()=>setPicker(null)}>Отмена</button>
+              <button className="btn-glass btn-sm" onClick={async ()=>{
+                if (!dt) return;
+                const iso = new Date(dt).toISOString();
+                if (picker === 'schedule') await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
+                if (picker === 'review') await callStatus('NEEDS_REVIEW', { reviewDueAt: iso });
+                setPicker(null);
+              }}>Сохранить</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
