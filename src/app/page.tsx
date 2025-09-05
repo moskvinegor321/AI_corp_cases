@@ -149,8 +149,8 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mt-2">
-        <input className="w-full max-w-[720px] px-3 py-2 rounded bg-background border border-white/10" placeholder="Поиск по заголовку, теме или тексту" value={query} onChange={(e)=>setQuery(e.target.value)} />
+      <div className="mt-2 flex justify-center">
+        <input className="w-full max-w-[900px] px-3 py-2 rounded bg-background border border-white/10" placeholder="Поиск по заголовку, теме или тексту" value={query} onChange={(e)=>setQuery(e.target.value)} />
       </div>
 
       {stats && (
