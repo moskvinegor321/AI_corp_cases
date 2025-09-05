@@ -4,6 +4,13 @@ import { requireAdmin } from '@/lib/admin';
 
 export const runtime = 'nodejs';
 
+export async function GET(_: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
+  const post = await prisma.post.findUnique({ where: { id }, include: { attachments: true, pillar: true, comments: { orderBy: { createdAt: 'desc' }, take: 5 } } });
+  if (!post) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  return NextResponse.json({ post });
+}
+
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;

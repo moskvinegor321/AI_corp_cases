@@ -18,10 +18,19 @@ export default function TablePage() {
     if (typeof window === 'undefined') return;
     const sp = new URLSearchParams(window.location.search);
     const pid = sp.get('post');
-    if (pid && items.length) {
-      const p = items.find(i => i.id === pid);
-      if (p) setOpenPost(p);
-    }
+    if (!pid) return;
+    const local = items.find(i => i.id === pid);
+    if (local) { setOpenPost(local); return; }
+    // fetch directly if not in current page
+    (async () => {
+      try {
+        const r = await fetch(`/api/posts/${pid}`);
+        if (r.ok) {
+          const d = await r.json();
+          if (d?.post) setOpenPost(d.post as Post);
+        }
+      } catch {}
+    })();
   }, [items]);
 
   const load = async () => {
