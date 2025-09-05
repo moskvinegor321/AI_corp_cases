@@ -8,6 +8,7 @@ export default function TablePage() {
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [view, setView] = useState<'matrix'|'list'>('matrix');
   const { filters, setStatuses, setRange, setPillar } = usePostFilters();
+  const [statusOpen, setStatusOpen] = useState(false);
 
   const load = async () => {
     const params = new URLSearchParams();
@@ -32,16 +33,27 @@ export default function TablePage() {
           <option value="matrix">Матрица</option>
           <option value="list">Список</option>
         </select>
-        <select className="select-compact-sm" multiple value={filters.statuses as unknown as string[]} onChange={(e)=>{
-          const opts = Array.from(e.target.selectedOptions).map(o=>o.value as PostStatus);
-          setStatuses(opts);
-        }}>
-          <option value="READY_TO_PUBLISH">READY_TO_PUBLISH</option>
-          <option value="PUBLISHED">PUBLISHED</option>
-          <option value="NEEDS_REVIEW">NEEDS_REVIEW</option>
-          <option value="DRAFT">DRAFT</option>
-          <option value="REJECTED">REJECTED</option>
-        </select>
+        <div className="relative">
+          <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(v=>!v)}>
+            {filters.statuses?.length ? `Статусы (${filters.statuses.length})` : 'Статусы'}
+          </button>
+          {statusOpen && (
+            <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[220px] grid gap-2">
+              {(['READY_TO_PUBLISH','PUBLISHED','NEEDS_REVIEW','DRAFT','REJECTED'] as PostStatus[]).map(s => (
+                <label key={s} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={filters.statuses.includes(s)} onChange={(e)=>{
+                    const next = e.target.checked ? [...filters.statuses, s] : filters.statuses.filter(x=>x!==s);
+                    setStatuses(next);
+                  }} /> {s}
+                </label>
+              ))}
+              <div className="flex gap-2 justify-end pt-1">
+                <button className="btn-glass btn-sm" onClick={()=>{ setStatuses([]); setStatusOpen(false); }}>Сбросить</button>
+                <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(false)}>Готово</button>
+              </div>
+            </div>
+          )}
+        </div>
         <select className="select-compact-sm" value={filters.pillarId||''} onChange={(e)=> setPillar(e.target.value||undefined)}>
           <option value="">Все страницы</option>
           {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
