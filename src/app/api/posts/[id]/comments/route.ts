@@ -24,10 +24,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (unauthorized) return unauthorized;
   const { id } = await ctx.params;
   const body = await req.json();
-  const { text, isTask, taskStatus, dueAt } = body as { text: string; isTask?: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'; dueAt?: string };
+  const { text, isTask, taskStatus, dueAt, assignee } = body as { text: string; isTask?: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'; dueAt?: string; assignee?: string };
   if (!text) return NextResponse.json({ error: 'text required' }, { status: 400 });
-  const comment = await prisma.postComment.create({ data: { postId: id, text, isTask: !!isTask, taskStatus: taskStatus || null, dueAt: dueAt ? new Date(dueAt) : null } });
-  await auditLog({ entityType: 'comment', entityId: comment.id, action: 'created', meta: { postId: id, isTask: !!isTask, taskStatus: taskStatus || null, dueAt: dueAt || null } });
+  const comment = await prisma.postComment.create({ data: { postId: id, text, isTask: !!isTask, taskStatus: taskStatus || null, dueAt: dueAt ? new Date(dueAt) : null, assignee: assignee || null } });
+  await auditLog({ entityType: 'comment', entityId: comment.id, action: 'created', meta: { postId: id, isTask: !!isTask, taskStatus: taskStatus || null, dueAt: dueAt || null, assignee: assignee || null } });
   return NextResponse.json({ comment });
 }
 

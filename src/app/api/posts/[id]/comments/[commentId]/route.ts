@@ -10,9 +10,9 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (unauthorized) return unauthorized;
   const { commentId } = await ctx.params;
   const body = await req.json();
-  const { text, isTask, taskStatus, dueAt } = body as { text?: string; isTask?: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'; dueAt?: string };
-  const comment = await prisma.postComment.update({ where: { id: commentId }, data: { text, isTask, taskStatus, dueAt: dueAt ? new Date(dueAt) : undefined } });
-  await auditLog({ entityType: 'comment', entityId: commentId, action: 'updated', meta: { isTask, taskStatus, dueAt: dueAt || null } });
+  const { text, isTask, taskStatus, dueAt, assignee } = body as { text?: string; isTask?: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'; dueAt?: string; assignee?: string };
+  const comment = await prisma.postComment.update({ where: { id: commentId }, data: { text, isTask, taskStatus, assignee, dueAt: dueAt ? new Date(dueAt) : undefined } });
+  await auditLog({ entityType: 'comment', entityId: commentId, action: 'updated', meta: { isTask, taskStatus, assignee: assignee || null, dueAt: dueAt || null } });
   return NextResponse.json({ comment });
 }
 

@@ -13,7 +13,7 @@ export type Post = {
   body?: string | null;
   source?: string | null;
   attachments?: Array<{ id: string; name: string; url: string; mimeType?: string | null; sizeBytes?: number | null }>;
-  comments?: Array<{ id: string; text: string; isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'|null; dueAt?: string | null; createdAt: string }>;
+  comments?: Array<{ id: string; text: string; isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'|null; dueAt?: string | null; createdAt: string; assignee?: string | null }>;
 };
 
 export function PostCard({ post, onChanged, onToggleComments: _onToggleComments, onEdit, adminToken }: { post: Post; onChanged?: () => void; onToggleComments?: () => void; onEdit?: (post: Post) => void; adminToken?: string }) {
@@ -27,6 +27,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
   const [isTask, setIsTask] = useState(false);
   const [taskStatus, setTaskStatus] = useState<''|'OPEN'|'IN_PROGRESS'|'DONE'>('');
   const [taskDueAt, setTaskDueAt] = useState<string>('');
+  const [assignee, setAssignee] = useState<string>('');
   const statusLabel: Record<Post["status"], string> = {
     DRAFT: 'Разбор',
     NEEDS_REVIEW: 'Ревью',
@@ -144,9 +145,17 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
               {post.comments.slice(0, 10).map((c) => (
                 <div key={c.id} className="text-xs opacity-80 border-t border-white/10 pt-1 flex items-center gap-2">
                   {c.isTask && (
-                    <span className="chip px-2 py-0.5 rounded text-[10px]">{c.taskStatus || 'OPEN'}</span>
+                    <button className="chip px-2 py-0.5 rounded text-[10px] hover:opacity-80"
+                      onClick={async ()=>{
+                        const next = ((s: 'OPEN'|'IN_PROGRESS'|'DONE'|null|undefined) => s==='OPEN'?'IN_PROGRESS': s==='IN_PROGRESS'?'DONE':'OPEN')(c.taskStatus);
+                        const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+                        await fetch(`/api/posts/${post.id}/comments/${c.id}`, { method:'PATCH', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ taskStatus: next }) });
+                        onChanged?.();
+                      }}
+                    >{c.taskStatus || 'OPEN'}</button>
                   )}
                   <span className="truncate">{c.text}</span>
+                  {c.assignee && <span className="opacity-60">→ {c.assignee}</span>}
                   <span className="opacity-60">{new Date(c.createdAt).toLocaleString()}</span>
                   {c.dueAt && <span className="opacity-60">⏰ {new Date(c.dueAt).toLocaleString()}</span>}
                 </div>
@@ -165,6 +174,12 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                   <option value="IN_PROGRESS">IN_PROGRESS</option>
                   <option value="DONE">DONE</option>
                 </select>
+                <select className="select-compact-sm" value={assignee} onChange={(e)=> setAssignee(e.target.value)} disabled={!isTask}>
+                  <option value="">Исполнитель…</option>
+                  <option value="Егор">Егор</option>
+                  <option value="Коля">Коля</option>
+                  <option value="Лена">Лена</option>
+                </select>
                 <input className="select-compact-sm" type="datetime-local" value={taskDueAt} onChange={(e)=>setTaskDueAt(e.target.value)} disabled={!isTask} />
                 <button className="btn-glass btn-sm" onClick={async ()=>{
                   if (!commentText.trim()) { alert('Введите текст'); return; }
@@ -172,8 +187,9 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                   const payload: Record<string, unknown> = { text: commentText, isTask };
                   if (taskStatus) payload.taskStatus = taskStatus;
                   if (taskDueAt) payload.dueAt = new Date(taskDueAt).toISOString();
+                  if (assignee) payload.assignee = assignee;
                   await fetch(`/api/posts/${post.id}/comments`, { method:'POST', headers:{ 'content-type':'application/json', 'x-admin-token': token }, body: JSON.stringify(payload) });
-                  setCommentText(''); setIsTask(false); setTaskStatus(''); setTaskDueAt('');
+                  setCommentText(''); setIsTask(false); setTaskStatus(''); setTaskDueAt(''); setAssignee('');
                   onChanged?.();
                 }}>Добавить</button>
               </div>

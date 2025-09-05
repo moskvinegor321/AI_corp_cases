@@ -120,6 +120,7 @@ model PostComment {
   postId     String
   post       Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorId   String?
+  assignee   String?
   text       String
   isTask     Boolean    @default(false)
   taskStatus TaskStatus?
