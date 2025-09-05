@@ -12,9 +12,10 @@ export type Post = {
   pillar?: { id: string; name: string } | null;
   body?: string | null;
   source?: string | null;
+  attachments?: Array<{ id: string; name: string; url: string; mimeType?: string | null; sizeBytes?: number | null }>;
 };
 
-export function PostCard({ post, onChanged, onToggleComments, onEdit }: { post: Post; onChanged?: () => void; onToggleComments?: () => void; onEdit?: (post: Post) => void }) {
+export function PostCard({ post, onChanged, onToggleComments, onEdit, adminToken }: { post: Post; onChanged?: () => void; onToggleComments?: () => void; onEdit?: (post: Post) => void; adminToken?: string }) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [picker, setPicker] = useState<null | 'review' | 'schedule'>(null);
@@ -26,6 +27,16 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit }: { post: 
     READY_TO_PUBLISH: 'Запланирован',
     PUBLISHED: 'Опубликован',
   } as const;
+
+  const resolveKind = (mime?: string | null, name?: string) => {
+    const ext = (name || '').split('.').pop()?.toLowerCase() || '';
+    if ((mime||'').startsWith('image/') || ['png','jpg','jpeg','gif','webp','svg'].includes(ext)) return 'image';
+    if ((mime||'').startsWith('video/') || ['mp4','mov','webm','avi','mkv'].includes(ext)) return 'video';
+    if ((mime||'').startsWith('audio/') || ['mp3','wav','aac','ogg'].includes(ext)) return 'audio';
+    if ((mime||'').startsWith('text/') || ['txt','md','csv','ts','js','json'].includes(ext)) return 'text';
+    if (ext === 'pdf' || mime === 'application/pdf') return 'pdf';
+    return 'file';
+  };
   const callStatus = async (status: Post["status"], extra?: { scheduledAt?: string; reviewDueAt?: string; publishedAt?: string }) => {
     setLoading(true);
     try {
@@ -44,14 +55,12 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit }: { post: 
   const onFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    // basic validation: 25MB limit and allowed types
-    const maxBytes = 25 * 1024 * 1024;
-    const allowed = [/^image\//, /^application\/pdf$/, /^text\//, /^video\//];
-    if (f.size > maxBytes) { alert('Файл больше 25MB'); e.currentTarget.value = ''; return; }
-    if (!allowed.some((re) => re.test(f.type || ''))) { alert('Недопустимый тип файла'); e.currentTarget.value = ''; return; }
+    // basic validation: 100MB limit
+    const maxBytes = 100 * 1024 * 1024;
+    if (f.size > maxBytes) { alert('Файл больше 100MB'); e.currentTarget.value = ''; return; }
     setLoading(true);
     try {
-      const token = (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+      const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
       const signRes = await fetch(`/api/uploads/s3`, {
         method: "POST",
         headers: { "content-type": "application/json", "x-admin-token": token },
@@ -166,6 +175,26 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit }: { post: 
           </div>
         )}
       </div>
+      {post.attachments && post.attachments.length > 0 && (
+        <div className="panel rounded-lg p-2 grid gap-1">
+          {post.attachments.map((a) => (
+            <div key={a.id} className="text-xs flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="chip px-2 py-0.5 rounded text-[10px]">{resolveKind(a.mimeType, a.name)}</span>
+                <a href={a.url} target="_blank" rel="noreferrer" className="truncate hover:underline">{a.name}</a>
+                {typeof a.sizeBytes === 'number' && <span className="opacity-60 whitespace-nowrap">{(a.sizeBytes/1024/1024).toFixed(1)} MB</span>}
+              </div>
+              <button className="btn-glass btn-sm" onClick={async ()=>{
+                const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+                const ok = typeof window !== 'undefined' ? window.confirm('Удалить файл?') : true;
+                if (!ok) return;
+                await fetch(`/api/posts/${post.id}/attachments/${a.id}`, { method: 'DELETE', headers: { 'x-admin-token': token } });
+                onChanged?.();
+              }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

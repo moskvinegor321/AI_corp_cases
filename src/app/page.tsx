@@ -102,7 +102,7 @@ export default function Home() {
       <div className="grid gap-3">
         {items.map((p)=> (
           <div key={p.id} className="grid gap-2">
-            <PostCard post={p} onChanged={load} onToggleComments={()=>setOpenComments(prev=>({ ...prev, [p.id]: !prev[p.id] }))} onEdit={(post)=>{ setEditingId(post.id); setForm({ title: post.title, body: post.body||'', topic: post.topic||undefined, pillarId: post.pillar?.id||undefined }); setModalOpen(true); }} />
+            <PostCard post={p} onChanged={load} onToggleComments={()=>setOpenComments(prev=>({ ...prev, [p.id]: !prev[p.id] }))} onEdit={(post)=>{ setEditingId(post.id); setForm({ title: post.title, body: post.body||'', topic: post.topic||undefined, pillarId: post.pillar?.id||undefined }); setModalOpen(true); }} adminToken={token} />
             {!!(p.comments && p.comments.length) && (
               <div className="grid gap-1 mt-1">
                 {p.comments.slice(0, 10).map((c) => (
