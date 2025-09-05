@@ -245,6 +245,16 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           setPicker('publish');
         }}>Опубликовано</button>
         <button className="btn-glass bg-red-600/20 text-red-400 px-1.5 py-0.5 whitespace-nowrap" disabled={loading} onClick={async () => { await callStatus('REJECTED'); }}>Отклонить</button>
+        <button className="btn-glass bg-red-700/30 text-red-300 px-1.5 py-0.5 whitespace-nowrap" disabled={loading} onClick={async ()=>{
+          const ok = typeof window!=='undefined' ? window.confirm('Удалить пост? Это действие необратимо.') : true;
+          if (!ok) return;
+          setLoading(true);
+          try {
+            const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+            await fetch(`/api/posts/${post.id}`, { method: 'DELETE', headers: { 'x-admin-token': token } });
+            onChanged?.();
+          } finally { setLoading(false); }
+        }}>Удалить</button>
         </div>
         {picker && (
           <>
@@ -270,6 +280,16 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={()=>setCommentsOpen((v)=>!v)}>Комментарии</button>
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={() => onEdit?.(post)}>Редактировать</button>
+          <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={async ()=>{
+            const ok = typeof window!=='undefined' ? window.confirm('Удалить пост? Это действие необратимо.') : true;
+            if (!ok) return;
+            setLoading(true);
+            try {
+              const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+              await fetch(`/api/posts/${post.id}`, { method: 'DELETE', headers: { 'x-admin-token': token } });
+              onChanged?.();
+            } finally { setLoading(false); }
+          }}>Удалить</button>
           <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
         </div>
       </div>

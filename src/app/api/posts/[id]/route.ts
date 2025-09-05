@@ -19,4 +19,14 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   return NextResponse.json({ post });
 }
 
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+  const { id } = await ctx.params;
+  await prisma.attachment.deleteMany({ where: { postId: id } }).catch(()=>{});
+  await prisma.postComment.deleteMany({ where: { postId: id } }).catch(()=>{});
+  await prisma.post.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}
+
 
