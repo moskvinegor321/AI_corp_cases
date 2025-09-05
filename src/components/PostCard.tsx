@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type Post = {
   id: string;
@@ -31,6 +31,15 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
   const [assignee, setAssignee] = useState<string>('');
   const [statusEdit, setStatusEdit] = useState<{ id: string; value: 'OPEN'|'IN_PROGRESS'|'DONE' } | null>(null);
   const [addingTask, setAddingTask] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [overflowing, setOverflowing] = useState(false);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    setOverflowing(el.scrollHeight > el.clientHeight + 2);
+  }, [post.body, expanded]);
   const statusLabel: Record<Post["status"], string> = {
     DRAFT: 'Разбор',
     NEEDS_REVIEW: 'Ревью',
@@ -155,7 +164,12 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
         </div>
         {post.body && (
-          <div className="text-sm opacity-90 whitespace-pre-line" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.body}</div>
+          <>
+            <div ref={bodyRef} className="text-sm opacity-90 whitespace-pre-line" style={expanded ? { overflow: 'visible' } : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.body}</div>
+            {(overflowing || expanded) && (
+              <button className="btn-glass btn-sm mt-1" onClick={()=> setExpanded(v=>!v)}>{expanded ? 'Скрыть' : 'Показать полностью'}</button>
+            )}
+          </>
         )}
         <div className={`grid gap-2 mt-2 ${((post.comments && post.comments.length) || commentsOpen) ? 'border-t border-white/10 pt-2' : ''}`}>
           {!!(post.comments && post.comments.length) && (
