@@ -35,6 +35,13 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
     PUBLISHED: 'Опубликован',
     REJECTED: 'Отклонён',
   } as const;
+  const statusClass: Record<Post["status"], string> = {
+    DRAFT: 'bg-blue-500/20 text-blue-300',
+    NEEDS_REVIEW: 'bg-indigo-500/20 text-indigo-300',
+    READY_TO_PUBLISH: 'bg-amber-500/20 text-amber-300',
+    PUBLISHED: 'bg-green-600/20 text-green-400',
+    REJECTED: 'bg-red-600/20 text-red-400',
+  } as const;
 
   const resolveKind = (mime?: string | null, name?: string) => {
     const ext = (name || '').split('.').pop()?.toLowerCase() || '';
@@ -97,7 +104,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         <div className="flex items-center justify-between">
           <div className="font-semibold text-sm">{post.title}</div>
           <div className="text-xs opacity-70 flex items-center gap-2">
-            <span>{statusLabel[post.status]}</span>
+            <span className={`chip px-2 py-0.5 rounded ${statusClass[post.status]}`}>{statusLabel[post.status]}</span>
             {post.status === 'READY_TO_PUBLISH' && !editSchedule && (
               <>
                 <span className="opacity-60">{post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : '—'}</span>
