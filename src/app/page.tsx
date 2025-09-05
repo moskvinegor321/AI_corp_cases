@@ -146,13 +146,13 @@ export default function Home() {
           <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarIds[0] })); setModalOpen(true); }}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             try {
-              // Load page-scoped prompt if pillar selected
+              // Load pillar-scoped prompt if pillar selected
               if (filterPillarIds[0]) {
-                const pr = await fetch(`/api/pages/${filterPillarIds[0]}`, { cache: 'no-store' });
+                const pr = await fetch(`/api/pillars/${filterPillarIds[0]}`, { cache: 'no-store' });
                 const pd = await pr.json();
-                setPromptText(pd.page?.prompt || '');
-                setSearchQuery(pd.page?.searchQuery || '');
-                setNoSearch(!pd.page?.searchQuery);
+                setPromptText(pd.prompt || '');
+                setSearchQuery(pd.searchQuery || '');
+                setNoSearch(!(pd.searchQuery && pd.searchQuery.length));
               }
               const r = await fetch('/api/settings/prompts',{cache:'no-store'});
               if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }
