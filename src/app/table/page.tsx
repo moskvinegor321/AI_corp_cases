@@ -14,6 +14,15 @@ export default function TablePage() {
   const [pillarIds, setPillarIds] = useState<string[]>([]);
   const [pillarDraft, setPillarDraft] = useState<string[]>([]);
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const sp = new URLSearchParams(window.location.search);
+    const pid = sp.get('post');
+    if (pid && items.length) {
+      const p = items.find(i => i.id === pid);
+      if (p) setOpenPost(p);
+    }
+  }, [items]);
 
   const load = async () => {
     const params = new URLSearchParams();

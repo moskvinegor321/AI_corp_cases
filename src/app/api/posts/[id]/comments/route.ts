@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     try {
       const post = await prisma.post.findUnique({ where: { id }, include: { pillar: true } });
       const baseUrl = process.env.PUBLIC_APP_URL || '';
-      const link = baseUrl ? `${baseUrl}/?post=${id}` : '';
+      const link = baseUrl ? `${baseUrl}/table?post=${id}` : '';
       const lines: string[] = [];
       // Resolve assignee → Telegram handle via env map { "Егор":"@moskvin_egor", "Коля":"@antipovmykola" }
       let assigneeHandle = '' as string;
