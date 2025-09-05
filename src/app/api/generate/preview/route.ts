@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   const searchQueryOverride = pageSearch;
   const noSearchFinal = noSearch === true ? true : !searchQueryOverride;
 
-  const { items } = await generateStories({ n: 1, promptOverride: finalPrompt, searchQueryOverride, noSearch: noSearchFinal });
+  const { items } = await generateStories({ banlistTitles: [], n: 1, promptOverride: finalPrompt, searchQueryOverride, noSearch: noSearchFinal });
   const first: GeneratedItem | undefined = (Array.isArray(items) ? items[0] : undefined);
   const script: string = first && typeof first.script === 'string' ? first.script : '';
   return NextResponse.json({ text: script });
