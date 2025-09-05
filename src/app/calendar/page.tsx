@@ -183,7 +183,7 @@ export default function CalendarPage() {
       </div>
       {openPost && (
         <>
-          <div className="fixed inset-0 bg-black/80 z-40" onClick={()=> setOpenPost(null)} />
+          <div className="fixed inset-0 bg-black/90 z-40" onClick={()=> setOpenPost(null)} />
           <PostModal post={openPost} onClose={()=> setOpenPost(null)} onChanged={()=>{ setOpenPost(null); load(); }} />
         </>
       )}

@@ -201,7 +201,7 @@ export default function Home() {
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center">
           <div className="panel rounded-xl p-4 w-[min(700px,95vw)] grid gap-3">
             <div className="text-lg font-semibold">{editingId ? 'Редактировать пост' : 'Новый пост'}</div>
             <label className="grid gap-1 text-sm">
@@ -283,7 +283,7 @@ export default function Home() {
       )}
 
       {promptOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center">
           <div className="panel rounded-xl p-4 w-[min(900px,95vw)]">
             <div className="mb-2 font-semibold">Промпт генерации</div>
             <div className="grid gap-2">
