@@ -28,6 +28,8 @@ export async function GET(req: NextRequest) {
   const to = searchParams.get('to');
   const pillarId = searchParams.get('pillarId') || undefined;
   const search = searchParams.get('search') || undefined;
+  const taskStatus = (searchParams.get('taskStatus') || undefined) as 'OPEN'|'IN_PROGRESS'|'DONE'|undefined;
+  const assignee = searchParams.get('assignee') || undefined;
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
   const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get('pageSize') || '20', 10) || 20));
   const sortBy = (searchParams.get('sortBy') || 'updatedAt') as 'createdAt'|'updatedAt'|'scheduledAt'|'publishedAt';
@@ -42,6 +44,7 @@ export async function GET(req: NextRequest) {
     title?: { contains: string; mode: 'insensitive' };
     topic?: { contains: string; mode: 'insensitive' };
     body?: { contains: string; mode: 'insensitive' };
+    comments?: { some: { isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'; assignee?: string | null } };
   } = {};
   if (status && status.length) where.status = { in: status };
   if (pillarId) where.pillarId = pillarId;
@@ -55,6 +58,9 @@ export async function GET(req: NextRequest) {
     { topic: { contains: search, mode: 'insensitive' } },
     { body: { contains: search, mode: 'insensitive' } },
   ];
+  if (taskStatus || assignee) {
+    where.comments = { some: { isTask: true, taskStatus: taskStatus || undefined, assignee: assignee || undefined } };
+  }
 
   const [items, total] = await Promise.all([
     prisma.post.findMany({

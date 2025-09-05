@@ -20,6 +20,9 @@ export default function Home() {
   const [filterPillarId, setFilterPillarId] = useState<string|undefined>(undefined);
   const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED'>>([]);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [taskFilterOpen, setTaskFilterOpen] = useState(false);
+  const [taskStatus, setTaskStatus] = useState<''|'OPEN'|'IN_PROGRESS'|'DONE'>('');
+  const [assignee, setAssignee] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const [query, setQuery] = useState('');
@@ -31,6 +34,8 @@ export default function Home() {
     const params = new URLSearchParams();
     if (filterPillarId) params.set('pillarId', filterPillarId);
     if (statuses.length) params.set('status', JSON.stringify(statuses));
+    if (taskStatus) params.set('taskStatus', taskStatus);
+    if (assignee) params.set('assignee', assignee);
     params.set('pageSize', '20');
     try {
       abortRef.current?.abort();
@@ -84,37 +89,28 @@ export default function Home() {
             {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
           </select>
           <div className="relative">
-            <button className="btn-glass btn-sm" onClick={()=>setStatusOpen((v)=>!v)}>
-              {(() => {
-                const labels: Record<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED', string> = {
-                  DRAFT: 'Разбор',
-                  NEEDS_REVIEW: 'Ревью',
-                  READY_TO_PUBLISH: 'Запланирован',
-                  PUBLISHED: 'Опубликован',
-                  REJECTED: 'Отклонён',
-                };
-                return statuses.length === 0 ? 'Все статусы' : statuses.map((s) => labels[s]).join(', ');
-              })()}
+            <button className="btn-glass btn-sm" onClick={()=>setTaskFilterOpen((v)=>!v)}>
+              {taskStatus || assignee ? `Задачи: ${taskStatus || ''} ${assignee? '→ '+assignee: ''}` : 'Задачи'}
             </button>
-            {statusOpen && (
-              <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[220px]">
-                {([
-                  { code: 'DRAFT', label: 'Разбор' },
-                  { code: 'NEEDS_REVIEW', label: 'Ревью' },
-                  { code: 'READY_TO_PUBLISH', label: 'Запланирован' },
-                  { code: 'PUBLISHED', label: 'Опубликован' },
-                  { code: 'REJECTED', label: 'Отклонён' },
-                ] as Array<{code:'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED'; label: string}>).map(opt=> (
-                  <label key={opt.code} className="flex items-center gap-2 text-sm py-1">
-                    <input type="checkbox" checked={statuses.includes(opt.code)} onChange={(e)=>{
-                      setStatuses(prev=> e.target.checked ? [...prev, opt.code] : prev.filter(s=>s!==opt.code));
-                    }} />
-                    {opt.label}
-                  </label>
-                ))}
+            {taskFilterOpen && (
+              <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[260px] grid gap-2">
+                <div className="text-xs opacity-80">Статус задачи</div>
+                <select className="bg-background rounded p-2" value={taskStatus} onChange={(e)=>setTaskStatus(e.target.value as any)}>
+                  <option value="">Любой</option>
+                  <option value="OPEN">OPEN</option>
+                  <option value="IN_PROGRESS">IN_PROGRESS</option>
+                  <option value="DONE">DONE</option>
+                </select>
+                <div className="text-xs opacity-80">Исполнитель</div>
+                <select className="bg-background rounded p-2" value={assignee} onChange={(e)=>setAssignee(e.target.value)}>
+                  <option value="">Любой</option>
+                  <option value="Егор">Егор</option>
+                  <option value="Коля">Коля</option>
+                  <option value="Лена">Лена</option>
+                </select>
                 <div className="flex gap-2 justify-end mt-2">
-                  <button className="btn-glass btn-sm" onClick={()=>{ setStatuses([]); setStatusOpen(false); }}>Все</button>
-                  <button className="btn-glass btn-sm" onClick={()=>setStatusOpen(false)}>Готово</button>
+                  <button className="btn-glass btn-sm" onClick={()=>{ setTaskStatus(''); setAssignee(''); setTaskFilterOpen(false); }}>Сбросить</button>
+                  <button className="btn-glass btn-sm" onClick={()=>setTaskFilterOpen(false)}>Готово</button>
                 </div>
               </div>
             )}
