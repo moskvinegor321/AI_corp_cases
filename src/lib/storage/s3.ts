@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+// Deprecated in favor of Supabase Storage. Keeping for reference until full migration is verified.
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 

@@ -78,14 +78,15 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
     setLoading(true);
     try {
       const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
-      const signRes = await fetch(`/api/uploads/s3`, {
+      const signRes = await fetch(`/api/uploads/supabase`, {
         method: "POST",
         headers: { "content-type": "application/json", "x-admin-token": token },
         body: JSON.stringify({ filename: f.name, contentType: f.type || "application/octet-stream", prefix: `posts/${post.id}` }),
       });
       const { url, publicUrl } = await signRes.json();
       if (!url) throw new Error("签名 не получен");
-      await fetch(url, { method: "PUT", headers: { "content-type": f.type || "application/octet-stream" }, body: f });
+      // Supabase signed upload expects a POST with the file as body
+      await fetch(url, { method: "POST", headers: { "content-type": f.type || "application/octet-stream" }, body: f });
       await fetch(`/api/posts/${post.id}/attachments`, {
         method: "POST",
         headers: { "content-type": "application/json", "x-admin-token": token },
