@@ -16,7 +16,7 @@ export default function Home() {
   const [promptText, setPromptText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [noSearch, setNoSearch] = useState(false);
-  const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: '', body: '' });
+  const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string; searchQuery?: string; noSearch?: boolean }>({ title: '', body: '', searchQuery: '', noSearch: false });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [filterPillarIds, setFilterPillarIds] = useState<string[]>([]);
   const [pillarDraft, setPillarDraft] = useState<string[]>([]);
@@ -143,7 +143,7 @@ export default function Home() {
             setPillars(prev=>[...prev, created]);
             setForm(f=>({ ...f, pillarId: created.id }));
           }}>Создать столп</button>
-          <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarIds[0] })); setModalOpen(true); }}>Добавить пост</button>
+          <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarIds[0], searchQuery: '', noSearch: false })); setModalOpen(true); }}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             try {
               // Load pillar-scoped prompt if pillar selected
@@ -234,7 +234,7 @@ export default function Home() {
                   document.dispatchEvent(new Event('aion:load:start'));
                   try {
                     const token = adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '';
-                    const r = await fetch('/api/generate/preview', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId, title: form.title, topic: form.topic }) });
+                    const r = await fetch('/api/generate/preview', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId, title: form.title, topic: form.topic, searchQuery: form.searchQuery, noSearch: form.noSearch }) });
                     const d = await r.json();
                     if (d?.text) setForm(f=> ({ ...f, body: d.text }));
                     else alert('Не удалось сгенерировать текст');
@@ -243,6 +243,13 @@ export default function Home() {
                 }}>{generatingText ? 'Генерация…' : 'Сгенерировать текст'}</button>
               </div>
             </label>
+            <div className="grid gap-1 text-sm">
+              <span>Поисковый запрос</span>
+              <input className="bg-background rounded p-2" value={form.searchQuery||''} onChange={(e)=> setForm(f=> ({ ...f, searchQuery: e.target.value }))} placeholder="Запрос для источников" />
+              <label className="flex items-center gap-2 text-xs opacity-80">
+                <input type="checkbox" checked={!!form.noSearch} onChange={(e)=> setForm(f=> ({ ...f, noSearch: e.target.checked }))} /> Исключить поиск при генерации текста
+              </label>
+            </div>
             <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
               <label className="grid gap-1 text-sm">
                 <span>Тема</span>
@@ -272,7 +279,7 @@ export default function Home() {
                   }
                 }
                 if (editingId) {
-                  const res = await fetch(`/api/posts/${editingId}`, { method: 'PATCH', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ title: form.title, body: form.body, topic: form.topic, pillarId: form.pillarId }) });
+                  const res = await fetch(`/api/posts/${editingId}`, { method: 'PATCH', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ title: form.title, body: form.body, topic: form.topic, pillarId: form.pillarId, searchQuery: form.searchQuery }) });
                   if (!res.ok) { alert('Не удалось обновить пост'); return; }
                 } else {
                   const res = await fetch('/api/posts', { method: 'POST', headers: { 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ ...form, source: 'manual' }) });
