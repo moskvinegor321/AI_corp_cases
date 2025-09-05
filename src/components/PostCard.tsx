@@ -85,8 +85,16 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
       });
       const { url, publicUrl } = await signRes.json();
       if (!url) throw new Error("签名 не получен");
-      // Supabase signed upload expects a POST with the file as body
-      await fetch(url, { method: "POST", headers: { "content-type": f.type || "application/octet-stream" }, body: f });
+      // Try PUT first (S3-like); if 400/405, fallback to POST
+      let uploaded = false;
+      try {
+        const putRes = await fetch(url, { method: "PUT", headers: { "content-type": f.type || "application/octet-stream" }, body: f });
+        if (putRes.ok) uploaded = true;
+      } catch {}
+      if (!uploaded) {
+        const postRes = await fetch(url, { method: "POST", headers: { "content-type": f.type || "application/octet-stream" }, body: f });
+        if (!postRes.ok) throw new Error('upload failed');
+      }
       await fetch(`/api/posts/${post.id}/attachments`, {
         method: "POST",
         headers: { "content-type": "application/json", "x-admin-token": token },
