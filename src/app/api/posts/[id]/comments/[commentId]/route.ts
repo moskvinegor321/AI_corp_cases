@@ -16,4 +16,13 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   return NextResponse.json({ comment });
 }
 
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string; commentId: string }> }) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+  const { id, commentId } = await ctx.params;
+  await prisma.postComment.delete({ where: { id: commentId } });
+  await auditLog({ entityType: 'comment', entityId: commentId, action: 'deleted', meta: { postId: id } });
+  return NextResponse.json({ ok: true });
+}
+
 

@@ -201,6 +201,13 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                           setStatusEdit(null);
                           onChanged?.();
                         }}>OK</button>
+                        <button className="btn-glass btn-sm" style={{ color: '#f87171' }} title="Удалить" onClick={async ()=>{
+                          const ok = typeof window !== 'undefined' ? window.confirm('Удалить задачу?') : true;
+                          if (!ok) return;
+                          const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+                          await fetch(`/api/posts/${post.id}/comments/${c.id}`, { method:'DELETE', headers:{ 'x-admin-token': token } });
+                          onChanged?.();
+                        }}>🗑</button>
                       </span>
                     )}
                   </div>
