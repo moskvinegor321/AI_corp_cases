@@ -16,7 +16,8 @@ const ItemSchema = z.object({
   script: z.string().min(200),
   company: z.string().optional().nullable(),
   // allow up to 10 from the model; we'll clamp to 3 later
-  sources: z.array(z.string().url()).min(1).max(10),
+  // relax: accept any strings; we'll replace with provider URLs later
+  sources: z.array(z.string()).min(0).max(10),
   novelty_note: z.string().optional().nullable(),
   confidence: z.number().min(0).max(1).optional().nullable(),
 });
