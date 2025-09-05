@@ -19,6 +19,7 @@ export default function Home() {
   const [noSearch, setNoSearch] = useState(false);
   const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: '', body: '' });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
+  const [filterPillarId, setFilterPillarId] = useState<string|undefined>(undefined);
   const [drafts, setDrafts] = useState<Record<string, CommentDraft>>({});
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'>>([]);
@@ -28,7 +29,7 @@ export default function Home() {
 
   const load = async (overridePillarId?: string) => {
     const params = new URLSearchParams();
-    const pid = typeof overridePillarId === 'string' ? overridePillarId : form.pillarId;
+    const pid = typeof overridePillarId === 'string' ? overridePillarId : filterPillarId;
     if (pid) params.set('pillarId', pid);
     if (statuses.length) params.set('status', JSON.stringify(statuses));
     const r = await fetch(`/api/posts?${params.toString()}`);
@@ -43,7 +44,7 @@ export default function Home() {
     if (saved) setAdminToken(saved);
   }, []);
 
-  useEffect(() => { load(); }, [form.pillarId, JSON.stringify(statuses)]);
+  useEffect(() => { load(); }, [filterPillarId, JSON.stringify(statuses)]);
 
   const saveToken = (t: string) => { setAdminToken(t); if (typeof window !== 'undefined') localStorage.setItem('aion_admin_token', t); };
 
@@ -58,7 +59,7 @@ export default function Home() {
         <div className="text-2xl font-bold tracking-tight">Посты</div>
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
-          <select className="select-compact-sm" value={form.pillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setForm(f=>({ ...f, pillarId: v })); }}>
+          <select className="select-compact-sm" value={filterPillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setFilterPillarId(v); }}>
             <option value="">Все страницы</option>
             {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
           </select>
@@ -100,12 +101,12 @@ export default function Home() {
             setPillars(prev=>[...prev, created]);
             setForm(f=>({ ...f, pillarId: created.id }));
           }}>Создать страницу</button>
-          <button className="btn-glass btn-sm" onClick={()=>setModalOpen(true)}>Добавить пост</button>
+          <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarId })); setModalOpen(true); }}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             try {
               // Load page-scoped prompt if pillar selected
-              if (form.pillarId) {
-                const pr = await fetch(`/api/pages/${form.pillarId}`, { cache: 'no-store' });
+              if (filterPillarId) {
+                const pr = await fetch(`/api/pages/${filterPillarId}`, { cache: 'no-store' });
                 const pd = await pr.json();
                 setPromptText(pd.page?.prompt || '');
                 setSearchQuery(pd.page?.searchQuery || '');
@@ -116,7 +117,7 @@ export default function Home() {
             } catch {}
             setPromptOpen(true);
           }}>Промпт и поиск</button>
-          <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
+          <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
         </div>
       </div>
 
