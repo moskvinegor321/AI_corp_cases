@@ -19,6 +19,7 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit }: { post: 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [picker, setPicker] = useState<null | 'review' | 'schedule'>(null);
   const [dt, setDt] = useState<string>('');
+  const [editSchedule, setEditSchedule] = useState(false);
   const statusLabel: Record<Post["status"], string> = {
     DRAFT: 'Разбор',
     NEEDS_REVIEW: 'Ревью',
@@ -80,7 +81,37 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit }: { post: 
       <div className="panel rounded-lg p-3 grid gap-2">
         <div className="flex items-center justify-between">
           <div className="font-semibold text-sm">{post.title}</div>
-          <div className="text-xs opacity-70">{statusLabel[post.status]}</div>
+          <div className="text-xs opacity-70 flex items-center gap-2">
+            <span>{statusLabel[post.status]}</span>
+            {post.status === 'READY_TO_PUBLISH' && !editSchedule && (
+              <>
+                <span className="opacity-60">{post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : '—'}</span>
+                <button
+                  className="btn-glass btn-sm"
+                  onClick={() => {
+                    const base = post.scheduledAt ? new Date(post.scheduledAt) : new Date();
+                    const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000)
+                      .toISOString()
+                      .slice(0, 16);
+                    setDt(local);
+                    setEditSchedule(true);
+                  }}
+                >Изменить</button>
+              </>
+            )}
+            {post.status === 'READY_TO_PUBLISH' && editSchedule && (
+              <>
+                <input className="bg-background rounded p-1" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
+                <button className="btn-glass btn-sm" onClick={async ()=>{
+                  if (!dt) return;
+                  const iso = new Date(dt).toISOString();
+                  await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
+                  setEditSchedule(false);
+                }}>OK</button>
+                <button className="btn-glass btn-sm" onClick={()=>setEditSchedule(false)}>✕</button>
+              </>
+            )}
+          </div>
         </div>
         <div className="text-xs opacity-80 flex gap-3 flex-wrap">
           {post.source && <span className="chip px-2 py-0.5 rounded text-xs">{post.source}</span>}
