@@ -24,7 +24,7 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
 
         {editing && (
           <div className="fixed inset-0 bg-black/90 flex items-center justify-center">
-            <div className="panel rounded-xl p-4 w-[min(700px,95vw)] grid gap-3">
+            <div className="panel-solid rounded-xl p-4 w-[min(700px,95vw)] grid gap-3">
               <div className="text-lg font-semibold">Редактировать пост</div>
               <label className="grid gap-1 text-sm">
                 <span>Заголовок</span>

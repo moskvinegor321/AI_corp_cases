@@ -129,6 +129,12 @@ body::before {
   border: 1px solid rgba(255,255,255,0.12);
 }
 
+/* More opaque panel for modals to avoid background bleed-through */
+.panel-solid {
+  background: rgba(10, 12, 16, 0.95);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
 /* Fullscreen spinner */
 .spinner {
   width: 42px;
