@@ -313,18 +313,16 @@ export default function Home() {
                 try {
                   setSavingPrompts(true);
                   const r1 = await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) });
-                  let rMain: Response;
+                  let ok = r1.ok;
                   if (filterPillarIds[0]) {
                     const pid = filterPillarIds[0];
-                    rMain = await fetch(`/api/pages/${pid}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
+                    const rPillar = await fetch(`/api/pillars/${pid}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
+                    ok = ok && rPillar.ok;
                   } else {
-                    rMain = await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
+                    const rGlobal = await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
+                    ok = ok && rGlobal.ok;
                   }
-                  if (!r1.ok || !rMain.ok) {
-                    const errText = await rMain.text().catch(()=> '');
-                    alert('Не удалось сохранить');
-                    return;
-                  }
+                  if (!ok) { alert('Не удалось сохранить'); return; }
                   setPromptOpen(false);
                 } finally { setSavingPrompts(false); }
               }}>{savingPrompts? 'Сохранение…' : 'Сохранить'}</button>

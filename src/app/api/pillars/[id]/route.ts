@@ -5,16 +5,45 @@ import { requireAdmin } from '@/lib/admin';
 
 export const runtime = 'nodejs';
 
+export async function GET(_: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
+  const pillar = await prisma.pillar.findUnique({ where: { id } });
+  if (!pillar) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  // read pillar-scoped prompts from settings
+  const keys = [`page:${id}:prompt`, `page:${id}:search_query`];
+  const rows = await prisma.setting.findMany({ where: { key: { in: keys } } });
+  const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
+  return NextResponse.json({ pillar, prompt: map[`page:${id}:prompt`] || null, searchQuery: map[`page:${id}:search_query`] || null });
+}
+
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
   const { id } = await ctx.params;
-  const { name } = (await req.json()) as { name?: string };
-  if (!name || !name.trim()) return NextResponse.json({ error: 'name required' }, { status: 400 });
+  const { name, prompt, searchQuery } = (await req.json()) as { name?: string; prompt?: string; searchQuery?: string };
+  if (!name && prompt === undefined && searchQuery === undefined) return NextResponse.json({ error: 'nothing to update' }, { status: 400 });
   try {
-    const pillar = await prisma.pillar.update({ where: { id }, data: { name: name.trim() } });
-    await auditLog({ entityType: 'pillar', entityId: id, action: 'updated', meta: { name: pillar.name } });
-    return NextResponse.json({ pillar });
+    let pillar;
+    if (name && name.trim()) {
+      pillar = await prisma.pillar.update({ where: { id }, data: { name: name.trim() } });
+      await auditLog({ entityType: 'pillar', entityId: id, action: 'updated', meta: { name: pillar.name } });
+    } else {
+      pillar = await prisma.pillar.findUnique({ where: { id } });
+    }
+
+    if (!pillar) return NextResponse.json({ error: 'not found' }, { status: 404 });
+
+    // Save pillar-scoped prompts to Setting table
+    const ops = [] as Array<ReturnType<typeof prisma.setting.upsert>>;
+    if (prompt !== undefined) {
+      ops.push(prisma.setting.upsert({ where: { key: `page:${id}:prompt` }, update: { value: (prompt || '').trim() }, create: { key: `page:${id}:prompt`, value: (prompt || '').trim() } }));
+    }
+    if (searchQuery !== undefined) {
+      ops.push(prisma.setting.upsert({ where: { key: `page:${id}:search_query` }, update: { value: (searchQuery || '').trim() }, create: { key: `page:${id}:search_query`, value: (searchQuery || '').trim() } }));
+    }
+    if (ops.length) await prisma.$transaction(ops);
+
+    return NextResponse.json({ pillar, updated: true });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     if (msg.toLowerCase().includes('unique')) {
