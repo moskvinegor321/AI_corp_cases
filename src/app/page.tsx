@@ -67,7 +67,18 @@ export default function Home() {
           }}>Создать страницу</button>
           <button className="btn-glass btn-sm" onClick={()=>setModalOpen(true)}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
-            try { const r = await fetch('/api/settings/prompts',{cache:'no-store'}); if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }} catch {}
+            try {
+              // Load page-scoped prompt if pillar selected
+              if (form.pillarId) {
+                const pr = await fetch(`/api/pages/${form.pillarId}`, { cache: 'no-store' });
+                const pd = await pr.json();
+                setPromptText(pd.page?.prompt || '');
+                setSearchQuery(pd.page?.searchQuery || '');
+                setNoSearch(!pd.page?.searchQuery);
+              }
+              const r = await fetch('/api/settings/prompts',{cache:'no-store'});
+              if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }
+            } catch {}
             setPromptOpen(true);
           }}>Промпт и поиск</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const body: GenerateBody & { pageId?: string; pillarId?: string; searchQuery?: string; noSearch?: boolean } = await req.json().catch(() => ({} as GenerateBody));
+  const body: GenerateBody & { pageId?: string; pillarId?: string; searchQuery?: string; noSearch?: boolean; promptOverride?: string } = await req.json().catch(() => ({} as GenerateBody));
   const n = Number(body?.n || process.env.GENERATE_N || 5);
   const pageId = (body as { pageId?: string }).pageId;
   const pillarId = (body as { pillarId?: string }).pillarId;
@@ -81,6 +81,10 @@ export async function POST(req: NextRequest) {
   finalPrompt = parts.length ? parts.join(`\n\n`) : undefined;
 
   // Allow overriding search from request body
+  // Allow client override of prompt and search
+  if (typeof body.promptOverride === 'string' && body.promptOverride.trim().length > 0) {
+    promptOverride = body.promptOverride.trim();
+  }
   const searchOverride = typeof body.searchQuery === 'string' && body.searchQuery.trim().length > 0 ? body.searchQuery.trim() : searchQueryOverride;
   const noSearchFinal = body.noSearch === true ? true : !searchOverride;
   const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride: searchOverride, noSearch: noSearchFinal });
