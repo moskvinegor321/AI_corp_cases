@@ -52,7 +52,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [filterPillarId, statuses, query]);
+  }, [filterPillarId, statuses, query, taskStatus, assignee]);
 
   useEffect(() => {
     load();
