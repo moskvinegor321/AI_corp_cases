@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
     const firstSource = (it.sources || [])[0];
     const matchedDoc = docs.find((d) => d.url === firstSource);
     const providerDate: string | undefined = (matchedDoc?.publishedAt as string | undefined);
-    const sourceDate = extractPublishedAt(providerDate) || extractPublishedAt(firstSource);
+    // const sourceDate = extractPublishedAt(providerDate) || extractPublishedAt(firstSource);
     // Create Post directly with status NEEDS_REVIEW ("На разбор"), source='ai'
     const post = await prisma.post.create({
       data: {

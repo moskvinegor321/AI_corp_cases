@@ -8,7 +8,7 @@ export default function TablePage() {
   const [items, setItems] = useState<Post[]>([]);
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [view, setView] = useState<'matrix'|'list'>('matrix');
-  const { filters, setStatuses, setRange, setPillar } = usePostFilters();
+  const { filters, setStatuses, setRange } = usePostFilters();
   const [statusOpen, setStatusOpen] = useState(false);
   const [pillarsOpen, setPillarsOpen] = useState(false);
   const [pillarIds, setPillarIds] = useState<string[]>([]);
@@ -28,11 +28,11 @@ export default function TablePage() {
       document.dispatchEvent(new Event('aion:load:end'));
     }
   };
-  useEffect(() => { load(); }, [JSON.stringify(filters)]);
+  useEffect(() => { load(); }, [filters.from, filters.to, JSON.stringify(filters.statuses)]);
 
-  const topics = useMemo(() => {
-    return Array.from(new Set(items.map(i => i.topic || '').filter(Boolean))).sort();
-  }, [items]);
+  // const topics = useMemo(() => {
+  //   return Array.from(new Set(items.map(i => i.topic || '').filter(Boolean))).sort();
+  // }, [items]);
 
   return (
     <div className="p-6 grid gap-4">

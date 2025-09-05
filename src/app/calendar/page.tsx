@@ -12,7 +12,7 @@ export default function CalendarPage() {
   const [items, setItems] = useState<Post[]>([]);
   const [adminToken, setAdminToken] = useState<string>("");
   const [month, setMonth] = useState<Date>(() => startOfMonth(new Date()));
-  const { filters, setStatuses, setRange, setPillar } = usePostFilters({ statuses: ["READY_TO_PUBLISH", "PUBLISHED"] as PostStatus[] });
+  const { filters, setStatuses, setRange } = usePostFilters({ statuses: ["READY_TO_PUBLISH", "PUBLISHED"] as PostStatus[] });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [statusOpen, setStatusOpen] = useState(false);
   const [openPost, setOpenPost] = useState<Post | null>(null);
@@ -48,7 +48,7 @@ export default function CalendarPage() {
       document.dispatchEvent(new Event('aion:load:end'));
     }
   };
-  useEffect(() => { load(); }, [JSON.stringify(filters)]);
+  useEffect(() => { load(); }, [filters.from, filters.to, JSON.stringify(filters.statuses)]);
 
   // Build month grid days
   const days = useMemo(() => {

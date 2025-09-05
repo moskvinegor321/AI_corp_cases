@@ -1,15 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin';
-import { generateStories } from '@/lib/llm/generateStories';
+import { generateStories, type GeneratedItem } from '@/lib/llm/generateStories';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
-  const body = await req.json().catch(()=> ({} as any)) as { pillarId?: string; title?: string; topic?: string; promptOverride?: string; noSearch?: boolean };
-  const { pillarId, title, topic, promptOverride, noSearch } = body;
+  type Payload = { pillarId?: string; title?: string; topic?: string; promptOverride?: string; noSearch?: boolean };
+  let payload: Payload = {};
+  try {
+    const raw = await req.json();
+    if (raw && typeof raw === 'object') {
+      const o = raw as Record<string, unknown>;
+      payload = {
+        pillarId: typeof o.pillarId === 'string' ? o.pillarId : undefined,
+        title: typeof o.title === 'string' ? o.title : undefined,
+        topic: typeof o.topic === 'string' ? o.topic : undefined,
+        promptOverride: typeof o.promptOverride === 'string' ? o.promptOverride : undefined,
+        noSearch: typeof o.noSearch === 'boolean' ? o.noSearch : undefined,
+      };
+    }
+  } catch {}
+  const { pillarId, title, topic, promptOverride, noSearch } = payload;
 
   // Pull pillar-specific prompt and search
   let pagePrompt: string | undefined;
@@ -44,8 +58,8 @@ export async function POST(req: NextRequest) {
   const noSearchFinal = noSearch === true ? true : !searchQueryOverride;
 
   const { items } = await generateStories({ n: 1, promptOverride: finalPrompt, searchQueryOverride, noSearch: noSearchFinal });
-  const first = (items as any[])[0];
-  const script: string = first?.script || '';
+  const first: GeneratedItem | undefined = (Array.isArray(items) ? items[0] : undefined);
+  const script: string = first && typeof first.script === 'string' ? first.script : '';
   return NextResponse.json({ text: script });
 }
 
