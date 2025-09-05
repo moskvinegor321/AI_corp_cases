@@ -18,6 +18,22 @@ export async function POST(req: NextRequest) {
   // Log input and computed values (no secrets)
   console.log('[uploads/supabase] request', { hasUrl: !!process.env.SUPABASE_URL, hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY, bucket, contentType, prefix, path });
 
+  // Ensure bucket exists (auto-create if missing)
+  try {
+    const { data: bucketInfo, error: bucketErr } = await supabase.storage.getBucket(bucket);
+    if (bucketErr || !bucketInfo) {
+      console.warn('[uploads/supabase] bucket missing, creating', { bucket });
+      const { error: createErr } = await supabase.storage.createBucket(bucket, { public: true });
+      if (createErr) {
+        console.error('[uploads/supabase] createBucket error', { message: createErr.message });
+        return NextResponse.json({ error: 'Failed to ensure bucket exists' }, { status: 500 });
+      }
+    }
+  } catch (err) {
+    console.error('[uploads/supabase] ensure bucket error', { message: (err as Error).message });
+    return NextResponse.json({ error: 'Bucket verification failed' }, { status: 500 });
+  }
+
   // Create a signed URL for upload via POST to storage API
   // Using createSignedUploadUrl (if available) or upload via service role
   // We will use createSignedUploadUrl to allow client direct upload without exposing keys
