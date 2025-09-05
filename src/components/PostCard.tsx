@@ -141,19 +141,24 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
               </>
             )}
             {post.status === 'READY_TO_PUBLISH' && editSchedule && (
-              <div className="absolute right-0 top-full mt-2 panel rounded-xl p-3 z-20 w-64 grid gap-2">
-                <div className="text-xs opacity-80">Дата/время публикации</div>
-                <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
-                <div className="flex gap-2 justify-end">
-                  <button className="btn-glass btn-sm" onClick={()=>setEditSchedule(false)}>Отмена</button>
-                  <button className="btn-glass btn-sm" onClick={async ()=>{
-                    if (!dt) return;
-                    const iso = new Date(dt).toISOString();
-                    await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
-                    setEditSchedule(false);
-                  }}>Сохранить</button>
+              <>
+                <div className="fixed inset-0 bg-black/70 z-40" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                  <div className="panel rounded-xl p-3 w-64 grid gap-2">
+                    <div className="text-xs opacity-80">Дата/время публикации</div>
+                    <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
+                    <div className="flex gap-2 justify-end">
+                      <button className="btn-glass btn-sm" onClick={()=>setEditSchedule(false)}>Отмена</button>
+                      <button className="btn-glass btn-sm" onClick={async ()=>{
+                        if (!dt) return;
+                        const iso = new Date(dt).toISOString();
+                        await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
+                        setEditSchedule(false);
+                      }}>Сохранить</button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </div>
@@ -265,22 +270,24 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         </div>
         {picker && (
           <>
-          <div className="fixed inset-0 bg-black/70 z-10" />
-          <div className="absolute top-full mt-2 left-0 panel rounded-xl p-3 z-20 w-64 grid gap-2">
-            <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : picker === 'publish' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
-            <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
-            <div className="flex gap-2 justify-end">
-              <button className="btn-glass btn-sm" onClick={()=>setPicker(null)}>Отмена</button>
-              <button className="btn-glass btn-sm" onClick={async ()=>{
-                if (!dt) return;
-                const iso = new Date(dt).toISOString();
-                if (picker === 'schedule') await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
-                if (picker === 'review') await callStatus('NEEDS_REVIEW', { reviewDueAt: iso });
-                if (picker === 'publish') await callStatus('PUBLISHED', { publishedAt: iso });
-                setPicker(null);
-              }}>Сохранить</button>
+            <div className="fixed inset-0 bg-black/70 z-40" />
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="panel rounded-xl p-3 w-64 grid gap-2">
+                <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : picker === 'publish' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
+                <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
+                <div className="flex gap-2 justify-end">
+                  <button className="btn-glass btn-sm" onClick={()=>setPicker(null)}>Отмена</button>
+                  <button className="btn-glass btn-sm" onClick={async ()=>{
+                    if (!dt) return;
+                    const iso = new Date(dt).toISOString();
+                    if (picker === 'schedule') await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
+                    if (picker === 'review') await callStatus('NEEDS_REVIEW', { reviewDueAt: iso });
+                    if (picker === 'publish') await callStatus('PUBLISHED', { publishedAt: iso });
+                    setPicker(null);
+                  }}>Сохранить</button>
+                </div>
+              </div>
             </div>
-          </div>
           </>
         )}
         <div className="flex gap-2 flex-wrap md:justify-end opacity-90">
