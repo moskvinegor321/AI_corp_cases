@@ -62,16 +62,15 @@ export async function GET(req: NextRequest) {
     where.comments = { some: { isTask: true, taskStatus: taskStatus || undefined, assignee: assignee || undefined } };
   }
 
-  const [items, total] = await Promise.all([
-    prisma.post.findMany({
-      where,
-      orderBy: { [sortBy]: sortDir },
-      include: { attachments: true, comments: { orderBy: { createdAt: 'desc' }, take: 5 }, pillar: true },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.post.count({ where }),
-  ]);
+  // Avoid saturating limited DB pool: run count after fetching page
+  const items = await prisma.post.findMany({
+    where,
+    orderBy: { [sortBy]: sortDir },
+    include: { attachments: true, comments: { orderBy: { createdAt: 'desc' }, take: 5 }, pillar: true },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+  });
+  const total = await prisma.post.count({ where });
   const payload = { items, page, pageSize, total };
   POSTS_CACHE.set(key, { ts: Date.now(), payload });
   return NextResponse.json(payload, { headers: { 'x-cache': 'MISS' } });

@@ -9,14 +9,13 @@ export async function GET(req: NextRequest) {
 
   const whereBase = pillarId ? { pillarId } : {};
 
-  const [total, draft, review, ready, published, rejected] = await Promise.all([
-    prisma.post.count({ where: whereBase }),
-    prisma.post.count({ where: { ...whereBase, status: 'DRAFT' } }),
-    prisma.post.count({ where: { ...whereBase, status: 'NEEDS_REVIEW' } }),
-    prisma.post.count({ where: { ...whereBase, status: 'READY_TO_PUBLISH' } }),
-    prisma.post.count({ where: { ...whereBase, status: 'PUBLISHED' } }),
-    prisma.post.count({ where: { ...whereBase, status: 'REJECTED' } }),
-  ]);
+  // Execute sequentially to reduce DB pool pressure (P2024 when limit=1)
+  const total = await prisma.post.count({ where: whereBase });
+  const draft = await prisma.post.count({ where: { ...whereBase, status: 'DRAFT' } });
+  const review = await prisma.post.count({ where: { ...whereBase, status: 'NEEDS_REVIEW' } });
+  const ready = await prisma.post.count({ where: { ...whereBase, status: 'READY_TO_PUBLISH' } });
+  const published = await prisma.post.count({ where: { ...whereBase, status: 'PUBLISHED' } });
+  const rejected = await prisma.post.count({ where: { ...whereBase, status: 'REJECTED' } });
 
   return NextResponse.json({
     total,
