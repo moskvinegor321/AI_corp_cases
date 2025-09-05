@@ -224,7 +224,7 @@ export default function StoriesPage() {
             Удалить выбранные
           </button>
           <div className="header-actions justify-end">
-            <button className="btn-glass btn-sm" onClick={openPrompt}>Промпт и поиск</button>
+            <button className="btn-glass btn-sm" onClick={openPrompt}>Мастер промпт</button>
             <button className="btn-glass btn-sm" onClick={generate} disabled={loading}>
               {loading ? 'Генерация…' : 'Сгенерировать 5 постов'}
             </button>
@@ -239,7 +239,7 @@ export default function StoriesPage() {
       {promptOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="glass rounded-xl p-4 w-[min(900px,95vw)]">
-            <div className="mb-2 font-semibold">Промпт генерации</div>
+            <div className="mb-2 font-semibold">Мастер промпт</div>
             <div className="mb-2 text-sm opacity-80">Контекст и тон сохраняются глобально и будут добавляться к задаче.</div>
             <div className="grid gap-2">
               <div>

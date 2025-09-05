@@ -158,7 +158,7 @@ export default function Home() {
               if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }
             } catch {}
             setPromptOpen(true);
-          }}>Промпт и поиск</button>
+          }}>Мастер промпт</button>
           <button className="btn-glass btn-sm" disabled={!filterPillarIds[0]} title={!filterPillarIds[0] ? 'Выберите столп, чтобы настроить промпт/поиск' : undefined} onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarIds[0]||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать 5 постов</button>
           {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
@@ -288,7 +288,7 @@ export default function Home() {
       {promptOpen && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center">
           <div className="panel rounded-xl p-4 w-[min(900px,95vw)]">
-            <div className="mb-2 font-semibold">Промпт генерации</div>
+            <div className="mb-2 font-semibold">Мастер промпт</div>
             <div className="grid gap-2">
               <div>
                 <div className="font-semibold text-sm mb-1">Context Prompt</div>
