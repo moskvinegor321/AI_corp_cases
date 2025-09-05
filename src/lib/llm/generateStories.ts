@@ -29,10 +29,8 @@ export type GeneratedItem = z.infer<typeof ItemSchema>;
 
 export async function generateStories({ banlistTitles, n, promptOverride, searchQueryOverride, noSearch }: { banlistTitles: string[]; n: number; promptOverride?: string; searchQueryOverride?: string; noSearch?: boolean }): Promise<{ items: GeneratedItem[]; docs: FoundDoc[] }> {
   const limit = Math.max(5, Math.min(30, n * 6));
-  const searchQuery = (searchQueryOverride && searchQueryOverride.trim())
-    ? searchQueryOverride.trim()
-    : 'AI enterprise adoption OR genAI internal rollout OR LLM policy last 90 days';
-  const docs = noSearch ? [] : await searchNews(searchQuery, limit);
+  const searchQuery = (searchQueryOverride && searchQueryOverride.trim()) ? searchQueryOverride.trim() : '';
+  const docs = noSearch || !searchQuery ? [] : await searchNews(searchQuery, limit);
 
   const sourcesBlock = docs
     .slice(0, limit)
@@ -51,8 +49,8 @@ export async function generateStories({ banlistTitles, n, promptOverride, search
     ? `${promptOverride.trim()}\n\n(Соблюдай требования ниже.)`
     : defaultTask;
 
-  const searchPart = noSearch ? '' : `\n\nИСПОЛЬЗУЙ ТЕМУ ПОИСКА: «${searchQuery}». Не отклоняйся от темы.`;
-  const docsPart = noSearch || docs.length === 0 ? '' : `\n\nСВЕЖИЕ ИСТОЧНИКИ ДЛЯ ОПОРА (до ${limit} штук, выбери лучшие):\n${sourcesBlock}`;
+  const searchPart = noSearch || !searchQuery ? '' : `\n\nИСПОЛЬЗУЙ ТЕМУ ПОИСКА: «${searchQuery}». Не отклоняйся от темы.`;
+  const docsPart = noSearch || !searchQuery || docs.length === 0 ? '' : `\n\nСВЕЖИЕ ИСТОЧНИКИ ДЛЯ ОПОРА (до ${limit} штук, выбери лучшие):\n${sourcesBlock}`;
   const prompt = `${taskBlock}${searchPart}${docsPart}\n\nБАНЛИСТ (заголовки публиковавшихся тем, не повторяйся):\n${banlistBlock}\n\n${jsonInstruction}`;
 
   const client = getOpenAIClient();

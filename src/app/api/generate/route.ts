@@ -65,12 +65,7 @@ export async function POST(req: NextRequest) {
       if (pPrompt) promptOverride = pPrompt;
       if (pSearch) searchQueryOverride = pSearch;
     }
-    if (!promptOverride && !searchQueryOverride) {
-      const rows = await prisma.setting.findMany({ where: { key: { in: ['prompt', 'search_query'] } } });
-      const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-      promptOverride = map['prompt'];
-      searchQueryOverride = map['search_query'];
-    }
+    // No global fallbacks: if pillar doesn't have prompts, we leave them empty
     // context/tov prompts (global)
     {
       const rows = await prisma.setting.findMany({ where: { key: { in: ['contextPrompt', 'toneOfVoicePrompt'] } } });
@@ -95,7 +90,7 @@ export async function POST(req: NextRequest) {
   if (typeof body.promptOverride === 'string' && body.promptOverride.trim().length > 0) {
     promptOverride = body.promptOverride.trim();
   }
-  // Force use of provided page/prompt search; no fallback to default topic
+  // Force use of provided pillar prompt/search only; no fallback to any global/default
   const searchOverride = typeof body.searchQuery === 'string' && body.searchQuery.trim().length > 0
     ? body.searchQuery.trim()
     : (searchQueryOverride || '');
