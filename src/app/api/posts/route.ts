@@ -71,13 +71,7 @@ export async function GET(req: NextRequest) {
     take: pageSize,
   });
   const total = await prisma.post.count({ where });
-  // Try to enrich with sources if present in body as markers (generated pipeline may attach)
-  const enriched = items.map((p: any) => {
-    // noop if already present
-    if (p.sources) return p;
-    return p;
-  });
-  const payload = { items: enriched, page, pageSize, total };
+  const payload = { items, page, pageSize, total };
   POSTS_CACHE.set(key, { ts: Date.now(), payload });
   return NextResponse.json(payload, { headers: { 'x-cache': 'MISS' } });
 }
