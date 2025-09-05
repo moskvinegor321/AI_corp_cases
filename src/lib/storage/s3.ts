@@ -26,7 +26,8 @@ export async function createPresignedPutUrl({ filename, contentType, prefix, exp
   const client = getClient();
   const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
   const key = `${prefix ? `${prefix.replace(/\/$/, '')}/` : ''}${Date.now()}_${randomUUID()}_${safeName}`;
-  const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType, ACL: 'public-read' });
+  // Do not set ACL explicitly to avoid errors on buckets with ACLs disabled
+  const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType });
   const url = await getSignedUrl(client, command, { expiresIn: expiresSec });
   return { url, key };
 }

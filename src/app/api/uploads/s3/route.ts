@@ -12,7 +12,9 @@ export async function POST(req: NextRequest) {
   try {
     const { url, key } = await createPresignedPutUrl({ filename, contentType, prefix });
     const bucket = process.env.S3_BUCKET || '';
-    const publicUrlBase = process.env.S3_PUBLIC_URL_BASE || `https://${bucket}.s3.${process.env.S3_REGION}.amazonaws.com`; // TODO: Add to .env if using CDN
+    const region = process.env.S3_REGION || '';
+    // Prefer configurable public base (e.g., CDN); fallback to regional URL (works even with static websites and ACLs disabled)
+    const publicUrlBase = process.env.S3_PUBLIC_URL_BASE || (region ? `https://s3.${region}.amazonaws.com/${bucket}` : `https://${bucket}.s3.amazonaws.com`); // TODO: Add to .env if using CDN
     const publicUrl = `${publicUrlBase}/${key}`;
     return NextResponse.json({ url, key, publicUrl });
   } catch (e: unknown) {
