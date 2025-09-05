@@ -29,6 +29,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
   const [taskDueAt, setTaskDueAt] = useState<string>('');
   const [assignee, setAssignee] = useState<string>('');
   const [statusEdit, setStatusEdit] = useState<{ id: string; value: 'OPEN'|'IN_PROGRESS'|'DONE' } | null>(null);
+  const [addingTask, setAddingTask] = useState(false);
   const statusLabel: Record<Post["status"], string> = {
     DRAFT: 'Разбор',
     NEEDS_REVIEW: 'Ревью',
@@ -215,17 +216,23 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                   <option value="Лена">Лена</option>
                 </select>
                 <input className="select-compact-sm" type="datetime-local" value={taskDueAt} onChange={(e)=>setTaskDueAt(e.target.value)} disabled={!isTask} />
-                <button className="btn-glass btn-sm" onClick={async ()=>{
+                <button className="btn-glass btn-sm" disabled={addingTask} onClick={async ()=>{
+                  if (addingTask) return;
                   if (!commentText.trim()) { alert('Введите текст'); return; }
+                  setAddingTask(true);
                   const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
                   const payload: Record<string, unknown> = { text: commentText, isTask };
                   if (taskStatus) payload.taskStatus = taskStatus;
                   if (taskDueAt) payload.dueAt = new Date(taskDueAt).toISOString();
                   if (assignee) payload.assignee = assignee;
-                  await fetch(`/api/posts/${post.id}/comments`, { method:'POST', headers:{ 'content-type':'application/json', 'x-admin-token': token }, body: JSON.stringify(payload) });
-                  setCommentText(''); setIsTask(false); setTaskStatus(''); setTaskDueAt(''); setAssignee('');
-                  onChanged?.();
-                }}>Добавить</button>
+                  try {
+                    await fetch(`/api/posts/${post.id}/comments`, { method:'POST', headers:{ 'content-type':'application/json', 'x-admin-token': token }, body: JSON.stringify(payload) });
+                    setCommentText(''); setIsTask(false); setTaskStatus(''); setTaskDueAt(''); setAssignee('');
+                    onChanged?.();
+                  } finally {
+                    setAddingTask(false);
+                  }
+                }}>{addingTask ? 'Добавление…' : 'Добавить'}</button>
               </div>
             </div>
           )}
