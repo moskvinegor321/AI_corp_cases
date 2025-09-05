@@ -46,8 +46,34 @@ export async function searchSerper(query: string, limit = 20, options?: { page?:
     data = (await tryEndpoint(prefer === 'news' ? 'search' : 'news')) ?? data;
   }
 
-  const news = data?.news || [];
-  const organic = data?.organic || [];
+  let news = data?.news || [];
+  let organic = data?.organic || [];
+
+  // If still empty, try a simplified query (remove quotes/AND/parentheses/time hints)
+  if ((news.length + organic.length) === 0) {
+    const simplify = (q: string) => q
+      .replace(/last\s*\d+\s*days/ig, ' ')
+      .replace(/[()\"]+/g, ' ')
+      .replace(/\bAND\b/ig, ' ')
+      .replace(/\s+OR\s+/ig, ' OR ')
+      .replace(/\s+/g, ' ') // collapse
+      .trim();
+    const simpler = simplify(query);
+    if (simpler && simpler !== query) {
+      const payload2: Record<string, string | number> = { q: simpler, num: Math.min(limit, 100), page };
+      if (gl) payload2.gl = gl;
+      if (hl) payload2.hl = hl;
+      try {
+        const { data: data2 } = await axios.post<SerperResponse>(`https://google.serper.dev/${prefer}`, payload2, { headers });
+        if (process.env.DEBUG_SEARCH === 'true') {
+          // eslint-disable-next-line no-console
+          console.log(`[serper] simplified q="${simpler}" → news:${data2.news?.length||0} organic:${data2.organic?.length||0}`);
+        }
+        news = data2.news || [];
+        organic = data2.organic || [];
+      } catch { /* ignore */ }
+    }
+  }
 
   if (news.length) {
     return news.map((n) => ({
