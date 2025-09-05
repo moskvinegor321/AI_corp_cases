@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePostFilters, type PostStatus } from "@/lib/filters/posts";
 import type { Post } from "@/components/PostCard";
+import PostModal from "./PostModal";
 
 function startOfMonth(d: Date) { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)); return x; }
 function endOfMonth(d: Date) { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 23, 59, 59, 999)); return x; }
@@ -14,6 +15,7 @@ export default function CalendarPage() {
   const { filters, setStatuses, setRange, setPillar } = usePostFilters({ statuses: ["READY_TO_PUBLISH", "PUBLISHED"] as PostStatus[] });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [openPost, setOpenPost] = useState<Post | null>(null);
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
@@ -144,9 +146,10 @@ export default function CalendarPage() {
                 <div className="text-xs font-medium opacity-80">{d.getUTCDate()}</div>
                 <div className="flex flex-col gap-1">
                   {posts.slice(0,3).map((p)=> (
-                    <div key={p.id} className={`text-[11px] px-2 py-1 rounded ${p.status==='PUBLISHED'?'border-green-600 text-green-500':'border-yellow-600 text-yellow-500'} chip`}
+                    <div key={p.id} className={`text-[11px] px-2 py-1 rounded ${p.status==='PUBLISHED'?'border-green-600 text-green-500':'border-yellow-600 text-yellow-500'} chip cursor-pointer`}
                       draggable={p.status==='READY_TO_PUBLISH'}
                       onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', JSON.stringify({ id: p.id })); }}
+                      onClick={()=> setOpenPost(p)}
                     >
                       {p.title}
                       {p.pillar?.name ? ` — ${p.pillar.name}` : ''}
@@ -159,6 +162,12 @@ export default function CalendarPage() {
           })}
         </div>
       </div>
+      {openPost && (
+        <>
+          <div className="fixed inset-0 bg-black/70 z-40" onClick={()=> setOpenPost(null)} />
+          <PostModal post={openPost} onClose={()=> setOpenPost(null)} onChanged={()=>{ setOpenPost(null); load(); }} />
+        </>
+      )}
     </div>
   );
 }
