@@ -31,6 +31,7 @@ export default function Home() {
     const params = new URLSearchParams();
     if (filterPillarId) params.set('pillarId', filterPillarId);
     if (statuses.length) params.set('status', JSON.stringify(statuses));
+    params.set('pageSize', '20');
     try {
       abortRef.current?.abort();
       const controller = new AbortController();

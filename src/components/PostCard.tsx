@@ -105,7 +105,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
       <div className="panel rounded-lg p-3 grid gap-2">
         <div className="flex items-center justify-between">
           <div className="font-semibold text-sm">{post.title}</div>
-          <div className="text-xs opacity-70 flex items-center gap-2">
+          <div className="text-xs opacity-70 flex items-center gap-2 relative">
             <span className={`chip px-2 py-0.5 rounded ${statusClass[post.status]}`}>{statusLabel[post.status]}</span>
             {post.status === 'READY_TO_PUBLISH' && !editSchedule && (
               <>
@@ -124,16 +124,19 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
               </>
             )}
             {post.status === 'READY_TO_PUBLISH' && editSchedule && (
-              <>
-                <input className="bg-background rounded p-1" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
-                <button className="btn-glass btn-sm" onClick={async ()=>{
-                  if (!dt) return;
-                  const iso = new Date(dt).toISOString();
-                  await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
-                  setEditSchedule(false);
-                }}>OK</button>
-                <button className="btn-glass btn-sm" onClick={()=>setEditSchedule(false)}>✕</button>
-              </>
+              <div className="absolute right-0 top-full mt-2 glass rounded-xl p-3 z-20 w-64 grid gap-2">
+                <div className="text-xs opacity-80">Дата/время публикации</div>
+                <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
+                <div className="flex gap-2 justify-end">
+                  <button className="btn-glass btn-sm" onClick={()=>setEditSchedule(false)}>Отмена</button>
+                  <button className="btn-glass btn-sm" onClick={async ()=>{
+                    if (!dt) return;
+                    const iso = new Date(dt).toISOString();
+                    await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
+                    setEditSchedule(false);
+                  }}>Сохранить</button>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -151,8 +154,8 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         <div className={`grid gap-2 mt-2 ${((post.comments && post.comments.length) || commentsOpen) ? 'border-t border-white/10 pt-2' : ''}`}>
           {!!(post.comments && post.comments.length) && (
             <div className="grid gap-1">
-              {post.comments.slice(0, 10).map((c) => (
-                <div key={c.id} className="text-xs opacity-80 border-t border-white/10 pt-1 flex items-center gap-2">
+              {post.comments.slice(0, 10).map((c, i) => (
+                <div key={c.id} className={`text-xs opacity-80 pt-1 flex items-center gap-2 ${i>0 ? 'border-t border-white/10' : ''}`}>
                   {c.isTask && (
                     <>
                       <button className="chip px-2 py-0.5 rounded text-[10px] hover:opacity-80" onClick={()=> setStatusEdit({ id: c.id, value: (c.taskStatus || 'OPEN') as 'OPEN'|'IN_PROGRESS'|'DONE' })}>

@@ -96,6 +96,13 @@ model Post {
   comments     PostComment[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+
+  @@index([pillarId, status])
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([scheduledAt])
+  @@index([publishedAt])
 }
 
 model Attachment {
@@ -126,4 +133,6 @@ model PostComment {
   taskStatus TaskStatus?
   dueAt      DateTime?
   createdAt  DateTime   @default(now())
+
+  @@index([postId, createdAt])
 }

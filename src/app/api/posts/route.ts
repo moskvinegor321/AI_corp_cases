@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   const pillarId = searchParams.get('pillarId') || undefined;
   const search = searchParams.get('search') || undefined;
   const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
-  const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') || '20', 10) || 20));
+  const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get('pageSize') || '20', 10) || 20));
   const sortBy = (searchParams.get('sortBy') || 'updatedAt') as 'createdAt'|'updatedAt'|'scheduledAt'|'publishedAt';
   const sortDir = ((searchParams.get('sortDir') || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc') as 'asc'|'desc';
 
