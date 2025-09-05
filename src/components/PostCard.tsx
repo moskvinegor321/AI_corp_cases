@@ -13,6 +13,7 @@ export type Post = {
   body?: string | null;
   source?: string | null;
   attachments?: Array<{ id: string; name: string; url: string; mimeType?: string | null; sizeBytes?: number | null }>;
+  comments?: Array<{ id: string; text: string; isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'|null; dueAt?: string | null; createdAt: string }>;
 };
 
 export function PostCard({ post, onChanged, onToggleComments, onEdit, adminToken }: { post: Post; onChanged?: () => void; onToggleComments?: () => void; onEdit?: (post: Post) => void; adminToken?: string }) {
@@ -21,6 +22,11 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit, adminToken
   const [picker, setPicker] = useState<null | 'review' | 'schedule'>(null);
   const [dt, setDt] = useState<string>('');
   const [editSchedule, setEditSchedule] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [isTask, setIsTask] = useState(false);
+  const [taskStatus, setTaskStatus] = useState<''|'OPEN'|'IN_PROGRESS'|'DONE'>('');
+  const [taskDueAt, setTaskDueAt] = useState<string>('');
   const statusLabel: Record<Post["status"], string> = {
     DRAFT: 'Разбор',
     NEEDS_REVIEW: 'Ревью',
@@ -133,6 +139,49 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit, adminToken
         {post.body && (
           <div className="text-sm opacity-90 whitespace-pre-line clamp-6">{post.body}</div>
         )}
+        <div className="mt-2">
+          <button className="btn-glass btn-sm" onClick={()=>setCommentsOpen(v=>!v)}>Комментарии</button>
+        </div>
+        {commentsOpen && (
+          <div className="panel rounded-lg p-3 grid gap-2 mt-2">
+            <div className="font-semibold text-sm">Комментарий / задача</div>
+            <textarea className="bg-background rounded p-2 h-20" value={commentText} onChange={(e)=>setCommentText(e.target.value)} placeholder="Текст комментария" />
+            <div className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2"><input type="checkbox" checked={isTask} onChange={(e)=>setIsTask(e.target.checked)} /> это задача</label>
+              <select className="select-compact-sm" value={taskStatus} onChange={(e)=>setTaskStatus(e.target.value as 'OPEN'|'IN_PROGRESS'|'DONE'|'')} disabled={!isTask}>
+                <option value="">Статус задачи…</option>
+                <option value="OPEN">OPEN</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="DONE">DONE</option>
+              </select>
+              <input className="select-compact-sm" type="datetime-local" value={taskDueAt} onChange={(e)=>setTaskDueAt(e.target.value)} disabled={!isTask} />
+              <button className="btn-glass btn-sm" onClick={async ()=>{
+                if (!commentText.trim()) { alert('Введите текст'); return; }
+                const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+                const payload: Record<string, unknown> = { text: commentText, isTask };
+                if (taskStatus) payload.taskStatus = taskStatus;
+                if (taskDueAt) payload.dueAt = new Date(taskDueAt).toISOString();
+                await fetch(`/api/posts/${post.id}/comments`, { method:'POST', headers:{ 'content-type':'application/json', 'x-admin-token': token }, body: JSON.stringify(payload) });
+                setCommentText(''); setIsTask(false); setTaskStatus(''); setTaskDueAt('');
+                onChanged?.();
+              }}>Добавить</button>
+            </div>
+            {!!(post.comments && post.comments.length) && (
+              <div className="grid gap-1 mt-1">
+                {post.comments.slice(0, 10).map((c) => (
+                  <div key={c.id} className="text-xs opacity-80 border-t border-white/10 pt-1 flex items-center gap-2">
+                    {c.isTask && (
+                      <span className="chip px-2 py-0.5 rounded text-[10px]">{c.taskStatus || 'OPEN'}</span>
+                    )}
+                    <span className="truncate">{c.text}</span>
+                    <span className="opacity-60">{new Date(c.createdAt).toLocaleString()}</span>
+                    {c.dueAt && <span className="opacity-60">⏰ {new Date(c.dueAt).toLocaleString()}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex gap-2 flex-wrap relative md:justify-end">
         <button className="btn-glass btn-sm" disabled={loading} onClick={() => {
@@ -154,7 +203,6 @@ export function PostCard({ post, onChanged, onToggleComments, onEdit, adminToken
           await callStatus("PUBLISHED");
         }}>Опубликовано</button>
         <button className="btn-glass btn-sm" onClick={() => onEdit?.(post)}>Редактировать</button>
-        <button className="btn-glass btn-sm" onClick={onToggleComments}>Комментарии</button>
         <button className="btn-glass btn-sm" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
         <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
 

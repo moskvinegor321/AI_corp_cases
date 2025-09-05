@@ -123,44 +123,7 @@ export default function Home() {
       <div className="grid gap-3">
         {items.map((p)=> (
           <div key={p.id} className="grid gap-2">
-            <PostCard post={p} onChanged={load} onToggleComments={()=>setOpenComments(prev=>({ ...prev, [p.id]: !prev[p.id] }))} onEdit={(post)=>{ setEditingId(post.id); setForm({ title: post.title, body: post.body||'', topic: post.topic||undefined, pillarId: post.pillar?.id||undefined }); setModalOpen(true); }} adminToken={token} />
-            {!!(p.comments && p.comments.length) && (
-              <div className="grid gap-1 mt-1">
-                {p.comments.slice(0, 10).map((c) => (
-                  <div key={c.id} className="text-xs opacity-80 border-t border-white/10 pt-1 flex items-center gap-2">
-                    {c.isTask && (
-                      <span className="chip px-2 py-0.5 rounded text-[10px]">{c.taskStatus || 'OPEN'}</span>
-                    )}
-                    <span className="truncate">{c.text}</span>
-                    <span className="opacity-60">{new Date(c.createdAt).toLocaleString()}</span>
-                    {c.dueAt && <span className="opacity-60">⏰ {new Date(c.dueAt).toLocaleString()}</span>}
-                  </div>
-                ))}
-              </div>
-            )}
-            {openComments[p.id] && (
-            <div className="panel rounded-lg p-3 grid gap-2">
-              <div className="font-semibold text-sm">Комментарий / задача</div>
-              <textarea className="bg-background rounded p-2 h-20" value={drafts[p.id]?.text||''} onChange={(e)=>setDraft(p.id,{ text: e.target.value })} placeholder="Текст комментария" />
-              <div className="flex items-center gap-2 text-sm">
-                <label className="flex items-center gap-2"><input type="checkbox" checked={!!drafts[p.id]?.isTask} onChange={(e)=>setDraft(p.id,{ isTask: e.target.checked })} /> это задача</label>
-                <select className="select-compact-sm" value={drafts[p.id]?.taskStatus||''} onChange={(e)=>setDraft(p.id,{ taskStatus: e.target.value as 'OPEN'|'IN_PROGRESS'|'DONE'|'' })} disabled={!drafts[p.id]?.isTask}>
-                  <option value="">Статус задачи…</option>
-                  <option value="OPEN">OPEN</option>
-                  <option value="IN_PROGRESS">IN_PROGRESS</option>
-                  <option value="DONE">DONE</option>
-                </select>
-                <input className="select-compact-sm" type="datetime-local" value={drafts[p.id]?.dueAt||''} onChange={(e)=>setDraft(p.id,{ dueAt: e.target.value ? new Date(e.target.value).toISOString(): undefined })} disabled={!drafts[p.id]?.isTask} />
-                <button className="btn-glass btn-sm" onClick={async ()=>{
-                  const d = drafts[p.id];
-                  if (!d?.text || !d.text.trim()) { alert('Введите текст'); return; }
-                  await fetch(`/api/posts/${p.id}/comments`, { method:'POST', headers:{ 'content-type':'application/json', 'x-admin-token': token }, body: JSON.stringify({ text: d.text, isTask: !!d.isTask, taskStatus: d.taskStatus || undefined, dueAt: d.dueAt }) });
-                  setDraft(p.id, { text: '', isTask: false, taskStatus: '', dueAt: undefined });
-                  await load();
-                }}>Добавить</button>
-              </div>
-            </div>
-            )}
+            <PostCard post={p} onChanged={load} onEdit={(post)=>{ setEditingId(post.id); setForm({ title: post.title, body: post.body||'', topic: post.topic||undefined, pillarId: post.pillar?.id||undefined }); setModalOpen(true); }} adminToken={token} />
           </div>
         ))}
       </div>
