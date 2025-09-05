@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
     publishedAt?: { gte?: Date; lte?: Date };
     title?: { contains: string; mode: 'insensitive' };
     topic?: { contains: string; mode: 'insensitive' };
+    body?: { contains: string; mode: 'insensitive' };
   } = {};
   if (status && status.length) where.status = { in: status };
   if (pillarId) where.pillarId = pillarId;
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest) {
     ...(where.OR || []),
     { title: { contains: search, mode: 'insensitive' } },
     { topic: { contains: search, mode: 'insensitive' } },
+    { body: { contains: search, mode: 'insensitive' } },
   ];
 
   const [items, total] = await Promise.all([

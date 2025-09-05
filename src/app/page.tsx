@@ -22,6 +22,7 @@ export default function Home() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const [query, setQuery] = useState('');
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
@@ -34,6 +35,7 @@ export default function Home() {
       const controller = new AbortController();
       abortRef.current = controller;
       setLoading(true);
+      if (query.trim()) params.set('search', query.trim());
       const r = await fetch(`/api/posts?${params.toString()}`, { signal: controller.signal });
       if (!r.ok) throw new Error('failed');
       const d = await r.json();
@@ -43,7 +45,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [filterPillarId, statuses]);
+  }, [filterPillarId, statuses, query]);
 
   useEffect(() => {
     load();
@@ -65,6 +67,7 @@ export default function Home() {
         <div className="text-2xl font-bold tracking-tight">Посты</div>
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
+          <input className="px-2 py-1 rounded btn-glass btn-sm w-[240px]" placeholder="Поиск по заголовку/теме/тексту" value={query} onChange={(e)=>setQuery(e.target.value)} />
           <select className="select-compact-sm" value={filterPillarId||''} onChange={(e)=>{ const v = e.target.value||undefined; setFilterPillarId(v); }}>
             <option value="">Все страницы</option>
             {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
