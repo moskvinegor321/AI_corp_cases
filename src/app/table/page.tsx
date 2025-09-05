@@ -97,26 +97,32 @@ export default function TablePage() {
         </div>
       ) : (
         <div className="overflow-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm glass rounded-xl overflow-hidden">
             <thead>
-              <tr>
-                <th className="text-left p-2">Страница</th>
-                <th className="text-left p-2">Тема</th>
-                <th className="text-left p-2">Заголовок</th>
-                <th className="text-left p-2">Статус</th>
-                <th className="text-left p-2">Дата</th>
-                <th className="text-left p-2">Обновлён</th>
+              <tr className="bg-white/5">
+                <th className="text-left p-3">Страница</th>
+                <th className="text-left p-3">Тема</th>
+                <th className="text-left p-3">Заголовок</th>
+                <th className="text-left p-3">Статус</th>
+                <th className="text-left p-3">Дата</th>
               </tr>
             </thead>
             <tbody>
               {items.map(i => (
-                <tr key={i.id}>
-                  <td className="p-2">{i.pillar?.name || ''}</td>
-                  <td className="p-2">{i.topic || ''}</td>
-                  <td className="p-2">{i.title}</td>
-                  <td className="p-2">{i.status}</td>
-                  <td className="p-2">{i.scheduledAt? new Date(i.scheduledAt).toLocaleString(): i.publishedAt? new Date(i.publishedAt).toLocaleString(): ''}</td>
-                  <td className="p-2">{new Date().toLocaleString()}</td>
+                <tr key={i.id} className="border-t border-white/10 hover:bg-white/5">
+                  <td className="p-3">{i.pillar?.name || ''}</td>
+                  <td className="p-3">{i.topic || ''}</td>
+                  <td className="p-3">{i.title}</td>
+                  <td className="p-3">
+                    {({
+                      DRAFT:'Разбор',
+                      NEEDS_REVIEW:'Ревью',
+                      READY_TO_PUBLISH:'Запланирован',
+                      PUBLISHED:'Опубликован',
+                      REJECTED:'Отклонён'
+                    } as Record<string,string>)[i.status]}
+                  </td>
+                  <td className="p-3">{i.scheduledAt? new Date(i.scheduledAt).toLocaleString(): i.publishedAt? new Date(i.publishedAt).toLocaleString(): ''}</td>
                 </tr>
               ))}
             </tbody>
