@@ -26,8 +26,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   // Telegram notifications for scheduling/publishing
   try {
     const withPillar = await prisma.post.findUnique({ where: { id }, include: { pillar: true } });
-    const baseUrl = process.env.PUBLIC_APP_URL || '';
-    const link = baseUrl ? `${baseUrl}/table?post=${id}` : '';
+    const baseUrl = (process.env.PUBLIC_APP_URL || '').replace(/\/+$/,'');
+    const link = baseUrl ? `${baseUrl}/posts/${id}` : '';
     if (status === 'READY_TO_PUBLISH') {
       const when = (check.data.scheduledAt || withPillar?.scheduledAt) as unknown as Date | null;
       const whenText = when ? new Date(when).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }) : '';
