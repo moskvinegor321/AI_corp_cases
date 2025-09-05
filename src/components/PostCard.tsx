@@ -34,6 +34,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [reviewAssignee, setReviewAssignee] = useState<string>('Егор');
 
   useEffect(() => {
     const el = bodyRef.current;
@@ -286,13 +287,32 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
               <div className="panel rounded-xl p-3 w-64 grid gap-2">
                 <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : picker === 'publish' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
                 <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
+                {picker === 'review' && (
+                  <div className="grid gap-1">
+                    <div className="text-xs opacity-80">Ревьюер</div>
+                    <select className="bg-background rounded p-2" value={reviewAssignee} onChange={(e)=> setReviewAssignee(e.target.value)}>
+                      <option value="Егор">Егор</option>
+                      <option value="Коля">Коля</option>
+                    </select>
+                  </div>
+                )}
                 <div className="flex gap-2 justify-end">
                   <button className="btn-glass btn-sm" onClick={()=>setPicker(null)}>Отмена</button>
                   <button className="btn-glass btn-sm" onClick={async ()=>{
                     if (!dt) return;
                     const iso = new Date(dt).toISOString();
                     if (picker === 'schedule') await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
-                    if (picker === 'review') await callStatus('NEEDS_REVIEW', { reviewDueAt: iso });
+                    if (picker === 'review') {
+                      await callStatus('NEEDS_REVIEW', { reviewDueAt: iso });
+                      try {
+                        const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+                        await fetch(`/api/posts/${post.id}/comments`, {
+                          method: 'POST',
+                          headers: { 'content-type': 'application/json', 'x-admin-token': token },
+                          body: JSON.stringify({ text: 'Ревью поста', isTask: true, taskStatus: 'OPEN', assignee: reviewAssignee, dueAt: iso }),
+                        });
+                      } catch {}
+                    }
                     if (picker === 'publish') await callStatus('PUBLISHED', { publishedAt: iso });
                     setPicker(null);
                   }}>Сохранить</button>
