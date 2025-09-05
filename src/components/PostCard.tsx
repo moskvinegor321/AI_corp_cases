@@ -35,7 +35,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
   const [overflowing, setOverflowing] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const [reviewAssignee, setReviewAssignee] = useState<string>('Егор');
-  const [copied, setCopied] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
 
   useEffect(() => {
     const el = bodyRef.current;
@@ -168,15 +168,35 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         {post.body && (
           <>
             <div ref={bodyRef} className="text-sm opacity-90 whitespace-pre-line" style={expanded ? { overflow: 'visible' } : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.body}</div>
-            {(overflowing || expanded) && (
+            <div className="mt-1 flex items-center justify-between">
+              <div>
+                {(overflowing || expanded) && (
+                  <button
+                    className="text-[10px] underline opacity-80 hover:opacity-100 p-0"
+                    style={{ background: 'transparent', border: 'none' }}
+                    onClick={()=> setExpanded(v=>!v)}
+                  >
+                    {expanded ? 'Скрыть' : 'Показать полностью'}
+                  </button>
+                )}
+              </div>
               <button
-                className="mt-1 text-[10px] underline opacity-80 hover:opacity-100 p-0"
+                className="text-[10px] underline opacity-80 hover:opacity-100 p-0"
                 style={{ background: 'transparent', border: 'none' }}
-                onClick={()=> setExpanded(v=>!v)}
-              >
-                {expanded ? 'Скрыть' : 'Показать полностью'}
-              </button>
-            )}
+                title="Скопировать текст поста"
+                onClick={async ()=>{
+                  const text = post.body || '';
+                  try {
+                    await navigator.clipboard.writeText(text);
+                    setCopiedText(true); setTimeout(()=> setCopiedText(false), 1500);
+                  } catch {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text; document.body.appendChild(textarea); textarea.select();
+                    try { document.execCommand('copy'); setCopiedText(true); setTimeout(()=> setCopiedText(false), 1500); } finally { document.body.removeChild(textarea); }
+                  }
+                }}
+              >{copiedText ? 'Скопировано' : 'Скопировать текст'}</button>
+            </div>
           </>
         )}
         <div className={`grid gap-2 mt-2 ${((post.comments && post.comments.length) || commentsOpen) ? 'border-t border-white/10 pt-2' : ''}`}>
@@ -351,25 +371,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         <div className="flex gap-2 flex-wrap md:justify-end opacity-90">
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={()=>setCommentsOpen((v)=>!v)}>Комментарии</button>
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
-          <button
-            className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap"
-            title="Копировать ссылку на пост"
-            onClick={async ()=>{
-              const base = (typeof window!== 'undefined')
-                ? window.location.origin
-                : ((process.env as unknown as { NEXT_PUBLIC_APP_URL?: string }).NEXT_PUBLIC_APP_URL || '');
-              const url = `${base}/table?post=${post.id}`;
-              try {
-                await navigator.clipboard.writeText(url);
-                setCopied(true); setTimeout(()=> setCopied(false), 1500);
-              } catch {
-                // fallback
-                const textarea = document.createElement('textarea');
-                textarea.value = url; document.body.appendChild(textarea); textarea.select();
-                try { document.execCommand('copy'); setCopied(true); setTimeout(()=> setCopied(false), 1500); } finally { document.body.removeChild(textarea); }
-              }
-            }}
-          >{copied? 'Ссылка скопирована' : 'Скопировать ссылку'}</button>
+          {/* removed copy link button as per request */}
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={() => onEdit?.(post)}>Редактировать</button>
           <button className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap" onClick={async ()=>{
             const ok = typeof window!=='undefined' ? window.confirm('Удалить пост? Это действие необратимо.') : true;
