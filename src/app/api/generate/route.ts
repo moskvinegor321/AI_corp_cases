@@ -85,8 +85,11 @@ export async function POST(req: NextRequest) {
   if (typeof body.promptOverride === 'string' && body.promptOverride.trim().length > 0) {
     promptOverride = body.promptOverride.trim();
   }
-  const searchOverride = typeof body.searchQuery === 'string' && body.searchQuery.trim().length > 0 ? body.searchQuery.trim() : searchQueryOverride;
-  const noSearchFinal = body.noSearch === true ? true : !searchOverride;
+  // Force use of provided page/prompt search; no fallback to default topic
+  const searchOverride = typeof body.searchQuery === 'string' && body.searchQuery.trim().length > 0
+    ? body.searchQuery.trim()
+    : (searchQueryOverride || '');
+  const noSearchFinal = body.noSearch === true ? true : !(searchOverride && searchOverride.length > 0);
   if (process.env.DEBUG_GENERATE === 'true') {
     // eslint-disable-next-line no-console
     console.log('[generate] params', { pillarId, n, searchQuery: searchOverride, noSearch: noSearchFinal });
@@ -129,6 +132,7 @@ export async function POST(req: NextRequest) {
         topic: it.company || null,
         pillarId: pillarId || null,
         source: 'ai',
+        sources: Array.isArray(it.sources) ? it.sources.slice(0, 5) : [],
       },
     });
     // Do not persist sources as files; we may store them later in a dedicated column

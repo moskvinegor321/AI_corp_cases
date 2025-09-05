@@ -385,18 +385,16 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         </div>
       </div>
       <div className="grid gap-2">
-        <div className="text-xs opacity-80 flex items-center gap-2 flex-wrap">
-          <span className="chip px-2 py-0.5 rounded text-[10px]">Источники</span>
-          { (post as unknown as { sources?: string[] }).sources && Array.isArray((post as unknown as { sources?: string[] }).sources) && (post as unknown as { sources?: string[] }).sources!.length > 0 ? (
+        {(post as unknown as { sources?: string[] }).sources && Array.isArray((post as unknown as { sources?: string[] }).sources) && (post as unknown as { sources?: string[] }).sources!.length > 0 && (
+          <div className="text-xs opacity-80 flex items-center gap-2 flex-wrap">
+            <span className="chip px-2 py-0.5 rounded text-[10px]">Источники</span>
             <span className="flex items-center gap-2 flex-wrap">
               {((post as unknown as { sources: string[] }).sources).slice(0,3).map((u, i) => (
                 <a key={i} href={u} target="_blank" rel="noreferrer" className="hover:underline truncate max-w-[220px]">{new URL(u).hostname}</a>
               ))}
             </span>
-          ) : (
-            <span className="opacity-70">GPT Generated</span>
-          )}
-        </div>
+          </div>
+        )}
         {post.attachments && post.attachments.length > 0 && (
           <div className="panel rounded-lg p-2 grid gap-1">
             {post.attachments.map((a) => (
