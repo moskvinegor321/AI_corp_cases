@@ -146,7 +146,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         {post.body && (
           <div className="text-sm opacity-90 whitespace-pre-line clamp-6">{post.body}</div>
         )}
-        <div className="grid gap-2 mt-2 border-t border-white/10 pt-2">
+        <div className={`grid gap-2 mt-2 ${((post.comments && post.comments.length) || commentsOpen) ? 'border-t border-white/10 pt-2' : ''}`}>
           {!!(post.comments && post.comments.length) && (
             <div className="grid gap-1">
               {post.comments.slice(0, 10).map((c) => (
