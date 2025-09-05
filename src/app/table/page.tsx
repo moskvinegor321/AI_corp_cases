@@ -109,11 +109,24 @@ export default function TablePage() {
                   {pillars.map(p => (
                     <td key={p.id} className="p-3">
                       <div className="grid gap-1">
-                        {items.filter(i => (i.pillar?.id===p.id) && ((i.scheduledAt||i.publishedAt) && new Date(i.scheduledAt||i.publishedAt!).toISOString().slice(0,10)===day)).map(i => (
-                          <div key={i.id} className="text-xs chip rounded px-2 py-1 hover:bg-white/10 cursor-pointer" onClick={()=> setOpenPost(i)}>
-                            {i.title} — {i.status}
-                          </div>
-                        ))}
+                        {items.filter(i => (i.pillar?.id===p.id) && ((i.scheduledAt||i.publishedAt) && new Date(i.scheduledAt||i.publishedAt!).toISOString().slice(0,10)===day)).map(i => {
+                          const statusLabel: Record<NonNullable<Post['status']>, string> = { DRAFT:'Разбор', NEEDS_REVIEW:'Ревью', READY_TO_PUBLISH:'Запланирован', PUBLISHED:'Опубликован', REJECTED:'Отклонён' } as const;
+                          const statusCls: Record<NonNullable<Post['status']>, string> = {
+                            DRAFT:'bg-gray-500/20 text-gray-300 border-gray-500/30',
+                            NEEDS_REVIEW:'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+                            READY_TO_PUBLISH:'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                            PUBLISHED:'bg-green-600/20 text-green-400 border-green-600/30',
+                            REJECTED:'bg-red-600/20 text-red-400 border-red-600/30',
+                          } as const;
+                          return (
+                            <div key={i.id} className="panel rounded px-2 py-1 hover:bg-white/10 cursor-pointer grid gap-1" onClick={()=> setOpenPost(i)}>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`chip px-1.5 py-0.5 rounded text-[10px] ${statusCls[i.status]}`}>{statusLabel[i.status]}</span>
+                              </div>
+                              <div className="text-xs font-medium truncate" title={i.title}>{i.title}</div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </td>
                   ))}

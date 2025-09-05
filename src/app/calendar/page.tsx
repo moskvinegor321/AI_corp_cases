@@ -164,16 +164,38 @@ export default function CalendarPage() {
                    }}>
                 <div className="text-xs font-medium opacity-80">{d.getUTCDate()}</div>
                 <div className="flex flex-col gap-1">
-                  {posts.slice(0,3).map((p)=> (
-                    <div key={p.id} className={`text-[11px] px-2 py-1 rounded ${p.status==='PUBLISHED'?'border-green-600 text-green-500':'border-yellow-600 text-yellow-500'} chip cursor-pointer`}
-                      draggable={p.status==='READY_TO_PUBLISH'}
-                      onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', JSON.stringify({ id: p.id })); }}
-                      onClick={()=> setOpenPost(p)}
-                    >
-                      {p.title}
-                      {p.pillar?.name ? ` — ${p.pillar.name}` : ''}
-                    </div>
-                  ))}
+                  {posts.slice(0,3).map((p)=> {
+                    const statusLabel: Record<NonNullable<Post['status']>, string> = {
+                      DRAFT:'Разбор', NEEDS_REVIEW:'Ревью', READY_TO_PUBLISH:'Запланирован', PUBLISHED:'Опубликован', REJECTED:'Отклонён'
+                    } as const;
+                    const statusCls: Record<NonNullable<Post['status']>, string> = {
+                      DRAFT:'bg-gray-500/20 text-gray-300 border-gray-500/30',
+                      NEEDS_REVIEW:'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+                      READY_TO_PUBLISH:'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                      PUBLISHED:'bg-green-600/20 text-green-400 border-green-600/30',
+                      REJECTED:'bg-red-600/20 text-red-400 border-red-600/30',
+                    } as const;
+                    const when = (p.publishedAt || p.scheduledAt) ? new Date(p.publishedAt || p.scheduledAt as string).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) : '';
+                    return (
+                      <div key={p.id}
+                        className="panel rounded-lg p-2 cursor-pointer hover:bg-white/10 grid gap-1"
+                        draggable={p.status==='READY_TO_PUBLISH'}
+                        onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', JSON.stringify({ id: p.id })); }}
+                        onClick={()=> setOpenPost(p)}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`chip px-1.5 py-0.5 rounded text-[10px] ${statusCls[p.status]}`}>{statusLabel[p.status]}</span>
+                          <span className="text-[10px] opacity-70">{when}</span>
+                        </div>
+                        <div className="text-[11px] font-medium truncate" title={p.title}>{p.title}</div>
+                        {p.pillar?.name && (
+                          <div className="flex items-center gap-1">
+                            <span className="chip px-1.5 py-0.5 rounded text-[10px] opacity-80">{p.pillar.name}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   {posts.length>3 && (<div className="text-[10px] opacity-70">+{posts.length-3} ещё</div>)}
                 </div>
               </div>
