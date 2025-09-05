@@ -216,8 +216,8 @@ export default function Home() {
       )}
 
       {promptOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="glass rounded-xl p-4 w-[min(900px,95vw)]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
+          <div className="panel rounded-xl p-4 w-[min(900px,95vw)]">
             <div className="mb-2 font-semibold">Промпт генерации</div>
             <div className="grid gap-2">
               <div>
@@ -229,7 +229,8 @@ export default function Home() {
                 <textarea value={tovPrompt} onChange={(e)=>setTovPrompt(e.target.value)} className="w-full h-20 rounded p-2 bg-background" />
               </div>
             </div>
-            <textarea value={promptText} onChange={(e)=>setPromptText(e.target.value)} className="w-full h-48 rounded p-2 bg-background mt-2" />
+            <div className="font-semibold text-sm mb-1 mt-2">Основной промпт (задача)</div>
+            <textarea value={promptText} onChange={(e)=>setPromptText(e.target.value)} className="w-full h-48 rounded p-2 bg-background" />
             <div className="mt-3 font-semibold">Поисковый запрос</div>
             <input value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} className="w-full h-10 rounded p-2 bg-background" placeholder="Например: scientific B2B sales AND AI last 90 days" disabled={noSearch} />
             <label className="mt-2 flex items-center gap-2 text-sm opacity-80">
