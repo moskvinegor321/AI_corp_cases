@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
-  type Payload = { pillarId?: string; title?: string; topic?: string; promptOverride?: string; noSearch?: boolean };
+  type Payload = { pillarId?: string; title?: string; topic?: string; promptOverride?: string; noSearch?: boolean; searchQuery?: string };
   let payload: Payload = {};
   try {
     const raw = await req.json();
@@ -20,10 +20,11 @@ export async function POST(req: NextRequest) {
         topic: typeof o.topic === 'string' ? o.topic : undefined,
         promptOverride: typeof o.promptOverride === 'string' ? o.promptOverride : undefined,
         noSearch: typeof o.noSearch === 'boolean' ? o.noSearch : undefined,
+        searchQuery: typeof o.searchQuery === 'string' ? o.searchQuery : undefined,
       };
     }
   } catch {}
-  const { pillarId, title, topic, promptOverride, noSearch } = payload;
+  const { pillarId, title, topic, promptOverride, noSearch, searchQuery } = payload;
 
   // Pull pillar-specific prompt and search
   let pagePrompt: string | undefined;
@@ -54,8 +55,8 @@ export async function POST(req: NextRequest) {
   if (topic) finalPromptParts.push(`# TOPIC\n${topic}`);
   const finalPrompt = finalPromptParts.join('\n\n');
 
-  const searchQueryOverride = pageSearch;
-  const noSearchFinal = noSearch === true ? true : !searchQueryOverride;
+  const searchQueryOverride = (searchQuery && searchQuery.trim()) ? searchQuery.trim() : pageSearch;
+  const noSearchFinal = noSearch === true ? true : !(searchQueryOverride && searchQueryOverride.length > 0);
 
   const { items } = await generateStories({ banlistTitles: [], n: 1, promptOverride: finalPrompt, searchQueryOverride, noSearch: noSearchFinal });
   const first: GeneratedItem | undefined = (Array.isArray(items) ? items[0] : undefined);
