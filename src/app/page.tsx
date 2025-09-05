@@ -22,6 +22,7 @@ export default function Home() {
   const [drafts, setDrafts] = useState<Record<string, CommentDraft>>({});
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'>>([]);
+  const [statusOpen, setStatusOpen] = useState(false);
 
   const token = useMemo(() => adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '', [adminToken]);
 
@@ -61,15 +62,35 @@ export default function Home() {
             <option value="">Все страницы</option>
             {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
           </select>
-          <select className="select-compact-sm" multiple value={statuses as unknown as string[]} onChange={(e)=>{
-            const opts = Array.from(e.target.selectedOptions).map(o=>o.value as 'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED');
-            setStatuses(opts);
-          }}>
-            <option value="DRAFT">Разбор</option>
-            <option value="NEEDS_REVIEW">Ревью</option>
-            <option value="READY_TO_PUBLISH">Запланирован</option>
-            <option value="PUBLISHED">Опубликован</option>
-          </select>
+          <div className="relative">
+            <button className="btn-glass btn-sm" onClick={()=>setStatusOpen((v)=>!v)}>
+              {statuses.length===0 ? 'Все статусы' : ['DRAFT','NEEDS_REVIEW','READY_TO_PUBLISH','PUBLISHED']
+                .filter(s=>statuses.includes(s as any))
+                .map(s=>({DRAFT:'Разбор',NEEDS_REVIEW:'Ревью',READY_TO_PUBLISH:'Запланирован',PUBLISHED:'Опубликован'} as const)[s as 'DRAFT'])
+                .join(', ')}
+            </button>
+            {statusOpen && (
+              <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[220px]">
+                {([
+                  { code: 'DRAFT', label: 'Разбор' },
+                  { code: 'NEEDS_REVIEW', label: 'Ревью' },
+                  { code: 'READY_TO_PUBLISH', label: 'Запланирован' },
+                  { code: 'PUBLISHED', label: 'Опубликован' },
+                ] as Array<{code:'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'; label: string}>).map(opt=> (
+                  <label key={opt.code} className="flex items-center gap-2 text-sm py-1">
+                    <input type="checkbox" checked={statuses.includes(opt.code)} onChange={(e)=>{
+                      setStatuses(prev=> e.target.checked ? [...prev, opt.code] : prev.filter(s=>s!==opt.code));
+                    }} />
+                    {opt.label}
+                  </label>
+                ))}
+                <div className="flex gap-2 justify-end mt-2">
+                  <button className="btn-glass btn-sm" onClick={()=>{ setStatuses([]); setStatusOpen(false); }}>Все</button>
+                  <button className="btn-glass btn-sm" onClick={()=>setStatusOpen(false)}>Готово</button>
+                </div>
+              </div>
+            )}
+          </div>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             const name = typeof window!=='undefined' ? window.prompt('Название новой страницы/столпа') : '';
             if (!name || !name.trim()) return;
