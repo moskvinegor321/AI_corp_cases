@@ -90,7 +90,7 @@ export default function Home() {
           <div className="relative">
             <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(v=>!v)}>{filterPillarIds.length? `Страницы (${filterPillarIds.length})` : 'Страницы'}</button>
             {statusOpen && (
-              <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[260px] grid gap-2">
+              <div className="absolute top-full left-0 mt-2 popover-panel p-3 z-10 min-w-[260px] grid gap-2">
                 {pillars.map(p=> (
                   <label key={p.id} className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={filterPillarIds.includes(p.id)} onChange={(e)=>{

@@ -16,6 +16,8 @@ export default function CalendarPage() {
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [statusOpen, setStatusOpen] = useState(false);
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  const [pillarsOpen, setPillarsOpen] = useState(false);
+  const [pillarIds, setPillarIds] = useState<string[]>([]);
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
@@ -35,7 +37,7 @@ export default function CalendarPage() {
     if (filters.statuses?.length) params.set("status", JSON.stringify(filters.statuses));
     if (filters.from) params.set("from", filters.from);
     if (filters.to) params.set("to", filters.to);
-    if (filters.pillarId) params.set('pillarId', filters.pillarId);
+    if (pillarIds.length) params.set('pillarId', JSON.stringify(pillarIds));
     document.dispatchEvent(new Event('aion:load:start'));
     try {
       const r = await fetch(`/api/posts?${params.toString()}`);
@@ -116,6 +118,26 @@ export default function CalendarPage() {
           <option value="">Все страницы</option>
           {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
         </select>
+        <div className="relative">
+          <button className="btn-glass btn-sm" onClick={()=> setPillarsOpen(v=>!v)}>
+            {pillarIds.length ? `Страницы (${pillarIds.length})` : 'Все страницы'}
+          </button>
+          {pillarsOpen && (
+            <div className="absolute top-full left-0 mt-2 popover-panel p-3 z-10 min-w-[240px] grid gap-2">
+              {pillars.map(p => (
+                <label key={p.id} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={pillarIds.includes(p.id)} onChange={(e)=>{
+                    setPillarIds(prev => e.target.checked ? [...prev, p.id] : prev.filter(x=>x!==p.id));
+                  }} /> {p.name}
+                </label>
+              ))}
+              <div className="flex gap-2 justify-end pt-1">
+                <button className="btn-glass btn-sm" onClick={()=>{ setPillarIds([]); setPillarsOpen(false); }}>Сбросить</button>
+                <button className="btn-glass btn-sm" onClick={()=> setPillarsOpen(false)}>Готово</button>
+              </div>
+            </div>
+          )}
+        </div>
         <input className="select-compact-sm" type="date" value={filters.from?.slice(0,10) || ""} onChange={(e) => setRange(e.target.value? new Date(e.target.value).toISOString(): undefined, filters.to)} />
         <input className="select-compact-sm" type="date" value={filters.to?.slice(0,10) || ""} onChange={(e) => setRange(filters.from, e.target.value? new Date(e.target.value).toISOString(): undefined)} />
       </div>
