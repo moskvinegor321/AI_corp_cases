@@ -88,7 +88,7 @@ export default function Home() {
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
           <div className="relative">
-            <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(v=>!v)}>{filterPillarIds.length? `Страницы (${filterPillarIds.length})` : 'Страницы'}</button>
+            <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(v=>!v)}>{filterPillarIds.length? `Столпы (${filterPillarIds.length})` : 'Столпы'}</button>
             {statusOpen && (
               <div className="absolute top-full left-0 mt-2 popover-panel p-3 z-10 min-w-[260px] grid gap-2">
                 {pillars.map(p=> (
@@ -157,7 +157,7 @@ export default function Home() {
             } catch {}
             setPromptOpen(true);
           }}>Промпт и поиск</button>
-          <button className="btn-glass btn-sm" onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarIds[0]||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать 5 постов</button>
+          <button className="btn-glass btn-sm" disabled={!filterPillarIds[0]} title={!filterPillarIds[0] ? 'Выберите столп, чтобы настроить промпт/поиск' : undefined} onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarIds[0]||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать 5 постов</button>
           {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
       </div>

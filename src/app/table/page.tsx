@@ -69,7 +69,7 @@ export default function TablePage() {
         </div>
         <div className="relative">
           <button className="btn-glass btn-sm" onClick={()=> setPillarsOpen(v=>!v)}>
-            {pillarIds.length ? `Страницы (${pillarIds.length})` : 'Все страницы'}
+            {pillarIds.length ? `Столпы (${pillarIds.length})` : 'Все столпы'}
           </button>
           {pillarsOpen && (
             <div className="absolute top-full left-0 mt-2 popover-panel p-3 z-10 min-w-[240px] grid gap-2">
