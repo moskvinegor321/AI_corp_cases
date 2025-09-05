@@ -11,7 +11,8 @@ export default function CalendarPage() {
   const [items, setItems] = useState<Post[]>([]);
   const [adminToken, setAdminToken] = useState<string>("");
   const [month, setMonth] = useState<Date>(() => startOfMonth(new Date()));
-  const { filters, setStatuses, setRange } = usePostFilters({ statuses: ["READY_TO_PUBLISH", "PUBLISHED"] as PostStatus[] });
+  const { filters, setStatuses, setRange, setPillar } = usePostFilters({ statuses: ["READY_TO_PUBLISH", "PUBLISHED"] as PostStatus[] });
+  const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
@@ -31,9 +32,11 @@ export default function CalendarPage() {
     if (filters.statuses?.length) params.set("status", JSON.stringify(filters.statuses));
     if (filters.from) params.set("from", filters.from);
     if (filters.to) params.set("to", filters.to);
+    if (filters.pillarId) params.set('pillarId', filters.pillarId);
     const r = await fetch(`/api/posts?${params.toString()}`);
     const d = await r.json();
     setItems(d.items || []);
+    const rp = await fetch('/api/pillars'); const dp = await rp.json(); setPillars(dp.pillars||[]);
   };
   useEffect(() => { load(); }, [JSON.stringify(filters)]);
 
@@ -83,6 +86,11 @@ export default function CalendarPage() {
           <option value="PUBLISHED">PUBLISHED</option>
           <option value="NEEDS_REVIEW">NEEDS_REVIEW</option>
           <option value="DRAFT">DRAFT</option>
+          <option value="REJECTED">REJECTED</option>
+        </select>
+        <select className="select-compact-sm" value={filters.pillarId||''} onChange={(e)=> setPillar(e.target.value||undefined)}>
+          <option value="">Все страницы</option>
+          {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}
         </select>
         <input className="select-compact-sm" type="date" value={filters.from?.slice(0,10) || ""} onChange={(e) => setRange(e.target.value? new Date(e.target.value).toISOString(): undefined, filters.to)} />
         <input className="select-compact-sm" type="date" value={filters.to?.slice(0,10) || ""} onChange={(e) => setRange(filters.from, e.target.value? new Date(e.target.value).toISOString(): undefined)} />
@@ -118,6 +126,7 @@ export default function CalendarPage() {
                       onDragStart={(e)=>{ e.dataTransfer.setData('text/plain', JSON.stringify({ id: p.id })); }}
                     >
                       {p.title}
+                      {p.pillar?.name ? ` — ${p.pillar.name}` : ''}
                     </div>
                   ))}
                   {posts.length>3 && (<div className="text-[10px] opacity-70">+{posts.length-3} ещё</div>)}
