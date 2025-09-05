@@ -27,16 +27,25 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     const t = v.trim();
     return t.length === 0 ? null : t;
   };
-  const page = await prisma.page.update({
-    where: { id },
-    data: {
-      ...(typeof body.name === 'string' ? { name: body.name } : {}),
-      ...(body.prompt !== undefined ? { prompt: normalize(body.prompt) } : {}),
-      ...(body.searchQuery !== undefined ? { searchQuery: normalize(body.searchQuery) } : {}),
-    },
-  });
-  await auditLog({ entityType: 'page', entityId: id, action: 'updated', meta: { name: body.name ?? undefined, hasPrompt: body.prompt !== undefined, hasSearchQuery: body.searchQuery !== undefined } });
-  return NextResponse.json({ page });
+  try {
+    const page = await prisma.page.update({
+      where: { id },
+      data: {
+        ...(typeof body.name === 'string' ? { name: body.name } : {}),
+        ...(body.prompt !== undefined ? { prompt: normalize(body.prompt) } : {}),
+        ...(body.searchQuery !== undefined ? { searchQuery: normalize(body.searchQuery) } : {}),
+      },
+    });
+    await auditLog({ entityType: 'page', entityId: id, action: 'updated', meta: { name: body.name ?? undefined, hasPrompt: body.prompt !== undefined, hasSearchQuery: body.searchQuery !== undefined } });
+    return NextResponse.json({ page });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // Prisma P2025 – record not found for update
+    if (msg.includes('No record was found for an update') || msg.includes('P2025')) {
+      return NextResponse.json({ error: 'page not found' }, { status: 404 });
+    }
+    return NextResponse.json({ error: 'failed to update page' }, { status: 500 });
+  }
 }
 
 export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {

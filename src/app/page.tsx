@@ -299,11 +299,16 @@ export default function Home() {
                   const r1 = await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) });
                   let rMain: Response;
                   if (filterPillarIds[0]) {
-                    rMain = await fetch(`/api/pages/${filterPillarIds[0]}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
+                    const pid = filterPillarIds[0];
+                    rMain = await fetch(`/api/pages/${pid}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
                   } else {
                     rMain = await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
                   }
-                  if (!r1.ok || !rMain.ok) { alert('Не удалось сохранить'); return; }
+                  if (!r1.ok || !rMain.ok) {
+                    const errText = await rMain.text().catch(()=> '');
+                    alert('Не удалось сохранить');
+                    return;
+                  }
                   setPromptOpen(false);
                 } finally { setSavingPrompts(false); }
               }}>{savingPrompts? 'Сохранение…' : 'Сохранить'}</button>
