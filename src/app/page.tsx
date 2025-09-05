@@ -3,9 +3,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { PostCard, type Post } from '@/components/PostCard';
 
 type CommentDraft = { text: string; isTask: boolean; taskStatus: 'OPEN'|'IN_PROGRESS'|'DONE'|''; dueAt?: string };
+type PostComment = { id: string; text: string; isTask: boolean; taskStatus?: 'OPEN'|'IN_PROGRESS'|'DONE'|null; dueAt?: string|null; createdAt: string };
+type PostWithComments = Post & { comments?: PostComment[] };
 
 export default function Home() {
-  const [items, setItems] = useState<Post[]>([]);
+  const [items, setItems] = useState<PostWithComments[]>([]);
   const [adminToken, setAdminToken] = useState<string>('');
   const [modalOpen, setModalOpen] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
@@ -89,6 +91,20 @@ export default function Home() {
         {items.map((p)=> (
           <div key={p.id} className="grid gap-2">
             <PostCard post={p} onChanged={load} onToggleComments={()=>setOpenComments(prev=>({ ...prev, [p.id]: !prev[p.id] }))} />
+            {!!(p.comments && p.comments.length) && (
+              <div className="grid gap-1 mt-1">
+                {p.comments.slice(0, 10).map((c) => (
+                  <div key={c.id} className="text-xs opacity-80 border-t border-white/10 pt-1 flex items-center gap-2">
+                    {c.isTask && (
+                      <span className="chip px-2 py-0.5 rounded text-[10px]">{c.taskStatus || 'OPEN'}</span>
+                    )}
+                    <span className="truncate">{c.text}</span>
+                    <span className="opacity-60">{new Date(c.createdAt).toLocaleString()}</span>
+                    {c.dueAt && <span className="opacity-60">⏰ {new Date(c.dueAt).toLocaleString()}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
             {openComments[p.id] && (
             <div className="panel rounded-lg p-3 grid gap-2">
               <div className="font-semibold text-sm">Комментарий / задача</div>
