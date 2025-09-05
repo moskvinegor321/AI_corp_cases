@@ -14,8 +14,12 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const { status, scheduledAt, reviewDueAt, publishedAt } = body as { status: 'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'; scheduledAt?: string; reviewDueAt?: string; publishedAt?: string };
   const current = await prisma.post.findUnique({ where: { id } });
   if (!current) return NextResponse.json({ error: 'not found' }, { status: 404 });
+  console.log('[status] request', { id, from: current.status, to: status, scheduledAt, reviewDueAt, publishedAt });
   const check = validateStatusTransition(current, { status, scheduledAt, reviewDueAt, publishedAt });
-  if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+  if (!check.ok) {
+    console.warn('[status] validation_failed', { id, error: check.error });
+    return NextResponse.json({ error: check.error }, { status: 400 });
+  }
   const post = await prisma.post.update({ where: { id }, data: check.data });
   await auditLog({ entityType: 'post', entityId: id, action: 'status_changed', meta: { from: current.status, to: status, payload: { scheduledAt, reviewDueAt, publishedAt } } });
   return NextResponse.json({ post });

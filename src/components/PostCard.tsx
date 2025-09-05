@@ -57,12 +57,18 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
     setLoading(true);
     try {
       const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
-      await fetch(`/api/posts/${post.id}/status`, {
+      const res = await fetch(`/api/posts/${post.id}/status`, {
         method: "POST",
         headers: { "content-type": "application/json", "x-admin-token": token },
         body: JSON.stringify({ status, ...extra }),
       });
-      onChanged?.();
+      if (!res.ok) {
+        let msg = 'Не удалось изменить статус';
+        try { const j = await res.json(); if (j?.error) msg = j.error as string; } catch {}
+        alert(msg);
+      } else {
+        onChanged?.();
+      }
     } finally {
       setLoading(false);
     }
