@@ -155,12 +155,27 @@ export default function Home() {
 
       {stats && (
         <div className="flex items-center gap-2 flex-wrap opacity-90">
-          <span className="chip px-3 py-1 rounded">Всего: {stats.total}</span>
-          <span className="chip px-3 py-1 rounded">Разбор: {stats.byStatus.DRAFT || 0}</span>
-          <span className="chip px-3 py-1 rounded">Ревью: {stats.byStatus.NEEDS_REVIEW || 0}</span>
-          <span className="chip px-3 py-1 rounded">Запланирован: {stats.byStatus.READY_TO_PUBLISH || 0}</span>
-          <span className="chip px-3 py-1 rounded">Опубликован: {stats.byStatus.PUBLISHED || 0}</span>
-          <span className="chip px-3 py-1 rounded">Отклонён: {stats.byStatus.REJECTED || 0}</span>
+          <button
+            className="chip px-3 py-1 rounded border border-white/10 hover:border-white/30"
+            onClick={()=> setStatuses([])}
+          >Всего: {stats.total}</button>
+          {([
+            { code: 'DRAFT', label: 'Разбор', cls: 'bg-gray-500/30 text-gray-200 border-gray-500/40', off: 'text-gray-300 border-gray-500/30' },
+            { code: 'NEEDS_REVIEW', label: 'Ревью', cls: 'bg-indigo-500/20 text-indigo-200 border-indigo-500/30', off: 'text-indigo-300 border-indigo-500/20' },
+            { code: 'READY_TO_PUBLISH', label: 'Запланирован', cls: 'bg-amber-500/20 text-amber-200 border-amber-500/30', off: 'text-amber-300 border-amber-500/20' },
+            { code: 'PUBLISHED', label: 'Опубликован', cls: 'bg-green-600/20 text-green-200 border-green-600/30', off: 'text-green-400 border-green-600/20' },
+            { code: 'REJECTED', label: 'Отклонён', cls: 'bg-red-600/20 text-red-200 border-red-600/30', off: 'text-red-400 border-red-600/20' },
+          ] as Array<{code:'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED'; label:string; cls:string; off:string}>).map(s => {
+            const active = statuses.includes(s.code);
+            const count = (stats.byStatus as Record<string, number>)[s.code] || 0;
+            return (
+              <button
+                key={s.code}
+                onClick={()=> setStatuses(prev=> active ? prev.filter(x=>x!==s.code) : [...prev, s.code])}
+                className={`chip px-3 py-1 rounded border ${active? s.cls : s.off}`}
+              >{s.label}: {count}</button>
+            );
+          })}
         </div>
       )}
 
