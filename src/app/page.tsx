@@ -226,6 +226,19 @@ export default function Home() {
             <label className="grid gap-1 text-sm">
               <span>Текст</span>
               <textarea className="bg-background rounded p-2 h-40" value={form.body} onChange={(e)=>setForm(f=>({...f, body: e.target.value}))} />
+              {!editingId && (
+                <div className="flex justify-end">
+                  <button className="btn-glass btn-sm" disabled={!form.title.trim() || !form.pillarId} onClick={async ()=>{
+                    try {
+                      const token = adminToken || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || '';
+                      const r = await fetch('/api/generate/preview', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: form.pillarId, title: form.title, topic: form.topic }) });
+                      const d = await r.json();
+                      if (d?.text) setForm(f=> ({ ...f, body: d.text }));
+                      else alert('Не удалось сгенерировать текст');
+                    } catch { alert('Не удалось сгенерировать текст'); }
+                  }}>Сгенерировать текст</button>
+                </div>
+              )}
             </label>
             <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
               <label className="grid gap-1 text-sm">
