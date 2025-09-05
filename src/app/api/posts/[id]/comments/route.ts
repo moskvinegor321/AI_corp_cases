@@ -36,9 +36,26 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       const baseUrl = process.env.PUBLIC_APP_URL || '';
       const link = baseUrl ? `${baseUrl}/?post=${id}` : '';
       const lines: string[] = [];
+      // Resolve assignee → Telegram handle via env map { "Егор":"@moskvin_egor", "Коля":"@antipovmykola" }
+      let assigneeHandle = '' as string;
+      try {
+        const raw = process.env.TELEGRAM_ASSIGNEE_MAP || '';
+        if (raw) {
+          const map = JSON.parse(raw) as Record<string, string>;
+          if (assignee && map[assignee]) assigneeHandle = map[assignee];
+        }
+      } catch {}
       lines.push(`<b>Новая задача</b> ${post?.pillar?.name ? `в столпе <b>${escapeHtml(post.pillar.name)}</b>` : ''}`);
       if (post?.title) lines.push(`Пост: <b>${escapeHtml(post.title)}</b>`);
-      if (assignee) lines.push(`Исполнитель: ${escapeHtml(assignee)}`);
+      if (assignee) {
+        if (assigneeHandle) {
+          const link = assigneeHandle.startsWith('@') ? `https://t.me/${assigneeHandle.replace(/^@/, '')}` : assigneeHandle;
+          const handleText = assigneeHandle.startsWith('@') ? assigneeHandle : `@${assigneeHandle}`;
+          lines.push(`Исполнитель: ${escapeHtml(assignee)} — <a href="${link}">${handleText}</a>`);
+        } else {
+          lines.push(`Исполнитель: ${escapeHtml(assignee)}`);
+        }
+      }
       if (taskStatus) lines.push(`Статус: ${escapeHtml(taskStatus)}`);
       if (dueAt) lines.push(`Дедлайн: ${escapeHtml(new Date(dueAt).toLocaleString())}`);
       lines.push('');
