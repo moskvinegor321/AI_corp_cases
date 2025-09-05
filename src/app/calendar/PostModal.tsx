@@ -15,15 +15,17 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
     <>
       <div className="fixed inset-0 bg-black/90 z-40" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4">
-        <div className="relative w-[98vw] max-w-[1200px] max-h-[92vh] overflow-y-auto modal-scroll" onClick={(e)=> e.stopPropagation()}>
+        <div className="relative w-[98vw] max-w-[1200px] max-h-[92vh] overflow-y-auto overflow-x-hidden modal-scroll" onClick={(e)=> e.stopPropagation()}>
         <button
           aria-label="Закрыть"
-          className="btn-glass btn-sm absolute -top-3 -right-3"
+          className="btn-glass btn-sm absolute top-2 right-2"
           onClick={onClose}
         >
           ✕
         </button>
-        <PostCard post={post} onChanged={onChanged} onEdit={() => { setEditing(true); setForm({ title: post.title, body: post.body || "", topic: post.topic || undefined, pillarId: post.pillar?.id || undefined }); }} adminToken={adminToken} />
+        <div className="pt-8 pr-1">
+          <PostCard post={post} onChanged={onChanged} onEdit={() => { setEditing(true); setForm({ title: post.title, body: post.body || "", topic: post.topic || undefined, pillarId: post.pillar?.id || undefined }); }} adminToken={adminToken} />
+        </div>
 
         {editing && (
           <div className="fixed inset-0 bg-black/90 flex items-center justify-center">
