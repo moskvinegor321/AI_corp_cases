@@ -134,7 +134,7 @@ export default function Home() {
               </div>
             )}
           </div>
-          <button className="btn-glass btn-sm" onClick={async ()=>{
+          <button className={`btn-glass btn-sm ${!filterPillarIds[0] ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!filterPillarIds[0]} title={!filterPillarIds[0] ? 'Выберите столп, чтобы открыть мастер промпта' : undefined} onClick={async ()=>{
             const name = typeof window!=='undefined' ? window.prompt('Название нового столпа') : '';
             if (!name || !name.trim()) return;
             const res = await fetch('/api/pillars', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ name: name.trim() }) });
@@ -159,7 +159,7 @@ export default function Home() {
             } catch {}
             setPromptOpen(true);
           }}>Мастер промпт</button>
-          <button className="btn-glass btn-sm" disabled={!filterPillarIds[0]} title={!filterPillarIds[0] ? 'Выберите столп, чтобы настроить промпт/поиск' : undefined} onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarIds[0]||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать 5 постов</button>
+          <button className={`btn-glass btn-sm ${!filterPillarIds[0] ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!filterPillarIds[0]} title={!filterPillarIds[0] ? 'Выберите столп, чтобы сгенерировать посты' : undefined} onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarIds[0]||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать посты</button>
           {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
       </div>
