@@ -12,8 +12,10 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
   useEffect(() => { fetch('/api/pillars').then(r=>r.json()).then(d=> setPillars(d.pillars || [])); }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="relative w-[98vw] max-w-[1200px] max-h-[92vh] overflow-auto" onClick={(e)=> e.stopPropagation()}>
+    <>
+      <div className="fixed inset-0 bg-black/90 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4">
+        <div className="relative w-[98vw] max-w-[1200px] max-h-[92vh] overflow-y-auto modal-scroll" onClick={(e)=> e.stopPropagation()}>
         <button
           aria-label="Закрыть"
           className="btn-glass btn-sm absolute -top-3 -right-3"
@@ -73,8 +75,9 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
