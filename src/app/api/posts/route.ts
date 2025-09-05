@@ -5,6 +5,9 @@ import { requireAdmin } from '@/lib/admin';
 
 export const runtime = 'nodejs';
 
+const POSTS_CACHE = new Map<string, { ts: number; payload: unknown }>();
+const CACHE_TTL_MS = 10_000; // 10s
+
 function parseArray(param: string | null): string[] | undefined {
   if (!param) return undefined;
   try {
@@ -15,6 +18,11 @@ function parseArray(param: string | null): string[] | undefined {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
+  const key = req.url;
+  const cached = POSTS_CACHE.get(key);
+  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+    return NextResponse.json(cached.payload, { headers: { 'x-cache': 'HIT' } });
+  }
   const status = parseArray(searchParams.get('status')) as ('DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED')[] | undefined;
   const from = searchParams.get('from');
   const to = searchParams.get('to');
@@ -58,7 +66,9 @@ export async function GET(req: NextRequest) {
     }),
     prisma.post.count({ where }),
   ]);
-  return NextResponse.json({ items, page, pageSize, total });
+  const payload = { items, page, pageSize, total };
+  POSTS_CACHE.set(key, { ts: Date.now(), payload });
+  return NextResponse.json(payload, { headers: { 'x-cache': 'MISS' } });
 }
 
 export async function POST(req: NextRequest) {
