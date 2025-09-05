@@ -55,6 +55,16 @@ export async function POST(req: NextRequest) {
         searchQueryOverride = page.searchQuery || undefined;
       }
     }
+    // Pillar-scoped settings stored in Setting: pillar:{id}:prompt and pillar:{id}:search_query
+    if (pillarId) {
+      const keys = [`pillar:${pillarId}:prompt`, `pillar:${pillarId}:search_query`];
+      const rowsP = await prisma.setting.findMany({ where: { key: { in: keys } } });
+      const mapP = Object.fromEntries(rowsP.map((r) => [r.key, r.value]));
+      const pPrompt = (mapP[`pillar:${pillarId}:prompt`] || '').trim();
+      const pSearch = (mapP[`pillar:${pillarId}:search_query`] || '').trim();
+      if (pPrompt) promptOverride = pPrompt;
+      if (pSearch) searchQueryOverride = pSearch;
+    }
     if (!promptOverride && !searchQueryOverride) {
       const rows = await prisma.setting.findMany({ where: { key: { in: ['prompt', 'search_query'] } } });
       const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
