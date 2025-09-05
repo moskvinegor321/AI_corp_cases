@@ -71,7 +71,15 @@ export async function GET(req: NextRequest) {
     take: pageSize,
   });
   const total = await prisma.post.count({ where });
-  const payload = { items, page, pageSize, total };
+  // Debug: include first 3 attachment URLs as sources for UI
+  const itemsWithSources = items.map((p) => ({
+    ...p,
+    sources: (p.attachments || [])
+      .filter((a) => a.mimeType === 'text/url')
+      .slice(0, 3)
+      .map((a) => a.url),
+  }));
+  const payload = { items: itemsWithSources as typeof items, page, pageSize, total };
   POSTS_CACHE.set(key, { ts: Date.now(), payload });
   return NextResponse.json(payload, { headers: { 'x-cache': 'MISS' } });
 }

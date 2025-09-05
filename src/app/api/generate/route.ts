@@ -127,6 +127,16 @@ export async function POST(req: NextRequest) {
         source: 'ai',
       },
     });
+    // Persist sources as attachments for visibility in UI
+    try {
+      const urls = Array.isArray(it.sources) ? it.sources.slice(0, 3) : [];
+      for (const u of urls) {
+        try {
+          const host = new URL(u).hostname;
+          await prisma.attachment.create({ data: { postId: post.id, name: host, url: u, mimeType: 'text/url' } });
+        } catch {}
+      }
+    } catch {}
     created.push(post);
   }
 
