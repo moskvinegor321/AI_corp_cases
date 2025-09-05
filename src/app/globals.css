@@ -140,6 +140,14 @@ body::before {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Opaque popover panel for dropdowns */
+.popover-panel {
+  background: rgba(10, 12, 16, 0.92);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  border-radius: 12px;
+}
+
 /* Line clamp utility for 6 lines */
 .clamp-6 {
   display: -webkit-box;

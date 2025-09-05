@@ -38,13 +38,19 @@ export default function TablePage() {
             {filters.statuses?.length ? `Статусы (${filters.statuses.length})` : 'Статусы'}
           </button>
           {statusOpen && (
-            <div className="absolute top-full left-0 mt-2 glass rounded-xl p-3 z-10 min-w-[220px] grid gap-2">
-              {(['READY_TO_PUBLISH','PUBLISHED','NEEDS_REVIEW','DRAFT','REJECTED'] as PostStatus[]).map(s => (
-                <label key={s} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={filters.statuses.includes(s)} onChange={(e)=>{
-                    const next = e.target.checked ? [...filters.statuses, s] : filters.statuses.filter(x=>x!==s);
+            <div className="absolute top-full left-0 mt-2 popover-panel p-3 z-10 min-w-[240px] grid gap-2">
+              {([
+                {code:'READY_TO_PUBLISH', label:'Запланирован'},
+                {code:'PUBLISHED', label:'Опубликован'},
+                {code:'NEEDS_REVIEW', label:'Ревью'},
+                {code:'DRAFT', label:'Разбор'},
+                {code:'REJECTED', label:'Отклонён'},
+              ] as Array<{code: PostStatus; label: string}>).map(({code,label}) => (
+                <label key={code} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={filters.statuses.includes(code)} onChange={(e)=>{
+                    const next = e.target.checked ? [...filters.statuses, code] : filters.statuses.filter(x=>x!==code);
                     setStatuses(next);
-                  }} /> {s}
+                  }} /> {label}
                 </label>
               ))}
               <div className="flex gap-2 justify-end pt-1">
