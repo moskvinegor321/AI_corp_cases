@@ -14,6 +14,15 @@ export default function TablePage() {
   const [pillarIds, setPillarIds] = useState<string[]>([]);
   const [pillarDraft, setPillarDraft] = useState<string[]>([]);
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  // Normalize accidental double slashes in path (e.g., //table?post=... from external links)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const normalizedPath = window.location.pathname.replace(/\/+/, '/');
+    if (normalizedPath !== window.location.pathname) {
+      const url = normalizedPath + window.location.search;
+      window.history.replaceState({}, '', url);
+    }
+  }, []);
   const openWithUrl = (p: Post) => {
     setOpenPost(p);
     if (typeof window !== 'undefined') {
