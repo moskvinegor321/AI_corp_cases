@@ -27,8 +27,7 @@ export async function auditLog(evt: AuditEvent): Promise<void> {
       },
     });
   } catch {
-    // eslint-disable-next-line no-console
-    console.warn('auditLog failed');
+    // noop in production; optionally route to external logger
   }
 }
 

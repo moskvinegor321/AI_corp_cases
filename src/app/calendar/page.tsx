@@ -34,7 +34,7 @@ export default function CalendarPage() {
     <div className="p-6 grid gap-4">
       <div className="flex items-center gap-3 flex-wrap">
         <div className="text-xl font-semibold">Календарь</div>
-        <select className="select-compact-sm" multiple value={filters.statuses as any}
+        <select className="select-compact-sm" multiple value={filters.statuses as unknown as string[]}
           onChange={(e) => {
             const opts = Array.from(e.target.selectedOptions).map(o => o.value as Post["status"]);
             setFilters(prev => ({ ...prev, statuses: opts }));

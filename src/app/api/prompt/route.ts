@@ -11,7 +11,7 @@ export async function GET() {
     const rows = await prisma.setting.findMany({ where: { key: { in: [KEY_PROMPT, KEY_SEARCH] } } });
     const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
     return NextResponse.json({ prompt: map[KEY_PROMPT] || '', searchQuery: map[KEY_SEARCH] || '' });
-  } catch (e) {
+  } catch {
     // Fallback if the Setting table does not exist yet (migration not applied)
     return NextResponse.json({ prompt: '', searchQuery: '' });
   }

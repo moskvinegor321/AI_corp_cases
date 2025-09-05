@@ -7,28 +7,29 @@ type StatusPayload = {
   publishedAt?: string;
 };
 
+export type StatusUpdate = Partial<Pick<Post, 'status' | 'scheduledAt' | 'reviewDueAt' | 'publishedAt'>>;
 export type StatusValidationResult =
-  | { ok: true; data: Partial<Post> }
+  | { ok: true; data: StatusUpdate }
   | { ok: false; error: string };
 
 export function validateStatusTransition(current: Post, payload: StatusPayload): StatusValidationResult {
   const { status, scheduledAt, reviewDueAt, publishedAt } = payload;
   if (!status) return { ok: false, error: 'status required' };
 
-  const data: Partial<Post> = { status } as any;
+  const data: StatusUpdate = { status };
 
   if (status === 'READY_TO_PUBLISH') {
     if (!scheduledAt) return { ok: false, error: 'scheduledAt required' };
-    data.scheduledAt = new Date(scheduledAt) as any;
+    data.scheduledAt = new Date(scheduledAt);
   }
 
   if (status === 'NEEDS_REVIEW') {
     if (!reviewDueAt) return { ok: false, error: 'reviewDueAt required' };
-    data.reviewDueAt = new Date(reviewDueAt) as any;
+    data.reviewDueAt = new Date(reviewDueAt);
   }
 
   if (status === 'PUBLISHED') {
-    data.publishedAt = (publishedAt ? new Date(publishedAt) : new Date()) as any;
+    data.publishedAt = publishedAt ? new Date(publishedAt) : new Date();
   }
 
   // Prevent going backwards from PUBLISHED unless explicitly allowed later

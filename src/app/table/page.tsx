@@ -21,7 +21,7 @@ export default function TablePage() {
     <div className="p-6 grid gap-4">
       <div className="flex items-center gap-3">
         <div className="text-xl font-semibold">Таблица</div>
-        <select className="select-compact-sm" value={view} onChange={(e)=>setView(e.target.value as any)}>
+        <select className="select-compact-sm" value={view} onChange={(e)=>setView(e.target.value as 'matrix'|'list')}>
           <option value="matrix">Матрица</option>
           <option value="list">Список</option>
         </select>

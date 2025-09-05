@@ -1,6 +1,7 @@
 import { PrismaClient } from '@/generated/prisma';
 
 declare global {
+  // declare to persist prisma in dev
   // eslint-disable-next-line no-var
   var prismaGlobal: PrismaClient | undefined;
 }

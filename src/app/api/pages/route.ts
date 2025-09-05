@@ -48,7 +48,7 @@ export async function GET() {
     }));
 
     return NextResponse.json({ pages: enriched });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ pages: [] });
   }
 }
