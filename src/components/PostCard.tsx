@@ -137,9 +137,6 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         {post.body && (
           <div className="text-sm opacity-90 whitespace-pre-line clamp-6">{post.body}</div>
         )}
-        <div className="mt-2">
-          <button className="btn-glass btn-sm" onClick={()=>setCommentsOpen(v=>!v)}>Комментарии</button>
-        </div>
         {commentsOpen && (
           <div className="panel rounded-lg p-3 grid gap-2 mt-2">
             <div className="font-semibold text-sm">Комментарий / задача</div>
@@ -181,8 +178,9 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           </div>
         )}
       </div>
-      <div className="flex gap-2 flex-wrap relative md:justify-end">
-        <button className="btn-glass btn-sm" disabled={loading} onClick={() => {
+      <div className="relative flex flex-col gap-2 md:items-end">
+        <div className="flex gap-2 flex-wrap md:justify-end">
+        <button className="btn-glass btn-sm bg-blue-500/20 text-blue-300" disabled={loading} onClick={() => {
           // default now + 1 hour
           const base = new Date();
           base.setMinutes(base.getMinutes() + 60);
@@ -190,20 +188,17 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           setDt(local);
           setPicker('review');
         }}>На ревью</button>
-        <button className="btn-glass btn-sm" disabled={loading} onClick={() => {
+        <button className="btn-glass btn-sm bg-amber-500/20 text-amber-300" disabled={loading} onClick={() => {
           const base = post.scheduledAt ? new Date(post.scheduledAt) : new Date();
           const local = new Date(base.getTime() - base.getTimezoneOffset() * 60000).toISOString().slice(0,16);
           setDt(local);
           setPicker('schedule');
         }}>Запланировать</button>
-        <button className="btn-glass btn-sm" disabled={loading} onClick={async () => {
+        <button className="btn-glass btn-sm bg-green-600/20 text-green-400" disabled={loading} onClick={async () => {
           if (!confirm("Отметить как опубликовано сейчас?")) return;
           await callStatus("PUBLISHED");
         }}>Опубликовано</button>
-        <button className="btn-glass btn-sm" onClick={() => onEdit?.(post)}>Редактировать</button>
-        <button className="btn-glass btn-sm" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
-        <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
-
+        </div>
         {picker && (
           <div className="absolute top-full mt-2 left-0 glass rounded-xl p-3 z-10 w-64 grid gap-2">
             <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
@@ -220,6 +215,12 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
             </div>
           </div>
         )}
+        <div className="flex gap-2 flex-wrap md:justify-end opacity-90">
+          <button className="btn-glass btn-sm" onClick={()=>setCommentsOpen(v=>!v)}>Комментарии</button>
+          <button className="btn-glass btn-sm" disabled={loading} onClick={onChooseFile}>Добавить файл</button>
+          <button className="btn-glass btn-sm" onClick={() => onEdit?.(post)}>Редактировать</button>
+          <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={onFileSelected} />
+        </div>
       </div>
       {post.attachments && post.attachments.length > 0 && (
         <div className="panel rounded-lg p-2 grid gap-1">
