@@ -20,7 +20,15 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
   const { id, commentId } = await ctx.params;
-  await prisma.postComment.delete({ where: { id: commentId } });
+  try {
+    await prisma.postComment.delete({ where: { id: commentId } });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes('P2025') || msg.toLowerCase().includes('no record')) {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+    return NextResponse.json({ error: 'failed to delete comment' }, { status: 500 });
+  }
   await auditLog({ entityType: 'comment', entityId: commentId, action: 'deleted', meta: { postId: id } });
   return NextResponse.json({ ok: true });
 }
