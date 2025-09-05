@@ -14,6 +14,22 @@ export default function TablePage() {
   const [pillarIds, setPillarIds] = useState<string[]>([]);
   const [pillarDraft, setPillarDraft] = useState<string[]>([]);
   const [openPost, setOpenPost] = useState<Post | null>(null);
+  const openWithUrl = (p: Post) => {
+    setOpenPost(p);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('post', p.id);
+      window.history.pushState({ post: p.id }, '', url.toString());
+    }
+  };
+  const closeModal = () => {
+    setOpenPost(null);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('post');
+      window.history.pushState({}, '', url.toString());
+    }
+  };
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const sp = new URLSearchParams(window.location.search);
@@ -31,6 +47,22 @@ export default function TablePage() {
         }
       } catch {}
     })();
+  }, [items]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onPop = () => {
+      const sp = new URLSearchParams(window.location.search);
+      const pid = sp.get('post');
+      if (!pid) { setOpenPost(null); return; }
+      const local = items.find(i => i.id === pid);
+      if (local) { setOpenPost(local); return; }
+      (async () => {
+        try { const r = await fetch(`/api/posts/${pid}`); if (r.ok) { const d = await r.json(); if (d?.post) setOpenPost(d.post as Post); } } catch {}
+      })();
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, [items]);
 
   const load = async () => {
@@ -138,7 +170,7 @@ export default function TablePage() {
                             REJECTED:'bg-red-600/20 text-red-400 border-red-600/30',
                           } as const;
                           return (
-                            <div key={i.id} className="panel rounded px-2 py-1 hover:bg-white/10 cursor-pointer grid gap-1" onClick={()=> setOpenPost(i)}>
+                            <div key={i.id} className="panel rounded px-2 py-1 hover:bg-white/10 cursor-pointer grid gap-1" onClick={()=> openWithUrl(i)}>
                               <div className="flex items-center justify-between gap-2">
                                 <span className={`chip px-1.5 py-0.5 rounded text-[10px] ${statusCls[i.status]}`}>{statusLabel[i.status]}</span>
                               </div>
@@ -171,7 +203,7 @@ export default function TablePage() {
                 <tr key={i.id} className="border-t border-white/10 hover:bg-white/5">
                   <td className="p-3">{i.pillar?.name || ''}</td>
                   <td className="p-3">{i.topic || ''}</td>
-                  <td className="p-3"><span className="hover:underline cursor-pointer" onClick={()=> setOpenPost(i)}>{i.title}</span></td>
+                  <td className="p-3"><span className="hover:underline cursor-pointer" onClick={()=> openWithUrl(i)}>{i.title}</span></td>
                   <td className="p-3">
                     {({
                       DRAFT:'Разбор',
@@ -190,8 +222,8 @@ export default function TablePage() {
       )}
       {openPost && (
         <>
-          <div className="fixed inset-0 bg-black/90 z-40" onClick={()=> setOpenPost(null)} />
-          <PostModal post={openPost} onClose={()=> setOpenPost(null)} onChanged={()=>{ setOpenPost(null); load(); }} />
+          <div className="fixed inset-0 bg-black/90 z-40" onClick={()=> closeModal()} />
+          <PostModal post={openPost} onClose={()=> closeModal()} onChanged={()=>{ closeModal(); load(); }} />
         </>
       )}
     </div>
