@@ -64,10 +64,10 @@ export default function Home() {
             const opts = Array.from(e.target.selectedOptions).map(o=>o.value as 'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED');
             setStatuses(opts);
           }}>
-            <option value="NEEDS_REVIEW">NEEDS_REVIEW</option>
-            <option value="READY_TO_PUBLISH">READY_TO_PUBLISH</option>
-            <option value="PUBLISHED">PUBLISHED</option>
-            <option value="DRAFT">DRAFT</option>
+            <option value="DRAFT">Разбор</option>
+            <option value="NEEDS_REVIEW">Ревью</option>
+            <option value="READY_TO_PUBLISH">Запланирован</option>
+            <option value="PUBLISHED">Опубликован</option>
           </select>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             const name = typeof window!=='undefined' ? window.prompt('Название новой страницы/столпа') : '';
