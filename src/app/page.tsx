@@ -144,6 +144,25 @@ export default function Home() {
             setForm(f=>({ ...f, pillarId: created.id }));
           }}>Создать столп</button>
           <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarIds[0], searchQuery: '', noSearch: false })); setModalOpen(true); }}>Добавить пост</button>
+          <button
+            className={`btn-glass btn-sm bg-red-600/20 text-red-400 ${!filterPillarIds[0] ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={!filterPillarIds[0]}
+            title={!filterPillarIds[0] ? 'Выберите столп для удаления' : undefined}
+            onClick={async ()=>{
+              if (!filterPillarIds[0]) return;
+              const pid = filterPillarIds[0];
+              const ok = typeof window !== 'undefined' ? window.confirm('Удалить столп? Посты останутся без привязки.') : true;
+              if (!ok) return;
+              try {
+                const res = await fetch(`/api/pillars/${pid}`, { method:'DELETE', headers:{ 'x-admin-token': token } });
+                if (!res.ok) { alert('Не удалось удалить столп'); return; }
+                setPillars(prev=> prev.filter(p=> p.id !== pid));
+                setFilterPillarIds(prev=> prev.filter(id=> id !== pid));
+                setPillarDraft(prev=> prev.filter(id=> id !== pid));
+                setForm(f=> ({ ...f, pillarId: f.pillarId === pid ? undefined : f.pillarId }));
+              } catch { alert('Ошибка удаления столпа'); }
+            }}
+          >Удалить столп</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             try {
               // Load pillar-scoped prompt if pillar selected

@@ -89,6 +89,22 @@ export default function TablePage() {
     }
   };
   useEffect(() => { load(); }, [filters.from, filters.to, JSON.stringify(filters.statuses)]);
+  // On first mount, if ?post= is present but list not loaded yet, fetch immediately (avoid race with load)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const sp = new URLSearchParams(window.location.search);
+    const pid = sp.get('post');
+    if (!pid) return;
+    // If nothing loaded yet, fetch directly once
+    if (items.length === 0) {
+      (async () => {
+        try {
+          const r = await fetch(`/api/posts/${pid}`);
+          if (r.ok) { const d = await r.json(); if (d?.post) setOpenPost(d.post as Post); }
+        } catch {}
+      })();
+    }
+  }, []);
 
   // const topics = useMemo(() => {
   //   return Array.from(new Set(items.map(i => i.topic || '').filter(Boolean))).sort();
