@@ -140,7 +140,7 @@ export default function TablePage() {
           <table className="w-full text-sm glass rounded-xl overflow-hidden">
             <thead>
               <tr className="bg-white/5">
-                <th className="text-left p-3">Страница</th>
+                <th className="text-left p-3">Столп</th>
                 <th className="text-left p-3">Тема</th>
                 <th className="text-left p-3">Заголовок</th>
                 <th className="text-left p-3">Статус</th>

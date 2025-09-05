@@ -54,7 +54,7 @@ export default function PostModal({ post, onClose, onChanged, adminToken }: { po
                   <input className="bg-background rounded p-2" value={form.topic||''} onChange={(e)=> setForm(f=> ({ ...f, topic: e.target.value }))} />
                 </label>
                 <label className="grid gap-1 text-sm">
-                  <span>Страница/Столп</span>
+                  <span>Столп</span>
                   <select className="bg-background rounded p-2" value={form.pillarId||''} onChange={(e)=> setForm(f=> ({ ...f, pillarId: e.target.value || undefined }))}>
                     <option value="">—</option>
                     {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}

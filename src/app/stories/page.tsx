@@ -147,7 +147,7 @@ export default function StoriesPage() {
 
   const createPage = useCallback(async () => {
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-    const res = await fetch('/api/pages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ name: 'Новая страница' }) });
+    const res = await fetch('/api/pages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ name: 'Новый столп' }) });
     const data = await res.json();
     setPages((prev) => [...prev, data.page]);
     setPageId(data.page.id as string);
@@ -161,7 +161,7 @@ export default function StoriesPage() {
       if (!created) return;
       targetId = created.id;
     }
-    const name = typeof window !== 'undefined' ? window.prompt('Новое название страницы') : '';
+    const name = typeof window !== 'undefined' ? window.prompt('Новое название столпа') : '';
     if (!name || !name.trim()) return;
     const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
     const res = await fetch(`/api/pages/${targetId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-admin-token': token || '' }, body: JSON.stringify({ name: name.trim() }) });
@@ -209,7 +209,7 @@ export default function StoriesPage() {
             <button className="btn-glass btn-sm" onClick={async () => {
               if (!pageId) return;
               const token = adminToken || process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-              const cascade = typeof window !== 'undefined' && window.confirm('Удалить страницу и все её истории?');
+              const cascade = typeof window !== 'undefined' && window.confirm('Удалить столп и все её истории?');
               const params = cascade ? '?cascade=true' : '';
               await fetch(`/api/pages/${pageId}${params}`, { method: 'DELETE', headers: { 'x-admin-token': token || '' } });
               const res = await fetch('/api/pages', { cache: 'no-store' });

@@ -134,14 +134,14 @@ export default function Home() {
             )}
           </div>
           <button className="btn-glass btn-sm" onClick={async ()=>{
-            const name = typeof window!=='undefined' ? window.prompt('Название новой страницы/столпа') : '';
+            const name = typeof window!=='undefined' ? window.prompt('Название нового столпа') : '';
             if (!name || !name.trim()) return;
             const res = await fetch('/api/pillars', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ name: name.trim() }) });
-            if (!res.ok) { alert('Не удалось создать страницу'); return; }
+            if (!res.ok) { alert('Не удалось создать столп'); return; }
             const created = (await res.json()).pillar as { id: string; name: string };
             setPillars(prev=>[...prev, created]);
             setForm(f=>({ ...f, pillarId: created.id }));
-          }}>Создать страницу</button>
+          }}>Создать столп</button>
           <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarIds[0] })); setModalOpen(true); }}>Добавить пост</button>
           <button className="btn-glass btn-sm" onClick={async ()=>{
             try {
@@ -248,7 +248,7 @@ export default function Home() {
                 <input className="bg-background rounded p-2" value={form.topic||''} onChange={(e)=>setForm(f=>({...f, topic: e.target.value}))} />
               </label>
               <label className="grid gap-1 text-sm">
-                <span>Страница/Столп</span>
+                <span>Столп</span>
                 <select className="bg-background rounded p-2" value={form.pillarId||''} onChange={(e)=>setForm(f=>({...f, pillarId: e.target.value||undefined}))}>
                   <option value="">—</option>
                   {pillars.map(p=> (<option key={p.id} value={p.id}>{p.name}</option>))}

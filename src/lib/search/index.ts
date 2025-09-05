@@ -37,7 +37,7 @@ export async function searchNews(query: string, limit = 20): Promise<FoundDoc[]>
   async function fetchPage(page: number): Promise<FoundDoc[]> {
     if (provider === 'newsapi') return await searchNewsApi(query, 100, { page });
     if (provider === 'serper') return await searchSerper(query, 100, { page });
-    if (provider === 'tavily') return await searchTavily(query, 20); // Tavily не поддерживает страницы в текущем API
+    if (provider === 'tavily') return await searchTavily(query, 20); // Tavily не поддерживает столпы в текущем API
     return [];
   }
 
@@ -55,7 +55,7 @@ export async function searchNews(query: string, limit = 20): Promise<FoundDoc[]>
         out.push(d);
       }
       page += 1;
-      // если за страницу не добавилось ни одного уникального — прекращаем
+      // если за столп не добавилось ни одного уникального — прекращаем
       if (out.length === 0 && page > 2) break;
     }
   } catch (e) {

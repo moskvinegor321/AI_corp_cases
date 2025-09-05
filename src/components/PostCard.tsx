@@ -145,7 +145,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         </div>
         <div className="text-xs opacity-80 flex gap-3 flex-wrap">
           {post.source && <span className="chip px-2 py-0.5 rounded text-xs">{post.source}</span>}
-          {post.pillar?.name && <span>Страница: {post.pillar.name}</span>}
+          {post.pillar?.name && <span>Столп: {post.pillar.name}</span>}
           {post.topic && <span>Тема: {post.topic}</span>}
           {post.scheduledAt && <span>Запланировано: {new Date(post.scheduledAt).toLocaleString()}</span>}
           {post.publishedAt && <span>Опубликовано: {new Date(post.publishedAt).toLocaleString()}</span>}

@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
   const body = (await req.json().catch(() => ({}))) as { name?: string; prompt?: string; searchQuery?: string };
-  const name = (body.name || '').trim() || 'Новая страница';
+  const name = (body.name || '').trim() || 'Новый столп';
   const page = await prisma.page.create({ data: { name, prompt: body.prompt || null, searchQuery: body.searchQuery || null } });
   await auditLog({ entityType: 'page', entityId: page.id, action: 'created', meta: { name } });
   return NextResponse.json({ page });
