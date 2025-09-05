@@ -23,11 +23,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isHydratingScript = `
+    window.__aion_loading = 0;
+    document.addEventListener('aion:load:start', ()=>{ window.__aion_loading++; toggle(); });
+    document.addEventListener('aion:load:end', ()=>{ window.__aion_loading = Math.max(0, window.__aion_loading-1); toggle(); });
+    function toggle(){
+      const el = document.getElementById('global-spinner');
+      if (!el) return;
+      el.style.display = (window.__aion_loading>0) ? 'flex' : 'none';
+    }
+  `;
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <div id="global-spinner" style={{display:'none'}} className="fixed inset-0 z-[1000] items-center justify-center" >
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative z-[1001] spinner" />
+        </div>
         <div className="p-4">
           <nav className="glass rounded-xl p-2 mb-4 flex gap-3 text-sm">
             <Link className="btn-glass btn-sm" href="/">Посты</Link>
@@ -37,6 +51,7 @@ export default function RootLayout({
           </nav>
           {children}
         </div>
+        <script dangerouslySetInnerHTML={{ __html: isHydratingScript }} />
       </body>
     </html>
   );

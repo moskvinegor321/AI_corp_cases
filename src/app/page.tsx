@@ -44,6 +44,7 @@ export default function Home() {
       abortRef.current = controller;
       setLoading(true);
       if (query.trim()) params.set('search', query.trim());
+      document.dispatchEvent(new Event('aion:load:start'));
       const r = await fetch(`/api/posts?${params.toString()}`, { signal: controller.signal });
       if (!r.ok) throw new Error('failed');
       const d = await r.json();
@@ -52,6 +53,7 @@ export default function Home() {
       // ignore aborts
     } finally {
       setLoading(false);
+      document.dispatchEvent(new Event('aion:load:end'));
     }
   }, [filterPillarId, statuses, query, taskStatus, assignee]);
 
@@ -141,7 +143,7 @@ export default function Home() {
             } catch {}
             setPromptOpen(true);
           }}>Промпт и поиск</button>
-          <button className="btn-glass btn-sm" onClick={async ()=>{ const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); return;} await load(); }}>Сгенерировать 5 постов</button>
+          <button className="btn-glass btn-sm" onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarId||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать 5 постов</button>
           {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
       </div>

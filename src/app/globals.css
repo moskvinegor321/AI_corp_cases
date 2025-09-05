@@ -129,6 +129,17 @@ body::before {
   border: 1px solid rgba(255,255,255,0.12);
 }
 
+/* Fullscreen spinner */
+.spinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 9999px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* Line clamp utility for 6 lines */
 .clamp-6 {
   display: -webkit-box;

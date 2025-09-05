@@ -84,6 +84,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
     setLoading(true);
     try {
       const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') || '' : '') || (process.env as unknown as { NEXT_PUBLIC_ADMIN_TOKEN?: string }).NEXT_PUBLIC_ADMIN_TOKEN || "";
+      document.dispatchEvent(new Event('aion:load:start'));
       const signRes = await fetch(`/api/uploads/supabase`, {
         method: "POST",
         headers: { "content-type": "application/json", "x-admin-token": token },
@@ -110,6 +111,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
     } catch {
       alert("Не удалось загрузить файл");
     } finally {
+      document.dispatchEvent(new Event('aion:load:end'));
       setLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
