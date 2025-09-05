@@ -168,8 +168,8 @@ export default function Home() {
               <button
                 key={s.code}
                 onClick={()=> setStatuses(prev=> active ? prev.filter(x=>x!==s.code) : [...prev, s.code])}
-                className={`chip px-3 py-1 rounded border ${active? s.cls : s.off}`}
-              >{s.label}: {count}</button>
+                className={`chip px-3 py-1 rounded border transition-all ${active? `${s.cls} ring-2 ring-white/70 font-semibold` : `${s.off} opacity-80 hover:opacity-100`}`}
+              >{active ? '✓ ' : ''}{s.label}: {count}</button>
             );
           })}
         </div>
