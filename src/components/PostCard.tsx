@@ -181,11 +181,12 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                 )}
               </div>
               <button
-                className="text-[10px] underline opacity-80 hover:opacity-100 p-0"
-                style={{ background: 'transparent', border: 'none' }}
-                title="Скопировать текст поста"
+                className="btn-glass text-[10px] px-2 py-0.5 whitespace-nowrap"
+                title="Скопировать заголовок и текст"
                 onClick={async ()=>{
-                  const text = post.body || '';
+                  const title = post.title || '';
+                  const body = post.body || '';
+                  const text = `${title}\n\n${body}`.trim();
                   try {
                     await navigator.clipboard.writeText(text);
                     setCopiedText(true); setTimeout(()=> setCopiedText(false), 1500);

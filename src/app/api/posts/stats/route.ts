@@ -5,9 +5,21 @@ export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const pillarId = searchParams.get('pillarId') || undefined;
-
-  const whereBase = pillarId ? { pillarId } : {};
+  const pillarParam = searchParams.get('pillarId');
+  let whereBase: Record<string, unknown> = {};
+  if (pillarParam) {
+    try {
+      const parsed = JSON.parse(pillarParam);
+      if (Array.isArray(parsed) && parsed.length) {
+        whereBase = { pillarId: { in: parsed as string[] } };
+      } else if (typeof parsed === 'string' && parsed) {
+        whereBase = { pillarId: parsed };
+      }
+    } catch {
+      // treat as a single ID
+      whereBase = { pillarId: pillarParam };
+    }
+  }
 
   // Execute sequentially to reduce DB pool pressure (P2024 when limit=1)
   const total = await prisma.post.count({ where: whereBase });
