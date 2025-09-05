@@ -152,7 +152,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString()}</span>}
         </div>
         {post.body && (
-          <div className="text-sm opacity-90 whitespace-pre-line clamp-6">{post.body}</div>
+          <div className="text-sm opacity-90 whitespace-pre-line" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.body}</div>
         )}
         <div className={`grid gap-2 mt-2 ${((post.comments && post.comments.length) || commentsOpen) ? 'border-t border-white/10 pt-2' : ''}`}>
           {!!(post.comments && post.comments.length) && (

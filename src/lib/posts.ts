@@ -41,10 +41,9 @@ export function validateStatusTransition(current: Post, payload: StatusPayload):
     data.publishedAt = publishedAt ? new Date(publishedAt) : new Date();
   }
 
-  // Prevent going backwards from PUBLISHED unless explicitly allowed later
-  const order: Record<PostStatus, number> = { DRAFT: 1, NEEDS_REVIEW: 2, READY_TO_PUBLISH: 3, PUBLISHED: 4, REJECTED: 5 } as const;
-  if (order[status] < order[current.status]) {
-    return { ok: false, error: 'invalid transition' };
+  // Disallow moving away from PUBLISHED to earlier states
+  if (current.status === 'PUBLISHED' && status !== 'PUBLISHED') {
+    return { ok: false, error: 'cannot change published' };
   }
 
   return { ok: true, data };
