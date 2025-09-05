@@ -140,26 +140,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                 >Изменить</button>
               </>
             )}
-            {post.status === 'READY_TO_PUBLISH' && editSchedule && (
-              <>
-                <div className="fixed inset-0 bg-black/90 z-40" />
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                  <div className="panel rounded-xl p-3 w-64 grid gap-2">
-                    <div className="text-xs opacity-80">Дата/время публикации</div>
-                    <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
-                    <div className="flex gap-2 justify-end">
-                      <button className="btn-glass btn-sm" onClick={()=>setEditSchedule(false)}>Отмена</button>
-                      <button className="btn-glass btn-sm" onClick={async ()=>{
-                        if (!dt) return;
-                        const iso = new Date(dt).toISOString();
-                        await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
-                        setEditSchedule(false);
-                      }}>Сохранить</button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+            {post.status === 'READY_TO_PUBLISH' && editSchedule && null}
           </div>
         </div>
         <div className="text-xs opacity-80 flex gap-3 flex-wrap">
@@ -291,6 +272,26 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
                     if (picker === 'review') await callStatus('NEEDS_REVIEW', { reviewDueAt: iso });
                     if (picker === 'publish') await callStatus('PUBLISHED', { publishedAt: iso });
                     setPicker(null);
+                  }}>Сохранить</button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+        {editSchedule && (
+          <>
+            <div className="fixed inset-0 bg-black/90 z-[100]" />
+            <div className="fixed inset-0 z-[110] flex items-center justify-center">
+              <div className="panel rounded-xl p-3 w-64 grid gap-2">
+                <div className="text-xs opacity-80">Дата/время публикации</div>
+                <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
+                <div className="flex gap-2 justify-end">
+                  <button className="btn-glass btn-sm" onClick={()=>setEditSchedule(false)}>Отмена</button>
+                  <button className="btn-glass btn-sm" onClick={async ()=>{
+                    if (!dt) return;
+                    const iso = new Date(dt).toISOString();
+                    await callStatus('READY_TO_PUBLISH', { scheduledAt: iso });
+                    setEditSchedule(false);
                   }}>Сохранить</button>
                 </div>
               </div>
