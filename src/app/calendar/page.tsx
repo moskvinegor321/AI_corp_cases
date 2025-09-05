@@ -18,6 +18,7 @@ export default function CalendarPage() {
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [pillarsOpen, setPillarsOpen] = useState(false);
   const [pillarIds, setPillarIds] = useState<string[]>([]);
+  const [pillarDraft, setPillarDraft] = useState<string[]>([]);
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('aion_admin_token') : '';
@@ -116,21 +117,21 @@ export default function CalendarPage() {
         </div>
         {/* Удалён одиночный селектор столпов; используем только мультиселектор ниже */}
         <div className="relative">
-          <button className="btn-glass btn-sm" onClick={()=> setPillarsOpen(v=>!v)}>
+          <button className="btn-glass btn-sm" onClick={()=> { setPillarDraft(pillarIds); setPillarsOpen(v=>!v); }}>
             {pillarIds.length ? `Столпы (${pillarIds.length})` : 'Все столпы'}
           </button>
           {pillarsOpen && (
             <div className="absolute top-full left-0 mt-2 popover-panel p-3 z-10 min-w-[240px] grid gap-2">
               {pillars.map(p => (
                 <label key={p.id} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={pillarIds.includes(p.id)} onChange={(e)=>{
-                    setPillarIds(prev => e.target.checked ? [...prev, p.id] : prev.filter(x=>x!==p.id));
+                  <input type="checkbox" checked={pillarDraft.includes(p.id)} onChange={(e)=>{
+                    setPillarDraft(prev => e.target.checked ? [...prev, p.id] : prev.filter(x=>x!==p.id));
                   }} /> {p.name}
                 </label>
               ))}
               <div className="flex gap-2 justify-end pt-1">
-                <button className="btn-glass btn-sm" onClick={()=>{ setPillarIds([]); setPillarsOpen(false); }}>Сбросить</button>
-                <button className="btn-glass btn-sm" onClick={()=> setPillarsOpen(false)}>Готово</button>
+                <button className="btn-glass btn-sm" onClick={()=>{ setPillarDraft([]); }}>Сбросить</button>
+                <button className="btn-glass btn-sm" onClick={()=> { setPillarIds(pillarDraft); setPillarsOpen(false); }}>Готово</button>
               </div>
             </div>
           )}

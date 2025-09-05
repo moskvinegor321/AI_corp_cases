@@ -19,6 +19,7 @@ export default function Home() {
   const [form, setForm] = useState<{ title: string; body: string; topic?: string; pillarId?: string }>({ title: '', body: '' });
   const [pillars, setPillars] = useState<{ id: string; name: string }[]>([]);
   const [filterPillarIds, setFilterPillarIds] = useState<string[]>([]);
+  const [pillarDraft, setPillarDraft] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<Array<'DRAFT'|'NEEDS_REVIEW'|'READY_TO_PUBLISH'|'PUBLISHED'|'REJECTED'>>([]);
   const [statusOpen, setStatusOpen] = useState(false);
   const [taskFilterOpen, setTaskFilterOpen] = useState(false);
@@ -89,19 +90,19 @@ export default function Home() {
         <div className="flex items-center gap-2">
           <input className="px-2 py-1 rounded btn-glass btn-sm" type="password" placeholder="Admin token" value={adminToken} onChange={(e)=>saveToken(e.target.value)} style={{ width: 160 }} />
           <div className="relative">
-            <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(v=>!v)}>{filterPillarIds.length? `Столпы (${filterPillarIds.length})` : 'Столпы'}</button>
+            <button className="btn-glass btn-sm" onClick={()=> { setPillarDraft(filterPillarIds); setStatusOpen(v=>!v); }}>{filterPillarIds.length? `Столпы (${filterPillarIds.length})` : 'Столпы'}</button>
             {statusOpen && (
               <div className="absolute top-full left-0 mt-2 popover-panel p-3 z-10 min-w-[260px] grid gap-2">
                 {pillars.map(p=> (
                   <label key={p.id} className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={filterPillarIds.includes(p.id)} onChange={(e)=>{
-                      setFilterPillarIds(prev=> e.target.checked ? [...prev, p.id] : prev.filter(x=>x!==p.id));
+                    <input type="checkbox" checked={pillarDraft.includes(p.id)} onChange={(e)=>{
+                      setPillarDraft(prev=> e.target.checked ? [...prev, p.id] : prev.filter(x=>x!==p.id));
                     }} /> {p.name}
                   </label>
                 ))}
                 <div className="flex gap-2 justify-end">
-                  <button className="btn-glass btn-sm" onClick={()=>{ setFilterPillarIds([]); setStatusOpen(false); }}>Сбросить</button>
-                  <button className="btn-glass btn-sm" onClick={()=> setStatusOpen(false)}>Готово</button>
+                  <button className="btn-glass btn-sm" onClick={()=>{ setPillarDraft([]); }}>Сбросить</button>
+                  <button className="btn-glass btn-sm" onClick={()=> { setFilterPillarIds(pillarDraft); setStatusOpen(false); }}>Готово</button>
                 </div>
               </div>
             )}
