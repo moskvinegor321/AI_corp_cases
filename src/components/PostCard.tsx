@@ -124,7 +124,7 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
               </>
             )}
             {post.status === 'READY_TO_PUBLISH' && editSchedule && (
-              <div className="absolute right-0 top-full mt-2 glass rounded-xl p-3 z-20 w-64 grid gap-2">
+              <div className="absolute right-0 top-full mt-2 panel rounded-xl p-3 z-20 w-64 grid gap-2">
                 <div className="text-xs opacity-80">Дата/время публикации</div>
                 <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
                 <div className="flex gap-2 justify-end">
@@ -248,8 +248,8 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
         </div>
         {picker && (
           <>
-          <div className="fixed inset-0 bg-black/60 z-10" />
-          <div className="absolute top-full mt-2 left-0 glass rounded-xl p-3 z-20 w-64 grid gap-2">
+          <div className="fixed inset-0 bg-black/70 z-10" />
+          <div className="absolute top-full mt-2 left-0 panel rounded-xl p-3 z-20 w-64 grid gap-2">
             <div className="text-xs opacity-80">{picker === 'schedule' ? 'Дата/время публикации' : picker === 'publish' ? 'Дата/время публикации' : 'Крайний срок ревью'}</div>
             <input className="bg-background rounded p-2" type="datetime-local" value={dt} onChange={(e)=>setDt(e.target.value)} />
             <div className="flex gap-2 justify-end">
