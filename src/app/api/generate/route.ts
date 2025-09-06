@@ -28,19 +28,20 @@ export async function POST(req: NextRequest) {
   const pageId = (body as { pageId?: string }).pageId;
   const pillarId = (body as { pillarId?: string }).pillarId;
 
+  // Build banlist from existing posts (within pillar if provided)
   const excludeRejected = String(process.env.EXCLUDE_REJECTED) === 'true';
-  const existing = await prisma.story.findMany({
-    where: {
-      status: { in: excludeRejected ? ['published', 'rejected'] : ['published'] },
-    },
+  const existingPosts = await prisma.post.findMany({
+    where: { pillarId: pillarId || undefined },
     orderBy: { createdAt: 'desc' },
-    select: { title: true, titleSlug: true },
+    select: { title: true },
+    take: 500,
   });
 
-  const banlistTitles = existing
+  const banlistTitles = existingPosts
     .slice(0, Number(process.env.MAX_CONTEXT_TITLES || 200))
-    .map((x) => x.title);
-  const existingSlugs = new Set(existing.map((x) => x.titleSlug));
+    .map((x) => x.title)
+    .filter(Boolean);
+  const existingSlugs = new Set(existingPosts.map((x) => toSlug(x.title)));
 
   // read custom prompt and searchQuery if set (fallback if Setting table is missing)
   let promptOverride: string | undefined = undefined;
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
     console.log('[generate] docs', docs.slice(0, 5));
   }
 
-  const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.82);
+  const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.9);
   const created: unknown[] = [];
   const skippedDuplicates: string[] = [];
 
