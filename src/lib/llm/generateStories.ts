@@ -13,8 +13,8 @@ function getOpenAIClient(): OpenAI {
 
 const ItemSchema = z.object({
   title: z.string().min(10),
-  // relax minimal length to reduce brittle failures while still discouraging empty content
-  script: z.string().min(100),
+  // Some models may return objects like { content: "..." } or arrays. Accept any and coerce later.
+  script: z.any(),
   company: z.string().optional().nullable(),
   // allow up to 10 from the model; we'll clamp to 3 later
   // relax: accept any strings; we'll replace with provider URLs later
@@ -92,6 +92,19 @@ export async function generateStories({ banlistTitles, n, promptOverride, search
     .slice(0, n)
     .map((it) => ({
       ...it,
+      script: (() => {
+        const s = (it as unknown as { script?: unknown }).script;
+        if (typeof s === 'string') return s;
+        if (s && typeof s === 'object') {
+          // common shapes
+          const maybe = (s as { content?: unknown; text?: unknown; value?: unknown }).content
+            ?? (s as { content?: unknown; text?: unknown; value?: unknown }).text
+            ?? (s as { content?: unknown; text?: unknown; value?: unknown }).value;
+          if (typeof maybe === 'string') return maybe;
+        }
+        if (Array.isArray(s)) return s.filter(x=>typeof x==='string').join('\n');
+        try { return JSON.stringify(s); } catch { return String(s ?? ''); }
+      })(),
       // take only real provider URLs; if none – leave empty array so UI hides the block
       sources: providerUrls.slice(0, 3),
     }));
