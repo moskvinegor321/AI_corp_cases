@@ -99,11 +99,14 @@ export async function POST(req: NextRequest) {
   }
   // Exclude URLs we already used in recent posts to reduce repetition
   let excludeUrls: string[] = [];
+  let excludeDomains: string[] = [];
   try {
-    const recent = await prisma.post.findMany({ where: { pillarId: pillarId || undefined }, orderBy: { createdAt: 'desc' }, take: 200, select: { sources: true } });
-    excludeUrls = recent.flatMap(p => (p.sources as string[] | null | undefined) || []).filter(Boolean);
+    const recent = await prisma.post.findMany({ where: { pillarId: pillarId || undefined }, orderBy: { createdAt: 'desc' }, take: 300, select: { sources: true } });
+    const urls = recent.flatMap(p => (p.sources as string[] | null | undefined) || []).filter(Boolean);
+    excludeUrls = urls;
+    excludeDomains = urls.map(u => { try { return new URL(u).hostname.replace(/^www\./,''); } catch { return ''; } }).filter(Boolean);
   } catch {}
-  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride: searchOverride, noSearch: noSearchFinal, excludeUrls });
+  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride: searchOverride, noSearch: noSearchFinal, excludeUrls, excludeDomains });
   if (process.env.DEBUG_GENERATE === 'true') {
     // eslint-disable-next-line no-console
     console.log('[generate] docs', docs.slice(0, 5));

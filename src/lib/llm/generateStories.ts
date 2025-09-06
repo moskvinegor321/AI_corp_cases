@@ -27,13 +27,19 @@ const ResponseSchema = z.object({ items: z.array(ItemSchema) });
 
 export type GeneratedItem = z.infer<typeof ItemSchema>;
 
-export async function generateStories({ banlistTitles, n, promptOverride, searchQueryOverride, noSearch, excludeUrls }: { banlistTitles: string[]; n: number; promptOverride?: string; searchQueryOverride?: string; noSearch?: boolean; excludeUrls?: string[] }): Promise<{ items: GeneratedItem[]; docs: FoundDoc[] }> {
+export async function generateStories({ banlistTitles, n, promptOverride, searchQueryOverride, noSearch, excludeUrls, excludeDomains }: { banlistTitles: string[]; n: number; promptOverride?: string; searchQueryOverride?: string; noSearch?: boolean; excludeUrls?: string[]; excludeDomains?: string[] }): Promise<{ items: GeneratedItem[]; docs: FoundDoc[] }> {
   const limit = Math.max(5, Math.min(30, n * 6));
   const searchQuery = (searchQueryOverride && searchQueryOverride.trim()) ? searchQueryOverride.trim() : '';
   let docs = noSearch || !searchQuery ? [] : await searchNews(searchQuery, limit);
   if (excludeUrls && excludeUrls.length) {
     const blocked = new Set(excludeUrls);
     docs = docs.filter(d => !blocked.has(d.url));
+  }
+  if (excludeDomains && excludeDomains.length) {
+    const blockedD = new Set(excludeDomains);
+    docs = docs.filter(d => {
+      try { const h = new URL(d.url).hostname.replace(/^www\./,''); return !blockedD.has(h); } catch { return true; }
+    });
   }
 
   const sourcesBlock = docs
