@@ -28,20 +28,24 @@ export async function POST(req: NextRequest) {
   const pageId = (body as { pageId?: string }).pageId;
   const pillarId = (body as { pillarId?: string }).pillarId;
 
-  // Build banlist from existing posts (within pillar if provided)
-  const excludeRejected = String(process.env.EXCLUDE_REJECTED) === 'true';
-  const existingPosts = await prisma.post.findMany({
+  // Build banlist from existing posts (prefer pillar, plus global safety net)
+  const existingPillarPosts = await prisma.post.findMany({
     where: { pillarId: pillarId || undefined },
     orderBy: { createdAt: 'desc' },
     select: { title: true },
     take: 500,
   });
+  const existingGlobalPosts = await prisma.post.findMany({
+    orderBy: { createdAt: 'desc' },
+    select: { title: true },
+    take: 1000,
+  });
 
-  const banlistTitles = existingPosts
+  const banlistTitles = [...existingPillarPosts, ...existingGlobalPosts]
     .slice(0, Number(process.env.MAX_CONTEXT_TITLES || 200))
     .map((x) => x.title)
     .filter(Boolean);
-  const existingSlugs = new Set(existingPosts.map((x) => toSlug(x.title)));
+  const existingSlugs = new Set(existingGlobalPosts.map((x) => toSlug(x.title)));
 
   // read custom prompt and searchQuery if set (fallback if Setting table is missing)
   let promptOverride: string | undefined = undefined;
@@ -112,7 +116,7 @@ export async function POST(req: NextRequest) {
     console.log('[generate] docs', docs.slice(0, 5));
   }
 
-  const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.9);
+  const threshold = Number(process.env.SIMILARITY_THRESHOLD || 0.95);
   const created: unknown[] = [];
   const skippedDuplicates: string[] = [];
 
@@ -122,10 +126,12 @@ export async function POST(req: NextRequest) {
 
   for (const it of items as MinimalItem[]) {
     const slug = toSlug(it.title);
+    const normalizedTitle = it.title.trim().toLowerCase();
     if (
       existingSlugs.has(slug) ||
       batchSlugs.has(slug) ||
-      isDuplicate(it.title, [...banlistTitles, ...batchTitles], threshold)
+      isDuplicate(it.title, [...banlistTitles, ...batchTitles], threshold) ||
+      [...banlistTitles, ...batchTitles].some(t => t.trim().toLowerCase() === normalizedTitle)
     ) {
       skippedDuplicates.push(it.title);
       continue;
