@@ -57,22 +57,19 @@ export async function POST(req: NextRequest) {
     }
     // Pillar-scoped settings stored in Setting: page:{id}:prompt and page:{id}:search_query
     if (pillarId) {
-      const keys = [`page:${pillarId}:prompt`, `page:${pillarId}:search_query`];
+      const keys = [`page:${pillarId}:prompt`, `page:${pillarId}:search_query`, `page:${pillarId}:context_prompt`, `page:${pillarId}:tov_prompt`];
       const rowsP = await prisma.setting.findMany({ where: { key: { in: keys } } });
       const mapP = Object.fromEntries(rowsP.map((r) => [r.key, r.value]));
       const pPrompt = (mapP[`page:${pillarId}:prompt`] || '').trim();
       const pSearch = (mapP[`page:${pillarId}:search_query`] || '').trim();
+      const pContext = (mapP[`page:${pillarId}:context_prompt`] || '').trim();
+      const pTov = (mapP[`page:${pillarId}:tov_prompt`] || '').trim();
       if (pPrompt) promptOverride = pPrompt;
       if (pSearch) searchQueryOverride = pSearch;
+      if (pContext) contextPrompt = pContext;
+      if (pTov) toneOfVoicePrompt = pTov;
     }
     // No global fallbacks: if pillar doesn't have prompts, we leave them empty
-    // context/tov prompts (global)
-    {
-      const rows = await prisma.setting.findMany({ where: { key: { in: ['contextPrompt', 'toneOfVoicePrompt'] } } });
-      const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-      contextPrompt = (map['contextPrompt'] || '').trim() || undefined;
-      toneOfVoicePrompt = (map['toneOfVoicePrompt'] || '').trim() || undefined;
-    }
   } catch {
     promptOverride = undefined;
     searchQueryOverride = undefined;

@@ -10,18 +10,18 @@ export async function GET(_: NextRequest, ctx: { params: Promise<{ id: string }>
   const pillar = await prisma.pillar.findUnique({ where: { id } });
   if (!pillar) return NextResponse.json({ error: 'not found' }, { status: 404 });
   // read pillar-scoped prompts from settings
-  const keys = [`page:${id}:prompt`, `page:${id}:search_query`];
+  const keys = [`page:${id}:prompt`, `page:${id}:search_query`, `page:${id}:context_prompt`, `page:${id}:tov_prompt`];
   const rows = await prisma.setting.findMany({ where: { key: { in: keys } } });
   const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
-  return NextResponse.json({ pillar, prompt: map[`page:${id}:prompt`] || null, searchQuery: map[`page:${id}:search_query`] || null });
+  return NextResponse.json({ pillar, prompt: map[`page:${id}:prompt`] || null, searchQuery: map[`page:${id}:search_query`] || null, contextPrompt: map[`page:${id}:context_prompt`] || null, toneOfVoicePrompt: map[`page:${id}:tov_prompt`] || null });
 }
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
   const { id } = await ctx.params;
-  const { name, prompt, searchQuery } = (await req.json()) as { name?: string; prompt?: string; searchQuery?: string };
-  if (!name && prompt === undefined && searchQuery === undefined) return NextResponse.json({ error: 'nothing to update' }, { status: 400 });
+  const { name, prompt, searchQuery, contextPrompt, toneOfVoicePrompt } = (await req.json()) as { name?: string; prompt?: string; searchQuery?: string; contextPrompt?: string; toneOfVoicePrompt?: string };
+  if (!name && prompt === undefined && searchQuery === undefined && contextPrompt === undefined && toneOfVoicePrompt === undefined) return NextResponse.json({ error: 'nothing to update' }, { status: 400 });
   try {
     let pillar;
     if (name && name.trim()) {
@@ -40,6 +40,12 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     }
     if (searchQuery !== undefined) {
       ops.push(prisma.setting.upsert({ where: { key: `page:${id}:search_query` }, update: { value: (searchQuery || '').trim() }, create: { key: `page:${id}:search_query`, value: (searchQuery || '').trim() } }));
+    }
+    if (contextPrompt !== undefined) {
+      ops.push(prisma.setting.upsert({ where: { key: `page:${id}:context_prompt` }, update: { value: (contextPrompt || '').trim() }, create: { key: `page:${id}:context_prompt`, value: (contextPrompt || '').trim() } }));
+    }
+    if (toneOfVoicePrompt !== undefined) {
+      ops.push(prisma.setting.upsert({ where: { key: `page:${id}:tov_prompt` }, update: { value: (toneOfVoicePrompt || '').trim() }, create: { key: `page:${id}:tov_prompt`, value: (toneOfVoicePrompt || '').trim() } }));
     }
     if (ops.length) await prisma.$transaction(ops);
 
