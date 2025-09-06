@@ -93,6 +93,7 @@ model Post {
   reviewDueAt  DateTime?
   source       String?
   sources      String[]   @default([])
+  sourcePublishedAt DateTime?
   attachments  Attachment[]
   comments     PostComment[]
   createdAt    DateTime   @default(now())

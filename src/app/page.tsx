@@ -164,21 +164,22 @@ export default function Home() {
               } catch { alert('Ошибка удаления столпа'); }
             }}
           >Удалить столп</button>
-          <button className="btn-glass btn-sm" onClick={async ()=>{
-            try {
-              // Load pillar-scoped prompt if pillar selected
-              if (filterPillarIds[0]) {
+          <button className={`btn-glass btn-sm ${!filterPillarIds[0] ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={!filterPillarIds[0]}
+            title={!filterPillarIds[0] ? 'Выберите столп, чтобы настроить мастер промпт' : undefined}
+            onClick={async ()=>{
+              if (!filterPillarIds[0]) return;
+              try {
                 const pr = await fetch(`/api/pillars/${filterPillarIds[0]}`, { cache: 'no-store' });
                 const pd = await pr.json();
                 setPromptText(pd.prompt || '');
                 setSearchQuery(pd.searchQuery || '');
                 setNoSearch(!(pd.searchQuery && pd.searchQuery.length));
-              }
-              const r = await fetch('/api/settings/prompts',{cache:'no-store'});
-              if(r.ok){const d=await r.json(); setContextPrompt(d.contextPrompt||''); setTovPrompt(d.toneOfVoicePrompt||''); }
-            } catch {}
-            setPromptOpen(true);
-          }}>Мастер промпт</button>
+                setContextPrompt(pd.contextPrompt || '');
+                setTovPrompt(pd.toneOfVoicePrompt || '');
+              } catch {}
+              setPromptOpen(true);
+            }}>Мастер промпт</button>
           <button className={`btn-glass btn-sm ${!filterPillarIds[0] ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!filterPillarIds[0]} title={!filterPillarIds[0] ? 'Выберите столп, чтобы сгенерировать посты' : undefined} onClick={async ()=>{ document.dispatchEvent(new Event('aion:load:start')); const res=await fetch('/api/generate',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ pillarId: filterPillarIds[0]||undefined, n:5, searchQuery, noSearch, promptOverride: promptText }) }); if(!res.ok){ alert('Не удалось сгенерировать'); document.dispatchEvent(new Event('aion:load:end')); return;} await load(); document.dispatchEvent(new Event('aion:load:end')); }}>Сгенерировать посты</button>
           {loading && <span className="chip px-2 py-1 rounded text-xs opacity-80">Загрузка…</span>}
         </div>
@@ -336,20 +337,13 @@ export default function Home() {
             </label>
             <div className="mt-3 flex gap-2 justify-end">
               <button className="btn-glass btn-sm" onClick={()=>setPromptOpen(false)}>Закрыть</button>
-              <button className="btn-glass btn-sm" disabled={savingPrompts} onClick={async ()=>{
+              <button className="btn-glass btn-sm" disabled={savingPrompts || !filterPillarIds[0]} title={!filterPillarIds[0] ? 'Выберите столп' : undefined} onClick={async ()=>{
+                if (!filterPillarIds[0]) return;
                 try {
                   setSavingPrompts(true);
-                  const r1 = await fetch('/api/settings/prompts',{ method:'POST', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ contextPrompt, toneOfVoicePrompt: tovPrompt }) });
-                  let ok = r1.ok;
-                  if (filterPillarIds[0]) {
-                    const pid = filterPillarIds[0];
-                    const rPillar = await fetch(`/api/pillars/${pid}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
-                    ok = ok && rPillar.ok;
-                  } else {
-                    const rGlobal = await fetch('/api/prompt',{ method:'PUT', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery }) });
-                    ok = ok && rGlobal.ok;
-                  }
-                  if (!ok) { alert('Не удалось сохранить'); return; }
+                  const pid = filterPillarIds[0];
+                  const rPillar = await fetch(`/api/pillars/${pid}`, { method:'PATCH', headers:{'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ prompt: promptText, searchQuery: noSearch ? '' : searchQuery, contextPrompt, toneOfVoicePrompt: tovPrompt }) });
+                  if (!rPillar.ok) { alert('Не удалось сохранить'); return; }
                   setPromptOpen(false);
                 } finally { setSavingPrompts(false); }
               }}>{savingPrompts? 'Сохранение…' : 'Сохранить'}</button>
