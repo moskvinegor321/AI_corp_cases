@@ -8,6 +8,7 @@ export type Post = {
   scheduledAt?: string | null;
   publishedAt?: string | null;
   reviewDueAt?: string | null;
+  sourcePublishedAt?: string | null;
   topic?: string | null;
   pillar?: { id: string; name: string } | null;
   body?: string | null;
@@ -165,6 +166,9 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           {post.scheduledAt && <span>Запланировано: {new Date(post.scheduledAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
           {post.publishedAt && <span>Опубликовано: {new Date(post.publishedAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
           {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
+          {(post as unknown as { sourcePublishedAt?: string|null }).sourcePublishedAt && (
+            <span>Дата новости: {new Date((post as unknown as { sourcePublishedAt: string }).sourcePublishedAt).toLocaleDateString()}</span>
+          )}
         </div>
         <div className="text-xs opacity-80 mt-1 flex items-center gap-2">
           <span className="chip px-2 py-0.5 rounded text-[10px]">Поисковый запрос</span>

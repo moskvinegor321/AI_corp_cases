@@ -140,10 +140,15 @@ export async function POST(req: NextRequest) {
     batchSlugs.add(slug);
     batchTitles.push(it.title);
 
-    // best-effort parse date from first source url or provider date if any
-    const firstSource = (it.sources || [])[0];
-    const matchedDoc = docs.find((d) => d.url === firstSource);
-    const providerDate: string | undefined = (matchedDoc?.publishedAt as string | undefined);
+    // best-effort parse earliest provider date from matched docs
+    const matchedDocs = (it.sources || []).map(u => docs.find(d => d.url === u)).filter(Boolean) as typeof docs;
+    let earliest: Date | null = null;
+    for (const d of matchedDocs) {
+      const dt = d && d.publishedAt ? new Date(d.publishedAt) : null;
+      if (dt && !Number.isNaN(dt.getTime())) {
+        if (!earliest || dt < earliest) earliest = dt;
+      }
+    }
     // const sourceDate = extractPublishedAt(providerDate) || extractPublishedAt(firstSource);
     // Create Post directly with status DRAFT (Разбор), source='ai'
     const post = await prisma.post.create({
@@ -155,6 +160,7 @@ export async function POST(req: NextRequest) {
         pillarId: pillarId || null,
         source: 'ai',
         sources: Array.isArray(it.sources) ? it.sources.slice(0, 5) : [],
+        sourcePublishedAt: earliest ? earliest.toISOString() : null,
       },
     });
     // Do not persist sources as files; we may store them later in a dedicated column
