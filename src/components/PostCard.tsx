@@ -166,6 +166,13 @@ export function PostCard({ post, onChanged, onToggleComments: _onToggleComments,
           {post.publishedAt && <span>Опубликовано: {new Date(post.publishedAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
           {post.reviewDueAt && <span>Разбор до: {new Date(post.reviewDueAt).toLocaleString([], { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>}
         </div>
+        <div className="text-xs opacity-80 mt-1 flex items-center gap-2">
+          <span className="chip px-2 py-0.5 rounded text-[10px]">Поисковый запрос</span>
+          <span className="truncate max-w-[600px]" title={(post as unknown as { searchQuery?: string|null }).searchQuery || ''}>{(post as unknown as { searchQuery?: string|null }).searchQuery || '—'}</span>
+          {onEdit && (
+            <button className="text-[10px] underline opacity-80 hover:opacity-100 p-0" style={{ background:'transparent', border:'none' }} onClick={()=> onEdit?.(post)}>Изменить</button>
+          )}
+        </div>
         {post.body && (
           <>
             <div ref={bodyRef} className="text-sm opacity-90 whitespace-pre-line" style={expanded ? { overflow: 'visible' } : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.body}</div>
