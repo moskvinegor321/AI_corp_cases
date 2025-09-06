@@ -134,7 +134,7 @@ export default function Home() {
               </div>
             )}
           </div>
-          <button className={`btn-glass btn-sm ${!filterPillarIds[0] ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={!filterPillarIds[0]} title={!filterPillarIds[0] ? 'Выберите столп, чтобы открыть мастер промпта' : undefined} onClick={async ()=>{
+          <button className="btn-glass btn-sm" onClick={async ()=>{
             const name = typeof window!=='undefined' ? window.prompt('Название нового столпа') : '';
             if (!name || !name.trim()) return;
             const res = await fetch('/api/pillars', { method:'POST', headers:{ 'content-type':'application/json','x-admin-token': token }, body: JSON.stringify({ name: name.trim() }) });
@@ -142,6 +142,7 @@ export default function Home() {
             const created = (await res.json()).pillar as { id: string; name: string };
             setPillars(prev=>[...prev, created]);
             setForm(f=>({ ...f, pillarId: created.id }));
+            setFilterPillarIds([created.id]);
           }}>Создать столп</button>
           <button className="btn-glass btn-sm" onClick={()=>{ setForm(f=>({ ...f, pillarId: filterPillarIds[0], searchQuery: '', noSearch: false })); setModalOpen(true); }}>Добавить пост</button>
           <button
