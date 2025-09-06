@@ -96,7 +96,13 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line no-console
     console.log('[generate] params', { pillarId, n, searchQuery: searchOverride, noSearch: noSearchFinal });
   }
-  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride: searchOverride, noSearch: noSearchFinal });
+  // Exclude URLs we already used in recent posts to reduce repetition
+  let excludeUrls: string[] = [];
+  try {
+    const recent = await prisma.post.findMany({ where: { pillarId: pillarId || undefined }, orderBy: { createdAt: 'desc' }, take: 200, select: { sources: true } });
+    excludeUrls = recent.flatMap(p => (p.sources as string[] | null | undefined) || []).filter(Boolean);
+  } catch {}
+  const { items, docs } = await generateStories({ banlistTitles, n, promptOverride: finalPrompt, searchQueryOverride: searchOverride, noSearch: noSearchFinal, excludeUrls });
   if (process.env.DEBUG_GENERATE === 'true') {
     // eslint-disable-next-line no-console
     console.log('[generate] docs', docs.slice(0, 5));
