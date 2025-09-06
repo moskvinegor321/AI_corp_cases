@@ -15,8 +15,9 @@ type SerperResponse = { news?: SerperNewsItem[]; organic?: SerperSearchItem[] };
 export async function searchSerper(query: string, limit = 20, options?: { page?: number }): Promise<FoundDoc[]> {
   const apiKey = process.env.SERPER_API_KEY;
   if (!apiKey) return [];
-  const gl = process.env.SERPER_GL || 'ru';
-  const hl = process.env.SERPER_HL || 'ru';
+  // Default to US/English unless overridden via env
+  const gl = process.env.SERPER_GL || 'us';
+  const hl = process.env.SERPER_HL || 'en';
   const page = options?.page ?? 1;
   const payload: Record<string, string | number> = { q: query, num: Math.min(limit, 100), page };
   if (gl) payload.gl = gl;
